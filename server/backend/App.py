@@ -1,14 +1,16 @@
-import os
-from flask import Flask, jsonify, request
+from flask import Flask
 
-template_dir = os.path.abspath('../frontend/public')
-app = Flask(__name__, template_folder=template_dir)
 
+app = Flask(__name__, 
+            static_folder="../frontend/build", 
+            static_url_path="/")
 data = {"message": "Hello from Flask!"}
 
-@app.route('/hello', methods=['GET'])
+
+@app.route('/api/hello', methods=['GET'])
 def get_data():
-    return jsonify(data)
+    return data
+
 
 if __name__ == '__main__':
     app.run()

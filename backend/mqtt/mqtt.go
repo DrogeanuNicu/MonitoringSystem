@@ -2,92 +2,148 @@ package mqtt
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/url"
 	"os"
+	"sync"
 
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
 )
 
-type MqttConfig struct {
-	CtxPtr       *context.Context
-	NumOfClients uint32
-	Server       string
-	Port         uint32
-	Topic        string
-	debug        bool
+type sendQueueType struct {
+	ch   chan paho.Publish
+	wg   sync.WaitGroup
+	stop chan struct{}
 }
 
-type clientsList struct {
-	Size    uint32
-	Clients []*autopaho.ConnectionManager
-}
+var debug bool
+var mqttLogger = log.New(os.Stdout, "MQTT: ", log.Ldate|log.Ltime)
+var sendQueue sendQueueType
 
-var logger *log.Logger = log.New(os.Stdout, "MQTT debug: ", log.Ldate|log.Ltime)
+func Init(ctxPtr *context.Context, numOfClients int, server string, port int,
+	topic string, sendQueueChSize int, isDebugOn bool) error {
 
-func Init(ctx *context.Context, clients int, server string, port int, topic string) error {
-
-	for i := 0; i < clients; i++ {
-		clientID := fmt.Sprintf("Client_%d", i)
-		go createClient(ctx, server, port, clientID, topic)
-	}
-	return nil
-}
-
-func createClient(ctx *context.Context, server string, port int, clientID string, topic string) error {
+	debug = isDebugOn
+	sendQueue.ch = make(chan paho.Publish, sendQueueChSize)
+	sendQueue.stop = make(chan struct{})
 
 	u, err := url.Parse(fmt.Sprintf("mqtt://%s:%d", server, port))
 	if err != nil {
-		panic(err)
+		mqttLogger.Printf("The broker url, %s, is invalid!\n", u)
+		return err
 	}
+
+	for i := 0; i < numOfClients; i++ {
+		clientID := fmt.Sprintf("Client_%d", i)
+		go createClient(ctxPtr, u, topic, clientID)
+	}
+
+	return nil
+}
+
+func Send(message paho.Publish) error {
+	if len(sendQueue.ch) < cap(sendQueue.ch) {
+		sendQueue.ch <- message
+		return nil
+	}
+	return errors.New("The message queue is full")
+}
+
+func DeInit() {
+	close(sendQueue.ch)
+	sendQueue.wg.Wait()
+	close(sendQueue.stop)
+}
+
+func createClient(ctxPtr *context.Context, u *url.URL, topic string, clientID string) {
 
 	cliCfg := autopaho.ClientConfig{
 		ServerUrls:                    []*url.URL{u},
 		KeepAlive:                     20,
 		CleanStartOnInitialConnection: false,
 		SessionExpiryInterval:         60,
-		Debug:                         logger,
-		Errors:                        logger,
-		OnConnectionUp: func(cm *autopaho.ConnectionManager, connAck *paho.Connack) {
-			fmt.Println("mqtt connection up")
-			if _, err := cm.Subscribe(context.Background(), &paho.Subscribe{
-				Subscriptions: []paho.SubscribeOptions{
-					{Topic: topic, QoS: 1},
-				},
-			}); err != nil {
-				fmt.Printf("failed to subscribe (%s). This is likely to mean no messages will be received.", err)
-			}
-			fmt.Println("mqtt subscription made")
-		},
-		OnConnectError: func(err error) { fmt.Printf("error whilst attempting connection: %s\n", err) },
+		OnConnectionUp:                onConnectionUp,
+		OnConnectError:                onConnectError,
 		ClientConfig: paho.ClientConfig{
-			ClientID: clientID,
-			OnPublishReceived: []func(paho.PublishReceived) (bool, error){
-				func(pr paho.PublishReceived) (bool, error) {
-					fmt.Printf("received message on topic %s; body: %s (retain: %t)\n", pr.Packet.Topic, pr.Packet.Payload, pr.Packet.Retain)
-					return true, nil
-				}},
-			OnClientError: func(err error) { fmt.Printf("client error: %s\n", err) },
-			OnServerDisconnect: func(d *paho.Disconnect) {
-				if d.Properties != nil {
-					fmt.Printf("server requested disconnect: %s\n", d.Properties.ReasonString)
-				} else {
-					fmt.Printf("server requested disconnect; reason code: %d\n", d.ReasonCode)
-				}
-			},
+			ClientID:           clientID,
+			OnPublishReceived:  []func(paho.PublishReceived) (bool, error){onPublishReceived},
+			OnClientError:      onClientError,
+			OnServerDisconnect: onServerDisconnect,
 		},
 	}
 
-	c, err := autopaho.NewConnection(*ctx, cliCfg)
+	if debug {
+		clientLogger := log.New(os.Stdout, "MQTT: ", log.Ldate|log.Ltime)
+		cliCfg.Debug = clientLogger
+		cliCfg.Errors = clientLogger
+	}
+
+	c, err := autopaho.NewConnection(*ctxPtr, cliCfg)
 	if err != nil {
+		mqttLogger.Printf("The client %s could not be created!\n", clientID)
 		panic(err)
 	}
 
-	if err = c.AwaitConnection(*ctx); err != nil {
+	if err = c.AwaitConnection(*ctxPtr); err != nil {
+		mqttLogger.Printf("The client %s could not connect to the broker!\n", clientID)
 		panic(err)
 	}
 
-	return nil
+	if _, err := c.Subscribe(context.Background(), &paho.Subscribe{
+		Subscriptions: []paho.SubscribeOptions{
+			{Topic: topic, QoS: 1},
+		},
+	}); err != nil {
+		mqttLogger.Printf("The client %s could not subscribe to the provided topic!\n", clientID)
+		panic(err)
+	}
+	mqttLogger.Printf("The client %s subscribed to %s!\n", clientID, topic)
+	sendQueue.wg.Add(1)
+
+	for {
+		select {
+		case message := <-sendQueue.ch:
+			_, err = c.Publish(*ctxPtr, &message)
+			if err != nil {
+				mqttLogger.Printf("The client %s could not send the message: %s: %s!\n", clientID, message.Topic, message.Payload)
+			}
+			continue
+		case <-sendQueue.stop:
+			err = c.Disconnect(*ctxPtr)
+			if err != nil {
+				mqttLogger.Printf("The client %s could not disconnect!", clientID)
+			}
+			return
+		}
+	}
+}
+
+func onConnectionUp(cm *autopaho.ConnectionManager, connAck *paho.Connack) {
+	if debug {
+		mqttLogger.Println("Connection up")
+	}
+}
+
+func onConnectError(err error) {
+	mqttLogger.Printf("Error while attempting connection: %s\n", err)
+}
+
+func onPublishReceived(pr paho.PublishReceived) (bool, error) {
+	mqttLogger.Printf("%s: %s \n", pr.Packet.Topic, pr.Packet.Payload)
+	return true, nil
+}
+
+func onClientError(err error) {
+	mqttLogger.Printf("Client error: %s\n", err)
+}
+
+func onServerDisconnect(d *paho.Disconnect) {
+	if d.Properties != nil {
+		mqttLogger.Printf("Server requested disconnect: %s\n", d.Properties.ReasonString)
+	} else {
+		mqttLogger.Printf("Server requested disconnect; reason code: %d\n", d.ReasonCode)
+	}
 }

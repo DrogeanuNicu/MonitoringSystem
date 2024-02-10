@@ -1,4 +1,5 @@
 DIR_BIN := ./bin
+DIR_SRC := ./src
 
 .PHONY: all
 all: build
@@ -9,7 +10,7 @@ run: build
 
 .PHONY: build
 build:
-	go build -o ${DIR_BIN}/backend main.go
+	go build -o ${DIR_BIN}/backend ${DIR_SRC}/main.go
 
 .PHONY: clean
 clean:

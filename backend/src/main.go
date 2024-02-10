@@ -1,8 +1,8 @@
 package main
 
 import (
-	"backend/mqtt"
-	"backend/router"
+	"backend/src/mqtt"
+	"backend/src/router"
 	"context"
 	"flag"
 	"fmt"

@@ -9,5 +9,5 @@ build:
 
 .PHONY: clean
 clean:
-	rm -rf $(DIR_BACKEND)/bin
+	$(MAKE) -C ${DIR_BACKEND} clean
 

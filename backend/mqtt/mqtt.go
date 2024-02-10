@@ -1,98 +1,93 @@
 package mqtt
 
 import (
-	"backend/threadpool"
 	"context"
-	"errors"
 	"fmt"
-	"net"
+	"log"
+	"net/url"
+	"os"
 
+	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
 )
 
-func Init(workersCount int, server string, port int, topic string) error {
-	for i := 0; i < workersCount; i++ {
+type MqttConfig struct {
+	CtxPtr       *context.Context
+	NumOfClients uint32
+	Server       string
+	Port         uint32
+	Topic        string
+	debug        bool
+}
+
+type clientsList struct {
+	Size    uint32
+	Clients []*autopaho.ConnectionManager
+}
+
+var logger *log.Logger = log.New(os.Stdout, "MQTT debug: ", log.Ldate|log.Ltime)
+
+func Init(ctx *context.Context, clients int, server string, port int, topic string) error {
+
+	for i := 0; i < clients; i++ {
 		clientID := fmt.Sprintf("Client_%d", i)
-		err := threadpool.Submit(func() error {
-			return spawnClient(clientID, server, port, topic)
-		})
-		if err != nil {
-			return err
-		}
+		go createClient(ctx, server, port, clientID, topic)
 	}
 	return nil
 }
 
-func spawnClient(clientID string, server string, port int, topic string) error {
-	client := createClient(server, port, clientID)
-	if client == nil {
-		return errors.New(fmt.Sprintf("MQTT: Could not create client with id: %v", clientID))
-	}
+func createClient(ctx *context.Context, server string, port int, clientID string, topic string) error {
 
-	err := subscribe(client, topic, 1)
+	u, err := url.Parse(fmt.Sprintf("mqtt://%s:%d", server, port))
 	if err != nil {
-		return err
+		panic(err)
 	}
 
-	return nil
-}
-
-func createClient(server string, port int, clientId string) *paho.Client {
-	conn, err := net.Dial("tcp", fmt.Sprintf("%v:%d", server, port))
-	if err != nil {
-		fmt.Printf("MQTT: Failed to connect to %s: %s\n", server, err)
-	}
-
-	c := paho.NewClient(paho.ClientConfig{
-		Conn:   conn,
-		Router: paho.NewStandardRouter(),
-	})
-
-	cp := &paho.Connect{
-		KeepAlive:  60,
-		ClientID:   clientId,
-		CleanStart: false,
-		Username:   "",
-		Password:   nil,
-	}
-	cp.UsernameFlag = true
-	cp.PasswordFlag = true
-
-	ca, err := c.Connect(context.Background(), cp)
-	if err != nil {
-		fmt.Printf("MQTT: Client %s: %v\n", clientId, err)
-		return nil
-	}
-	if ca.ReasonCode != 0 {
-		fmt.Printf("MQTT: Client %s: Failed to connect: %d - %s\n",
-			clientId,
-			ca.ReasonCode,
-			ca.Properties.ReasonString)
-		return nil
-	}
-	fmt.Printf("MQTT: Client %s connected to %s\n", clientId, server)
-
-	return c
-}
-
-func subscribe(client *paho.Client, topic string, subsId int) error {
-	client.Router.RegisterHandler(topic, messageHandler)
-
-	_, err := client.Subscribe(context.Background(), &paho.Subscribe{
-		Subscriptions: []paho.SubscribeOptions{
-			{
-				Topic: topic,
-				QoS:   0,
+	cliCfg := autopaho.ClientConfig{
+		ServerUrls:                    []*url.URL{u},
+		KeepAlive:                     20,
+		CleanStartOnInitialConnection: false,
+		SessionExpiryInterval:         60,
+		Debug:                         logger,
+		Errors:                        logger,
+		OnConnectionUp: func(cm *autopaho.ConnectionManager, connAck *paho.Connack) {
+			fmt.Println("mqtt connection up")
+			if _, err := cm.Subscribe(context.Background(), &paho.Subscribe{
+				Subscriptions: []paho.SubscribeOptions{
+					{Topic: topic, QoS: 1},
+				},
+			}); err != nil {
+				fmt.Printf("failed to subscribe (%s). This is likely to mean no messages will be received.", err)
+			}
+			fmt.Println("mqtt subscription made")
+		},
+		OnConnectError: func(err error) { fmt.Printf("error whilst attempting connection: %s\n", err) },
+		ClientConfig: paho.ClientConfig{
+			ClientID: clientID,
+			OnPublishReceived: []func(paho.PublishReceived) (bool, error){
+				func(pr paho.PublishReceived) (bool, error) {
+					fmt.Printf("received message on topic %s; body: %s (retain: %t)\n", pr.Packet.Topic, pr.Packet.Payload, pr.Packet.Retain)
+					return true, nil
+				}},
+			OnClientError: func(err error) { fmt.Printf("client error: %s\n", err) },
+			OnServerDisconnect: func(d *paho.Disconnect) {
+				if d.Properties != nil {
+					fmt.Printf("server requested disconnect: %s\n", d.Properties.ReasonString)
+				} else {
+					fmt.Printf("server requested disconnect; reason code: %d\n", d.ReasonCode)
+				}
 			},
 		},
-		Properties: &paho.SubscribeProperties{
-			SubscriptionIdentifier: &subsId,
-		},
-	})
+	}
 
-	return err
-}
+	c, err := autopaho.NewConnection(*ctx, cliCfg)
+	if err != nil {
+		panic(err)
+	}
 
-func messageHandler(m *paho.Publish) {
-	fmt.Printf("MQTT: %s: %s\n", m.Topic, string(m.Payload))
+	if err = c.AwaitConnection(*ctx); err != nil {
+		panic(err)
+	}
+
+	return nil
 }

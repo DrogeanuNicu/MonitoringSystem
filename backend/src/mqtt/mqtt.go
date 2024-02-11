@@ -20,7 +20,7 @@ type sendQueueType struct {
 }
 
 var debug bool
-var mqttLogger = log.New(os.Stdout, "MQTT: ", log.Ldate|log.Ltime)
+var mqttLogger = log.New(os.Stdout, "[MQTT] ", log.Ldate|log.Ltime)
 var sendQueue sendQueueType
 
 func Init(ctxPtr *context.Context, numOfClients int, server string, port int,
@@ -76,7 +76,7 @@ func createClient(ctxPtr *context.Context, u *url.URL, topic string, clientID st
 	}
 
 	if debug {
-		clientLogger := log.New(os.Stdout, "MQTT: ", log.Ldate|log.Ltime)
+		clientLogger := log.New(os.Stdout, "[MQTT] ", log.Ldate|log.Ltime)
 		cliCfg.Debug = clientLogger
 		cliCfg.Errors = clientLogger
 	}

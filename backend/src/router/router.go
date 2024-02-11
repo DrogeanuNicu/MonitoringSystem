@@ -3,6 +3,7 @@ package router
 import (
 	"fmt"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,7 +16,17 @@ func Init(address string, port int, debugMode bool) error {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	router = gin.Default()
+	router = gin.New()
+	router.Use(gin.Logger())
+	router.Use(gin.Recovery())
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
+
 	router.GET("/api/hello", HelloHandler)
 
 	err := router.Run(fmt.Sprintf("%s:%d", address, port))

@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
 
-const backendAddress = 'http://localhost:5000';
+const backendAddress = 'https://drogeanunicusor.go.ro:443';
 
 export default defineConfig({
   plugins: [

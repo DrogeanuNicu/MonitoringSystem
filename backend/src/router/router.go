@@ -9,7 +9,7 @@ import (
 
 var router *gin.Engine = nil
 
-func Init(address string, port int, debugMode bool) error {
+func Init(address string, port int, cert string, privateKey string, debugMode bool) error {
 	if debugMode {
 		gin.SetMode(gin.DebugMode)
 	} else {
@@ -29,7 +29,7 @@ func Init(address string, port int, debugMode bool) error {
 
 	router.GET("/api/hello", HelloHandler)
 
-	err := router.Run(fmt.Sprintf("%s:%d", address, port))
+	err := router.RunTLS(fmt.Sprintf("%s:%d", address, port), cert, privateKey)
 	if err != nil {
 		return err
 	}

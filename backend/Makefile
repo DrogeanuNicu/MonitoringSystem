@@ -2,15 +2,23 @@ DIR_BIN := ./bin
 DIR_SRC := ./src
 DIR_CERTS := ../certs
 
-FILE_CERT := $(abspath $(DIR_CERTS)/cert.pem)
-FILE_PRIVATE_KEY := $(abspath $(DIR_CERTS)/key.pem)
+FILE_HTTPS_CERT := $(abspath $(DIR_CERTS)/https/cert.pem)
+FILE_HTTPS_KEY := $(abspath $(DIR_CERTS)/https/key.pem)
+FILE_MQTTS_CA := $(abspath $(DIR_CERTS)/mqtts/ca.crt)
+FILE_MQTTS_CERT := $(abspath $(DIR_CERTS)/mqtts/server.crt)
+FILE_MQTTS_KEY := $(abspath $(DIR_CERTS)/mqtts/server.key)
 
 .PHONY: all
 all: build
 
 .PHONY: run
 run: build
-	${DIR_BIN}/backend --web-cert ${FILE_CERT} --web-private-key ${FILE_PRIVATE_KEY} 
+	${DIR_BIN}/backend \
+		--web-cert ${FILE_HTTPS_CERT} \
+		--web-private-key ${FILE_HTTPS_KEY} \
+		--mqtt-ca ${FILE_MQTTS_CA} \
+		--mqtt-cert ${FILE_MQTTS_CERT} \
+		--mqtt-key ${FILE_MQTTS_KEY}
 
 .PHONY: build
 build:

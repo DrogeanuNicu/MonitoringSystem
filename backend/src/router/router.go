@@ -10,6 +10,15 @@ import (
 var router *gin.Engine = nil
 
 func Init(address string, port int, cert string, privateKey string, debugMode bool) error {
+
+	if cert == "" {
+		panic("Please provide the path to the HTTPS TLS certificate")
+	}
+
+	if privateKey == "" {
+		panic("Please provide the path to the HTTPS TLS private key")
+	}
+
 	if debugMode {
 		gin.SetMode(gin.DebugMode)
 	} else {

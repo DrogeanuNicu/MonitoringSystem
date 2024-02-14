@@ -2,6 +2,8 @@ package mqtt
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"log"
@@ -23,14 +25,26 @@ var debug bool
 var mqttLogger = log.New(os.Stdout, "[MQTT] ", log.Ldate|log.Ltime)
 var sendQueue sendQueueType
 
-func Init(ctxPtr *context.Context, numOfClients int, server string, port int,
-	topic string, sendQueueChSize int, isDebugOn bool) error {
+func Init(ctxPtr *context.Context, numOfClients int, server string, port int, topic string,
+	sendQueueChSize int, ca string, cert string, privateKey string, isDebugOn bool) error {
+
+	if ca == "" {
+		panic("Please provide the path to the MQTTS TLS certificate authority")
+	}
+
+	if cert == "" {
+		panic("Please provide the path to the MQTTS TLS certificate")
+	}
+
+	if privateKey == "" {
+		panic("Please provide the path to the MQTTS TLS private key")
+	}
 
 	debug = isDebugOn
 	sendQueue.ch = make(chan paho.Publish, sendQueueChSize)
 	sendQueue.stop = make(chan struct{})
 
-	u, err := url.Parse(fmt.Sprintf("mqtt://%s:%d", server, port))
+	u, err := url.Parse(fmt.Sprintf("mqtts://%s:%d", server, port))
 	if err != nil {
 		mqttLogger.Printf("The broker url, %s, is invalid!\n", u)
 		return err
@@ -38,7 +52,7 @@ func Init(ctxPtr *context.Context, numOfClients int, server string, port int,
 
 	for i := 0; i < numOfClients; i++ {
 		clientID := fmt.Sprintf("Client_%d", i)
-		go createClient(ctxPtr, u, topic, clientID)
+		go createClient(ctxPtr, u, topic, clientID, ca, cert, privateKey)
 	}
 
 	return nil
@@ -58,10 +72,33 @@ func DeInit() {
 	close(sendQueue.stop)
 }
 
-func createClient(ctxPtr *context.Context, u *url.URL, topic string, clientID string) {
+func createClient(ctxPtr *context.Context, u *url.URL, topic string,
+	clientID string, ca string, cert string, privateKey string) {
+
+	clientCert, err := tls.LoadX509KeyPair(cert, privateKey)
+	if err != nil {
+		mqttLogger.Printf("Error loading client certificate and private key: %s\n", err)
+		panic(err)
+	}
+
+	caCert, err := os.ReadFile(ca)
+	if err != nil {
+		mqttLogger.Printf("Error loading CA certificate: %s\n", err)
+		panic(err)
+	}
+
+	caCertPool := x509.NewCertPool()
+	if !caCertPool.AppendCertsFromPEM(caCert) {
+		mqttLogger.Println("Error appending CA certificate to pool.")
+		panic("Failed to append CA certificate to pool")
+	}
 
 	cliCfg := autopaho.ClientConfig{
-		ServerUrls:                    []*url.URL{u},
+		ServerUrls: []*url.URL{u},
+		TlsCfg: &tls.Config{
+			RootCAs:      caCertPool,
+			Certificates: []tls.Certificate{clientCert},
+		},
 		KeepAlive:                     20,
 		CleanStartOnInitialConnection: false,
 		SessionExpiryInterval:         60,

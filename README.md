@@ -117,7 +117,7 @@ mosquitto_sub -h localhost -p 8883 --cafile /etc/mosquitto/ca_certificates/ca.cr
 
 Eg for `mosquitto_pub`:
 ```
-mosquitto_pub -h drogeanunicusor.go.ro -p 8883 -t test -m "message" --cafile certs/mqtts/ca.crt
+mosquitto_pub -h drogeanunicusor.go.ro -p 8883 --cafile certs/mqtts/ca.crt -t test -m "message"
 ```
 
 More details can be found here: [Mosquitto TLS Guide](http://www.steves-internet-guide.com/mosquitto-tls/)

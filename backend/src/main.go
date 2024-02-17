@@ -30,7 +30,7 @@ func main() {
 	flag.StringVar(&webCert, "web-cert", "", "The HTTP TLS certificate.")
 	flag.StringVar(&webPrivateKey, "web-private-key", "", "The HTTP TLS key.")
 	flag.IntVar(&numClients, "mqtt-clients", 4, "The number of MQTT clients in the shared group")
-	flag.StringVar(&mqttBrokerAdress, "mqtt-address", "drogeanunicusor.go.ro", "The address of the MQTT broker")
+	flag.StringVar(&mqttBrokerAdress, "mqtt-address", "localhost", "The address of the MQTT broker")
 	flag.IntVar(&mqttBrokerPort, "mqtt-port", 8883, "The port of the MQTT broker")
 	flag.StringVar(&mqttTopic, "mqtt-topic", "$share/golang/#", "The shared MQTT topic")
 	flag.IntVar(&mqttSendChSize, "mqtt-channel-size", 100, "Size of channel containing pending MQTT messages to be sent")

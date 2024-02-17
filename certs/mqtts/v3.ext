@@ -2,5 +2,5 @@ subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always,issuer:always
 basicConstraints       = CA:TRUE
 keyUsage               = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment, keyAgreement, keyCertSign
-subjectAltName         = DNS:drogeanunicusor.go.ro, DNS:www.drogeanunicusor.go.ro
+subjectAltName         = DNS:drogeanunicusor.go.ro, DNS:www.drogeanunicusor.go.ro, DNS:localhost
 issuerAltName          = issuer:copy

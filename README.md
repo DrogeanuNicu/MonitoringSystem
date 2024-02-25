@@ -63,16 +63,21 @@ Optionally, copy the generated files to the repo.
 ## Nginx
 After the [HTTPS Certificates](#https) were generated, configure Nginx (modify the paths from the config file if necessary):
 ```
-cp configs/nginx/golang-server.conf /etc/nginx/sites-available/golang-server.conf
+sudo cp configs/nginx/golang-server.conf /etc/nginx/sites-available/golang-server.conf
 ```
 Create the link to mark the config as active:
 ```
-ln -s etc/nginx/sites-available/golang-server.conf etc/nginx/sites-enabled/golang-server
+sudo ln -s /etc/nginx/sites-available/golang-server.conf /etc/nginx/sites-enabled/golang-server
+```
+
+If the file `proxy_params` is not present in `/etc/nginx`, copy it from the repo.
+```
+sudo cp configs/nginx/proxy_params /etc/nginx/proxy_params
 ```
 
 Restart the service for the changes to take effect:
 ```
-systemctl restart nginx.service
+sudo systemctl restart nginx.service
 ```
 
 ## MQTTS
@@ -95,19 +100,19 @@ Be aware that the fields for the 2nd and 4th command cannot be exactly the same!
 ## Mosquitto
 After the [MQTTS Certificates](#mqtts) were generated, copy them to the necessary folders of the broker:
 ```
-cp certs/mqtts/ca.crt /etc/mosquitto/ca_certificates/ca.crt
-cp certs/mqtts/server.crt /etc/mosquitto/certs/server.crt
-cp certs/mqtts/server.key /etc/mosquitto/certs/server.key
+sudo cp certs/mqtts/ca.crt /etc/mosquitto/ca_certificates/ca.crt
+sudo cp certs/mqtts/server.crt /etc/mosquitto/certs/server.crt
+sudo cp certs/mqtts/server.key /etc/mosquitto/certs/server.key
 ```
 
 Configure the broker:
 ```
-cp configs/mosquitto/mosquitto.conf /etc/mosquitto/conf.d/mosquitto.conf
+sudo cp configs/mosquitto/mosquitto.conf /etc/mosquitto/conf.d/mosquitto.conf
 ```
 
 Restart the broker service for the changes to take effect.
 ```
-systemctl restart mosquitto.service
+sudo systemctl restart mosquitto.service
 ```
 
 Eg for `mosquitto_sub`:

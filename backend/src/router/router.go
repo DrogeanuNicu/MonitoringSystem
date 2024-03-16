@@ -38,7 +38,8 @@ func Init(address string, port int, cert string, privateKey string, debugMode bo
 
 	router.GET("/api/hello", HelloHandler)
 
-	err := router.RunTLS(fmt.Sprintf("%s:%d", address, port), cert, privateKey)
+	// err := router.RunTLS(fmt.Sprintf("%s:%d", address, port), cert, privateKey)
+	err := router.Run(fmt.Sprintf("%s:%d", address, port))
 	if err != nil {
 		return err
 	}

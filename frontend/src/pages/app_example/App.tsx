@@ -1,4 +1,4 @@
-import { Component, createSignal, createEffect ,onCleanup } from 'solid-js';
+import { Component, createSignal, createEffect, onCleanup } from 'solid-js';
 
 import styles from './app.module.css';
 

@@ -2,6 +2,7 @@ package router
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -37,6 +38,8 @@ func Init(address string, port int, cert string, privateKey string, debugMode bo
 	}))
 
 	router.GET("/api/hello", HelloHandler)
+	router.POST("/api/login", LoginHandler)
+	router.POST("/api/register", RegisterHandler)
 
 	// err := router.RunTLS(fmt.Sprintf("%s:%d", address, port), cert, privateKey)
 	err := router.Run(fmt.Sprintf("%s:%d", address, port))
@@ -48,5 +51,29 @@ func Init(address string, port int, cert string, privateKey string, debugMode bo
 }
 
 func HelloHandler(c *gin.Context) {
-	c.JSON(200, gin.H{"message": "Hello from the gin server!"})
+	c.JSON(http.StatusOK, gin.H{"message": "Hello from the gin server!"})
+}
+
+func LoginHandler(c *gin.Context) {
+	var requestData map[string]interface{}
+	if err := c.BindJSON(&requestData); err != nil {
+		fmt.Println("Error binding JSON:", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request"})
+		return
+	}
+
+	fmt.Println("Received login request:", requestData)
+	c.JSON(http.StatusOK, gin.H{"message": "Login request received"})
+}
+
+func RegisterHandler(c *gin.Context) {
+	var requestData map[string]interface{}
+	if err := c.BindJSON(&requestData); err != nil {
+		fmt.Println("Error binding JSON:", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request"})
+		return
+	}
+
+	fmt.Println("Received register request:", requestData)
+	c.JSON(http.StatusOK, gin.H{"message": "Register request received"})
 }

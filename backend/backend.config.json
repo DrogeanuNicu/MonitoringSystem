@@ -3,8 +3,8 @@
     "https": {
         "Address": "localhost",
         "Port": 5000,
-        "Cert": "/home/nicu/Repos/MonitoringSystem/certs/https/cert.pem",
-        "Key": "/home/nicu/Repos/MonitoringSystem/certs/https/key.pem"
+        "Cert": "../../certs/https/cert.pem",
+        "Key": "../../certs/https/key.pem"
     },
     "mqtts": {
         "NumClients": 4,
@@ -12,9 +12,9 @@
         "Port": 8883,
         "Topic": "$share/golang/#",
         "SendChSize": 100,
-        "Ca": "/home/nicu/Repos/MonitoringSystem/certs/mqtts/ca.crt",
-        "Cert": "/home/nicu/Repos/MonitoringSystem/certs/mqtts/server.crt",
-        "Key": "/home/nicu/Repos/MonitoringSystem/certs/mqtts/server.key"
+        "Ca": "../../certs/mqtts/ca.crt",
+        "Cert": "../../certs/mqtts/server.crt",
+        "Key": "../../certs/mqtts/server.key"
     },
     "database": {
         "Address": "localhost",

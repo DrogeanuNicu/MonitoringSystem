@@ -20,7 +20,7 @@ type Config struct {
 	Database db.DatabaseConfig  `json:"database"`
 }
 
-func getAbsPath(path *string) (string, error) {
+func getAbsPath(path *string) string {
 	var absPath string
 
 	if filepath.IsAbs(*path) {
@@ -28,23 +28,19 @@ func getAbsPath(path *string) (string, error) {
 	} else {
 		binaryDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 		if err != nil {
-			return "", err
+			return ""
 		}
 		absPath = filepath.Join(binaryDir, *path)
 	}
 
-	return absPath, nil
+	return absPath
 }
 
 func readConfig(path *string, config *Config) error {
 	var filePath string
 	var err error
 
-	filePath, err = getAbsPath(path)
-	if err != nil {
-		return err
-	}
-
+	filePath = getAbsPath(path)
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -55,6 +51,12 @@ func readConfig(path *string, config *Config) error {
 	if err != nil {
 		return err
 	}
+
+	config.Https.Cert = getAbsPath(&config.Https.Cert)
+	config.Https.Key = getAbsPath(&config.Https.Key)
+	config.Mqtts.Ca = getAbsPath(&config.Mqtts.Ca)
+	config.Mqtts.Cert = getAbsPath(&config.Mqtts.Cert)
+	config.Mqtts.Key = getAbsPath(&config.Mqtts.Key)
 
 	return nil
 }

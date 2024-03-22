@@ -102,7 +102,7 @@ func checkTable(table string) bool {
 }
 
 func createUsersTable() {
-	_, err := db.Exec("CREATE TABLE users (id SERIAL PRIMARY KEY, username VARCHAR(50) UNIQUE, firstname VARCHAR(50), lastname VARCHAR(50), email VARCHAR(50) UNIQUE, password VARCHAR(150))")
+	_, err := db.Exec("CREATE TABLE users (id SERIAL PRIMARY KEY, username VARCHAR(50) UNIQUE, email VARCHAR(50) UNIQUE, password VARCHAR(150))")
 	if err != nil {
 		panic(fmt.Sprintf("Error creating 'users' table: %s\n", err))
 	}

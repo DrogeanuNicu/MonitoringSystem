@@ -36,9 +36,12 @@ func Init(config *DatabaseConfig) {
 		panic(err)
 	}
 
-	err = checkTables()
-	if err != nil {
-		panic(err)
+	if !checkTable("users") {
+		createUsersTable()
+	}
+
+	if !checkTable("boards") {
+		createBoardsTable()
 	}
 
 	logger.Println("Database is ready!")
@@ -54,44 +57,30 @@ func DeInit() error {
 	return nil
 }
 
-func checkTables() error {
-	var err error
+func checkTable(table string) bool {
+	tableExists := false
+	command := fmt.Sprintf("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '%s')", table)
 
-	// Check if the "users" table exists
-	var userTableExists bool
-	err = db.QueryRow("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'users')").Scan(&userTableExists)
+	err := db.QueryRow(command).Scan(&tableExists)
 	if err != nil {
-		logger.Printf("Error checking if users table exists: %s\n", err)
-		return err
+		panic(fmt.Sprintf("Error checking if '%s' table exists:\n%s\n", table, err))
 	}
 
-	// If the "users" table does not exist, create it
-	if !userTableExists {
-		_, err = db.Exec("CREATE TABLE users (id SERIAL PRIMARY KEY, username VARCHAR(50) UNIQUE, firstname VARCHAR(50), lastname VARCHAR(50), email VARCHAR(50) UNIQUE, password VARCHAR(150))")
-		if err != nil {
-			logger.Printf("Error creating 'users' table: %s\n", err)
-			return err
-		}
-		fmt.Println("Successfully created 'users' table!")
-	}
+	return tableExists
+}
 
-	// Check if the "boards" table exists
-	var boardTableExists bool
-	err = db.QueryRow("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'boards')").Scan(&boardTableExists)
+func createUsersTable() {
+	_, err := db.Exec("CREATE TABLE users (id SERIAL PRIMARY KEY, username VARCHAR(50) UNIQUE, firstname VARCHAR(50), lastname VARCHAR(50), email VARCHAR(50) UNIQUE, password VARCHAR(150))")
 	if err != nil {
-		logger.Printf("Error checking if boards table exists: %s\n", err)
-		return err
+		panic(fmt.Sprintf("Error creating 'users' table: %s\n", err))
 	}
+	logger.Println("Created 'users' table")
+}
 
-	// If the "boards" table does not exist, create it
-	if !boardTableExists {
-		_, err = db.Exec("CREATE TABLE boards (id SERIAL PRIMARY KEY, name VARCHAR(20), user_id INTEGER REFERENCES users(id) ON DELETE CASCADE)")
-		if err != nil {
-			logger.Printf("Error creating boards table: %s\n", err)
-			return err
-		}
-		logger.Println("Created 'boards' table")
+func createBoardsTable() {
+	_, err := db.Exec("CREATE TABLE boards (id SERIAL PRIMARY KEY, name VARCHAR(20), user_id INTEGER REFERENCES users(id) ON DELETE CASCADE)")
+	if err != nil {
+		panic(fmt.Sprintf("Error creating 'boards' table: %s\n", err))
 	}
-
-	return nil
+	logger.Println("Created 'boards' table")
 }

@@ -8,18 +8,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type HttpsConfig struct {
+	Address string `json:"Address"`
+	Port    int    `json:"Port"`
+	Cert    string `json:"Cert"`
+	Key     string `json:"Key"`
+}
+
 var router *gin.Engine = nil
 
-func Init(address string, port int, cert string, privateKey string, debugMode bool) error {
-
-	if cert == "" {
-		panic("Please provide the path to the HTTPS TLS certificate")
-	}
-
-	if privateKey == "" {
-		panic("Please provide the path to the HTTPS TLS private key")
-	}
-
+func Init(config *HttpsConfig, debugMode bool) {
 	if debugMode {
 		gin.SetMode(gin.DebugMode)
 	} else {
@@ -41,13 +39,11 @@ func Init(address string, port int, cert string, privateKey string, debugMode bo
 	router.POST("/api/login", LoginHandler)
 	router.POST("/api/register", RegisterHandler)
 
-	// err := router.RunTLS(fmt.Sprintf("%s:%d", address, port), cert, privateKey)
-	err := router.Run(fmt.Sprintf("%s:%d", address, port))
+	err := router.RunTLS(fmt.Sprintf("%s:%d", config.Address, config.Port), config.Cert, config.Key)
+	// err := router.Run(fmt.Sprintf("%s:%d", config.Address, config.Port))
 	if err != nil {
-		return err
+		panic(err)
 	}
-
-	return nil
 }
 
 func HelloHandler(c *gin.Context) {

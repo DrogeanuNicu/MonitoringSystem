@@ -9,24 +9,53 @@ import (
 	_ "github.com/lib/pq"
 )
 
+type DatabaseConfig struct {
+	Address  string `json:"Address"`
+	Port     int    `json:"Port"`
+	User     string `json:"User"`
+	Password string `json:"Password"`
+	Name     string `json:"Name"`
+}
+
+var db *sql.DB
 var logger = log.New(os.Stdout, "[DB] ", log.Ldate|log.Ltime)
 
-func Init(dbHost string, dbPort int, dbUser string, dbPassword string, dbName string) error {
-	connectionString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		dbHost, dbPort, dbUser, dbPassword, dbName)
+func Init(config *DatabaseConfig) {
+	var err error
 
-	db, err := sql.Open("postgres", connectionString)
+	conStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		config.Address, config.Port, config.User, config.Password, config.Name)
+
+	db, err = sql.Open("postgres", conStr)
 	if err != nil {
-		return err
+		panic(err)
 	}
-	defer db.Close()
 
 	err = db.Ping()
 	if err != nil {
+		panic(err)
+	}
+
+	err = checkTables()
+	if err != nil {
+		panic(err)
+	}
+
+	logger.Println("Database is ready!")
+}
+
+func DeInit() error {
+	err := db.Close()
+
+	if err != nil {
 		return err
 	}
 
-	logger.Println("Connected to the PostgreSQL database!")
+	return nil
+}
+
+func checkTables() error {
+	var err error
 
 	// Check if the "users" table exists
 	var userTableExists bool
@@ -63,8 +92,6 @@ func Init(dbHost string, dbPort int, dbUser string, dbPassword string, dbName st
 		}
 		logger.Println("Created 'boards' table")
 	}
-
-	logger.Println("Database is ready!")
 
 	return nil
 }

@@ -13,13 +13,62 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type Config struct {
+// ================================================================================================
+//
+//	Global Types
+//
+// ================================================================================================
+
+// ================================================================================================
+//
+//	Local Types
+//
+// ================================================================================================
+type config struct {
 	Debug    bool               `json:"debug"`
 	Https    router.HttpsConfig `json:"https"`
 	Mqtts    mqtt.MqttsConfig   `json:"mqtts"`
 	Database db.DatabaseConfig  `json:"database"`
 }
 
+// ================================================================================================
+//
+//	Global Variables
+//
+// ================================================================================================
+
+// ================================================================================================
+//
+//	Local Variables
+//
+// ================================================================================================
+
+// ================================================================================================
+//
+//	Global Functions
+//
+// ================================================================================================
+func main() {
+	var config config
+	var configFile string
+
+	flag.StringVar(&configFile, "config", "../backend.config.json", "The config file")
+	flag.Parse()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	readConfig(&configFile, &config)
+	go db.Init(&config.Database)
+	go mqtt.Init(&ctx, &config.Mqtts, config.Debug)
+	router.Init(&config.Https, config.Debug)
+}
+
+// ================================================================================================
+//
+//	Local Functions
+//
+// ================================================================================================
 func getAbsPath(path *string) string {
 	var absPath string
 
@@ -36,7 +85,7 @@ func getAbsPath(path *string) string {
 	return absPath
 }
 
-func readConfig(path *string, config *Config) error {
+func readConfig(path *string, config *config) error {
 	var filePath string
 	var err error
 
@@ -59,22 +108,6 @@ func readConfig(path *string, config *Config) error {
 	config.Mqtts.Key = getAbsPath(&config.Mqtts.Key)
 
 	return nil
-}
-
-func main() {
-	var config Config
-	var configFile string
-
-	flag.StringVar(&configFile, "config", "../backend.config.json", "The config file")
-	flag.Parse()
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	readConfig(&configFile, &config)
-	go db.Init(&config.Database)
-	go mqtt.Init(&ctx, &config.Mqtts, config.Debug)
-	router.Init(&config.Https, config.Debug)
 }
 
 // time.Sleep(2 * time.Second)

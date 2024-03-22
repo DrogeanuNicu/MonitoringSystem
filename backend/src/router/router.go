@@ -8,6 +8,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// ================================================================================================
+//
+//	Global Types
+//
+// ================================================================================================
 type HttpsConfig struct {
 	Address string `json:"Address"`
 	Port    int    `json:"Port"`
@@ -15,8 +20,30 @@ type HttpsConfig struct {
 	Key     string `json:"Key"`
 }
 
+// ================================================================================================
+//
+//	Local Types
+//
+// ================================================================================================
+
+// ================================================================================================
+//
+//	Global Variables
+//
+// ================================================================================================
+
+// ================================================================================================
+//
+//	Local Variables
+//
+// ================================================================================================
 var router *gin.Engine = nil
 
+// ================================================================================================
+//
+//	Global Functions
+//
+// ================================================================================================
 func Init(config *HttpsConfig, debugMode bool) {
 	if debugMode {
 		gin.SetMode(gin.DebugMode)
@@ -35,9 +62,8 @@ func Init(config *HttpsConfig, debugMode bool) {
 		AllowCredentials: true,
 	}))
 
-	router.GET("/api/hello", HelloHandler)
-	router.POST("/api/login", LoginHandler)
-	router.POST("/api/register", RegisterHandler)
+	router.POST("/api/login", loginHandler)
+	router.POST("/api/register", registerHandler)
 
 	err := router.RunTLS(fmt.Sprintf("%s:%d", config.Address, config.Port), config.Cert, config.Key)
 	// err := router.Run(fmt.Sprintf("%s:%d", config.Address, config.Port))
@@ -46,11 +72,12 @@ func Init(config *HttpsConfig, debugMode bool) {
 	}
 }
 
-func HelloHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "Hello from the gin server!"})
-}
-
-func LoginHandler(c *gin.Context) {
+// ================================================================================================
+//
+//	Local Functions
+//
+// ================================================================================================
+func loginHandler(c *gin.Context) {
 	var requestData map[string]interface{}
 	if err := c.BindJSON(&requestData); err != nil {
 		fmt.Println("Error binding JSON:", err)
@@ -62,7 +89,7 @@ func LoginHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Login request received"})
 }
 
-func RegisterHandler(c *gin.Context) {
+func registerHandler(c *gin.Context) {
 	var requestData map[string]interface{}
 	if err := c.BindJSON(&requestData); err != nil {
 		fmt.Println("Error binding JSON:", err)

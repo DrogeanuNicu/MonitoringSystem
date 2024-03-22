@@ -15,6 +15,11 @@ import (
 	"github.com/eclipse/paho.golang/paho"
 )
 
+// ================================================================================================
+//
+//	Global Types
+//
+// ================================================================================================
 type MqttsConfig struct {
 	NumClients int    `json:"NumClients"`
 	Address    string `json:"Address"`
@@ -26,16 +31,37 @@ type MqttsConfig struct {
 	Key        string `json:"Key"`
 }
 
+// ================================================================================================
+//
+//	Local Types
+//
+// ================================================================================================
 type sendQueueType struct {
 	ch   chan paho.Publish
 	wg   sync.WaitGroup
 	stop chan struct{}
 }
 
+// ================================================================================================
+//
+//	Global Variables
+//
+// ================================================================================================
+
+// ================================================================================================
+//
+//	Local Variables
+//
+// ================================================================================================
 var debug bool
 var logger = log.New(os.Stdout, "[MQTT] ", log.Ldate|log.Ltime)
 var sendQueue sendQueueType
 
+// ================================================================================================
+//
+//	Global Functions
+//
+// ================================================================================================
 func Init(ctxPtr *context.Context, config *MqttsConfig, isDebugOn bool) {
 	debug = isDebugOn
 	sendQueue.ch = make(chan paho.Publish, config.SendChSize)
@@ -67,6 +93,11 @@ func DeInit() {
 	close(sendQueue.stop)
 }
 
+// ================================================================================================
+//
+//	Local Functions
+//
+// ================================================================================================
 func createClient(ctxPtr *context.Context, u *url.URL, topic string,
 	clientID string, ca string, cert string, privateKey string) {
 

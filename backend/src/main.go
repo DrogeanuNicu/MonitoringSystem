@@ -3,7 +3,7 @@ package main
 import (
 	"backend/src/db"
 	"backend/src/mqtt"
-	"backend/src/router"
+	"backend/src/web"
 	"context"
 	"encoding/json"
 	"flag"
@@ -25,10 +25,10 @@ import (
 //
 // ================================================================================================
 type config struct {
-	Debug    bool               `json:"debug"`
-	Https    router.HttpsConfig `json:"https"`
-	Mqtts    mqtt.MqttsConfig   `json:"mqtts"`
-	Database db.DatabaseConfig  `json:"database"`
+	Debug    bool              `json:"debug"`
+	Https    web.HttpsConfig   `json:"https"`
+	Mqtts    mqtt.MqttsConfig  `json:"mqtts"`
+	Database db.DatabaseConfig `json:"database"`
 }
 
 // ================================================================================================
@@ -61,7 +61,7 @@ func main() {
 	readConfig(&configFile, &config)
 	go db.Init(&config.Database)
 	go mqtt.Init(&ctx, &config.Mqtts, config.Debug)
-	router.Init(&config.Https, config.Debug)
+	web.Init(&config.Https, config.Debug)
 }
 
 // ================================================================================================

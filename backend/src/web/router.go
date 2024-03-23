@@ -1,8 +1,11 @@
-package router
+package web
 
 import (
+	"backend/src/db"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -37,7 +40,9 @@ type HttpsConfig struct {
 //	Local Variables
 //
 // ================================================================================================
+var debug bool = false
 var router *gin.Engine = nil
+var logger = log.New(os.Stdout, "[HTTPS] ", log.Ldate|log.Ltime)
 
 // ================================================================================================
 //
@@ -50,6 +55,7 @@ func Init(config *HttpsConfig, debugMode bool) {
 	} else {
 		gin.SetMode(gin.ReleaseMode)
 	}
+	debug = debugMode
 
 	router = gin.New()
 	router.Use(gin.Logger())
@@ -64,9 +70,10 @@ func Init(config *HttpsConfig, debugMode bool) {
 
 	router.POST("/api/login", loginHandler)
 	router.POST("/api/register", registerHandler)
+	router.GET("/api/home/:username", authMiddleware(), homeHandler)
 
-	err := router.RunTLS(fmt.Sprintf("%s:%d", config.Address, config.Port), config.Cert, config.Key)
-	// err := router.Run(fmt.Sprintf("%s:%d", config.Address, config.Port))
+	// err := router.RunTLS(fmt.Sprintf("%s:%d", config.Address, config.Port), config.Cert, config.Key)
+	err := router.Run(fmt.Sprintf("%s:%d", config.Address, config.Port))
 	if err != nil {
 		panic(err)
 	}
@@ -85,8 +92,27 @@ func loginHandler(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("Received login request:", requestData)
-	c.JSON(http.StatusOK, gin.H{"message": "Login request received"})
+	if debug {
+		logger.Println("Received login request:", requestData)
+	}
+
+	username, _ := requestData["username"].(string)
+	password, _ := requestData["password"].(string)
+
+	userExists, err := db.Login(username, password)
+	if err != nil {
+		logger.Println(err)
+		c.JSON(http.StatusOK, gin.H{"error": "Could not communicate with the database!"})
+		return
+	}
+
+	if !userExists {
+		c.JSON(http.StatusOK, gin.H{"error": "Incorrect username or password!"})
+		return
+	}
+
+	token := generateJwtToken(username)
+	c.JSON(http.StatusOK, gin.H{"token": token})
 }
 
 func registerHandler(c *gin.Context) {
@@ -97,6 +123,26 @@ func registerHandler(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("Received register request:", requestData)
-	c.JSON(http.StatusOK, gin.H{"message": "Register request received"})
+	if debug {
+		logger.Println("Received register request:", requestData)
+	}
+
+	username, _ := requestData["username"].(string)
+	password, _ := requestData["password"].(string)
+	email, _ := requestData["email"].(string)
+
+	responseMsg, err := db.Register(username, email, password)
+	if err != nil {
+		logger.Println(err)
+		c.JSON(http.StatusOK, gin.H{"error": responseMsg})
+		return
+	}
+
+	token := generateJwtToken(username)
+	c.JSON(http.StatusOK, gin.H{"token": token})
+}
+
+func homeHandler(c *gin.Context) {
+	username := c.Param("username")
+	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("protected for user %s", username)})
 }

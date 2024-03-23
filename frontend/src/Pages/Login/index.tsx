@@ -5,6 +5,7 @@ import FormInputField from "../../Components/FormInputField"
 import FormErrorMessage from '../../Components/FromErrorMessage';
 
 import "../../Styles/index.css";
+import { storeToken } from '../../Api/Fetch';
 
 const Login: Component = () => {
   const [username, setUsername] = createSignal('');
@@ -13,7 +14,6 @@ const Login: Component = () => {
   const [retypedPassword, setRetypedPassword] = createSignal('');
   const [isRegistering, setIsRegistering] = createSignal(false);
   const [errorMessage, setErrorMessage] = createSignal('');
-
   const navigate = useNavigate();
 
   const handleLoginButtonClick = () => {
@@ -24,7 +24,7 @@ const Login: Component = () => {
     setIsRegistering(true);
   };
 
-  const handleFormSubmit = async (e) => {
+  const handleFormSubmit = async (e: Event) => {
     e.preventDefault();
     let url = '';
     const formData = {
@@ -63,10 +63,10 @@ const Login: Component = () => {
       else {
         // Request was successful, clear the error message
         setErrorMessage('');
-        console.log('Response Data:', responseData);
+        storeToken(formData.username, responseData.token)
         navigate(`/home/${formData.username}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       setErrorMessage(error.message);
     }
   };

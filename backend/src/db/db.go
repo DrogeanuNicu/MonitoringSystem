@@ -39,8 +39,13 @@ type DatabaseConfig struct {
 //	Local Variables
 //
 // ================================================================================================
+const maxUsernameLen = 30
+const maxEmailLen = 30
+const maxPasswordLen = 30
+const maxBoardNameLen = 20
+
 var db *sql.DB
-var logger = log.New(os.Stdout, "[DB] ", log.Ldate|log.Ltime)
+var logger = log.New(os.Stdout, "[DB   ] ", log.Ldate|log.Ltime)
 
 // ================================================================================================
 //
@@ -74,6 +79,28 @@ func Init(config *DatabaseConfig) {
 	logger.Println("Database is ready!")
 }
 
+func Login(username string, password string) (bool, error) {
+	var found bool
+	err := db.QueryRow("SELECT EXISTS (SELECT 1 FROM users WHERE username = $1 AND password = $2)", username, password).Scan(&found)
+	if err != nil {
+		return false, err
+	}
+
+	return found, nil
+}
+
+func Register(username string, email string, password string) (string, error) {
+	var returnMsg string = ""
+
+	_, err := db.Exec("INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", username, email, password)
+	if err != nil {
+		returnMsg = fmt.Sprintf("The user '%s' already exists!", username)
+		return returnMsg, err
+	}
+
+	return returnMsg, err
+}
+
 func DeInit() error {
 	err := db.Close()
 
@@ -102,7 +129,8 @@ func checkTable(table string) bool {
 }
 
 func createUsersTable() {
-	_, err := db.Exec("CREATE TABLE users (id SERIAL PRIMARY KEY, username VARCHAR(50) UNIQUE, email VARCHAR(50) UNIQUE, password VARCHAR(150))")
+	command := fmt.Sprintf("CREATE TABLE users (id SERIAL PRIMARY KEY, username VARCHAR(%d) UNIQUE, email VARCHAR(%d) UNIQUE, password VARCHAR(%d))", maxUsernameLen, maxEmailLen, maxPasswordLen)
+	_, err := db.Exec(command)
 	if err != nil {
 		panic(fmt.Sprintf("Error creating 'users' table: %s\n", err))
 	}
@@ -110,7 +138,8 @@ func createUsersTable() {
 }
 
 func createBoardsTable() {
-	_, err := db.Exec("CREATE TABLE boards (id SERIAL PRIMARY KEY, name VARCHAR(20), user_id INTEGER REFERENCES users(id) ON DELETE CASCADE)")
+	command := fmt.Sprintf("CREATE TABLE boards (id SERIAL PRIMARY KEY, name VARCHAR(%d), user_id INTEGER REFERENCES users(id) ON DELETE CASCADE)", maxBoardNameLen)
+	_, err := db.Exec(command)
 	if err != nil {
 		panic(fmt.Sprintf("Error creating 'boards' table: %s\n", err))
 	}

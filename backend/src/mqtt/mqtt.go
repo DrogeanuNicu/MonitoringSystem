@@ -53,8 +53,8 @@ type sendQueueType struct {
 //	Local Variables
 //
 // ================================================================================================
-var debug bool
-var logger = log.New(os.Stdout, "[MQTT] ", log.Ldate|log.Ltime)
+var debug bool = false
+var logger = log.New(os.Stdout, "[MQTTS] ", log.Ldate|log.Ltime)
 var sendQueue sendQueueType
 
 // ================================================================================================

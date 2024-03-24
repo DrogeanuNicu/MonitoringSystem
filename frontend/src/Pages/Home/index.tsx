@@ -1,13 +1,19 @@
-import { Component, onMount } from 'solid-js';
+import { Component, onMount, createSignal } from 'solid-js';
 import { useParams } from "@solidjs/router";
 import { useNavigate } from "@solidjs/router";
 
+
+import TopMenu from '../../Components/TopMenu/TopMenu';
+
 import "../../Styles/index.css";
-import { authorizedFetch, storeToken } from '../../Api/Fetch';
+import { authorizedFetch } from '../../Api/Fetch';
+
 
 const Home: Component = () => {
   const params = useParams();
   const navigate = useNavigate();
+
+  const [showDropdown, setShowDropdown] = createSignal(false);
 
   const fetchData = async () => {
     try {
@@ -30,11 +36,23 @@ const Home: Component = () => {
 
   onMount(fetchData);
 
+  const showMenu = () => {
+    setShowDropdown(true);
+  };
+
+  const hideMenu = () => {
+    setShowDropdown(false);
+  };
+
   return (
     <div>
-      <h1>Welcome, {params.username}!</h1>
+      <TopMenu />
+      <div class="container mx-auto mt-8">
+        <h1>Welcome, {params.username}!</h1>
+      </div>
     </div>
   );
+
 };
 
 export default Home;

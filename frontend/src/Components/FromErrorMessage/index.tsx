@@ -1,7 +1,7 @@
 import { createSignal } from 'solid-js';
 
 const FormErrorMessage = (props) => {
-  const [error, setError] = props.bind || createSignal('');
+  const [error, setError] = props.errorSignalBind || createSignal('');
 
   return (
     <div>

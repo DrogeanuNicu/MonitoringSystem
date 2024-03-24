@@ -17,10 +17,12 @@ const Login: Component = () => {
   const navigate = useNavigate();
 
   const handleLoginButtonClick = () => {
+    setErrorMessage('')
     setIsRegistering(false);
   };
 
   const handleRegisterButtonClick = () => {
+    setErrorMessage('')
     setIsRegistering(true);
   };
 
@@ -43,7 +45,7 @@ const Login: Component = () => {
       else {
         url = '/api/login';
       }
-      
+
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -123,7 +125,7 @@ const Login: Component = () => {
                 bind={[retypedPassword, setRetypedPassword]}
               />
             )}
-            <FormErrorMessage bind={[errorMessage, setErrorMessage]} />
+            <FormErrorMessage errorSignalBind={[errorMessage, setErrorMessage]} />
             <button type="submit" class="submit-button">
               {isRegistering() ? 'Register' : 'Login'}
             </button>

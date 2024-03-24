@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .main-color {
+    @apply bg-cyan-600;
+  }
+
+  .inactive-color {
+    @apply bg-gray-300;
+  }
+
+  .background-color {
+    @apply bg-gray-100
+  }
+}
 
 @layer components {
   .input-field {
@@ -9,40 +22,22 @@
   }
 
   .submit-button {
-    @apply block mx-auto bg-blue-500 text-white px-4 py-2 rounded-md mt-4;
+    @apply block mx-auto main-color text-white px-4 py-2 rounded-md mt-4;
   }
 
   .active-button {
-    @apply w-1/2 px-4 py-2 bg-blue-500 text-white;
+    @apply w-1/2 px-4 py-2 main-color text-white;
   }
 
   .inactive-button {
-    @apply w-1/2 px-4 py-2 bg-gray-300 text-black;
+    @apply w-1/2 px-4 py-2 inactive-color text-black;
   }
 }
 
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: #edeef1;
+  @apply m-0 font-sans antialiased background-color;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-
-.header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  @apply font-mono;
 }

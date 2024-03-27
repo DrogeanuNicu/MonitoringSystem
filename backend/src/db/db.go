@@ -1,6 +1,7 @@
 package db
 
 import (
+	"backend/src/dashboard"
 	"database/sql"
 	"fmt"
 	"log"
@@ -42,7 +43,7 @@ type DatabaseConfig struct {
 const maxUsernameLen = 30
 const maxEmailLen = 30
 const maxPasswordLen = 30
-const maxBoardNameLen = 20
+const maxBoardNameLen = 40
 
 var db *sql.DB
 var logger = log.New(os.Stdout, "[DB   ] ", log.Ldate|log.Ltime)
@@ -99,6 +100,51 @@ func Register(username string, email string, password string) (string, error) {
 	}
 
 	return returnMsg, err
+}
+
+func GetBoards(username string) ([]string, error) {
+	var boards []string
+
+	query := `
+        SELECT b.name
+        FROM boards b
+        INNER JOIN users u ON b.user_id = u.id
+        WHERE u.username = $1
+    `
+	rows, err := db.Query(query, username)
+	if err != nil {
+		logger.Printf("error querying board names: %v", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var boardName string
+		if err := rows.Scan(&boardName); err != nil {
+			logger.Printf("error scanning board name row: %v", err)
+			return nil, err
+		}
+		boards = append(boards, boardName)
+	}
+	if err := rows.Err(); err != nil {
+		logger.Printf("error iterating over board name rows: %v", err)
+		return nil, err
+	}
+
+	return boards, nil
+}
+
+func AddBoard(username string, boardData *dashboard.BoardData) error {
+	command := `
+	INSERT INTO boards (name, user_id)
+	SELECT $1, id FROM users WHERE username = $2
+`
+	_, err := db.Exec(command, boardData.Board, username)
+	if err != nil {
+		return fmt.Errorf("error adding %s to 'boards' table: %w", boardData.Board, err)
+	}
+
+	return nil
 }
 
 func DeInit() error {

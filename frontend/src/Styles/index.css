@@ -4,15 +4,19 @@
 
 @layer utilities {
   .main-color {
-    @apply bg-cyan-600;
+    @apply bg-teal-600;
   }
-
+  
   .inactive-color {
     @apply bg-gray-300;
   }
+  
+  .text-main-color {
+    @apply text-teal-600;
+  }
 
-  .background-color {
-    @apply bg-gray-100
+  .icon-main-color {
+    color: rgb(15 118 110);;
   }
 }
 
@@ -32,10 +36,6 @@
   .inactive-button {
     @apply w-1/2 px-4 py-2 inactive-color text-black;
   }
-}
-
-body {
-  @apply m-0 font-sans antialiased background-color;
 }
 
 code {

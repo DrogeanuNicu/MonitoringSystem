@@ -1,6 +1,7 @@
 package web
 
 import (
+	"backend/src/dashboard"
 	"backend/src/db"
 	"fmt"
 	"log"
@@ -70,7 +71,8 @@ func Init(config *HttpsConfig, debugMode bool) {
 
 	router.POST("/api/login", loginHandler)
 	router.POST("/api/register", registerHandler)
-	router.GET("/api/home/:username", authMiddleware(), homeHandler)
+	router.GET("/api/home/:username/boards", authMiddleware(), getBoardsHandler)
+	router.POST("/api/home/:username/add/:board", authMiddleware(), addBoardHandler)
 
 	// err := router.RunTLS(fmt.Sprintf("%s:%d", config.Address, config.Port), config.Cert, config.Key)
 	err := router.Run(fmt.Sprintf("%s:%d", config.Address, config.Port))
@@ -142,7 +144,41 @@ func registerHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"token": token})
 }
 
-func homeHandler(c *gin.Context) {
+func getBoardsHandler(c *gin.Context) {
 	username := c.Param("username")
-	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("protected for user %s", username)})
+	boards, err := db.GetBoards(username)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"error": "Could not communicate with the database!"})
+		return
+	}
+
+	if len(boards) == 0 {
+		c.JSON(http.StatusOK, gin.H{"boards": []string{}})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"boards": boards})
+}
+
+func addBoardHandler(c *gin.Context) {
+	username := c.Param("username")
+	var requestData map[string]interface{}
+	var boardData dashboard.BoardData
+
+	if err := c.BindJSON(&requestData); err != nil {
+		fmt.Println("Error binding JSON:", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request"})
+		return
+	}
+
+	boardData.Board = requestData["board"].(string)
+
+	err := db.AddBoard(username, &boardData)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Could not add the %s board into the database!", boardData.Board)})
+		return
+	}
+
+	/* TODO: Analyze if it makes sense to query the DB one more time in order to return the full list of the boards => solves sync problem between different terminals */
+	c.JSON(http.StatusOK, gin.H{})
 }

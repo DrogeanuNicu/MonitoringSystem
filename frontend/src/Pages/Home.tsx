@@ -9,7 +9,7 @@ import TopMenu from '../Components/TopMenu';
 import BoardListItem from '../Components/BoardListItem';
 import ConfigMenu from '../Components/ConfigMenu';
 
-import { BoardData } from '../Api/Board';
+import { BoardData, editBoardApi, deleteBoardApi } from '../Api/Board';
 
 import "../Styles/index.css";
 import { authorizedFetch } from '../Api/Fetch';
@@ -62,7 +62,7 @@ const Home: Component = () => {
 
     const responseData = await response.json();
     if (responseData.error !== undefined) {
-      throw new Error (responseData.error);
+      throw new Error(responseData.error);
     }
 
     setBoardList(prevList => [...prevList, newData.board]);
@@ -73,32 +73,33 @@ const Home: Component = () => {
     setIsConfigMenuOn(true);
   }
 
-  const editBoard = (newData: BoardData, oldBoardName: string) => {
+  const editBoard = async (newData: BoardData, oldBoardName: string) => {
     if (newData.board !== oldBoardName) {
       if (boardList().includes(newData.board)) {
         throw new Error("The name of the board must be unique!")
       }
-      setBoardList(prevList => prevList.map(board => {
-        if (board === oldBoardName) {
-          return newData.board;
-        }
-        return board;
-      }));
     }
-    /* TODO: Update the data on the server */
+    await editBoardApi(params.username, newData, oldBoardName);
+    console.log("dupa ce face editboardapi");
+    setBoardList(prevList => prevList.map(board => {
+      if (board === oldBoardName) {
+        return newData.board;
+      }
+      return board;
+    }));
+    setBoardList(prevList => prevList.map(board => board === oldBoardName ? newData.board : board));
   };
 
-  const deleteBoard = (boardToBeDeleted: string) => {
-
-    /* TODO: Delete the board from the database */
+  const deleteBoard = async (boardToBeDeleted: string) => {
+    await deleteBoardApi(params.username, boardToBeDeleted);
     setBoardList(prevBoardList => prevBoardList.filter(board => board !== boardToBeDeleted));
   };
 
-  const configMenuCallback = (newData: BoardData, oldBoardName?: string | undefined) => {
+  const configMenuCallback = async (newData: BoardData, oldBoardName?: string | undefined) => {
     if (oldBoardName !== undefined) {
-      editBoard(newData, oldBoardName);
+      await editBoard(newData, oldBoardName);
     } else {
-      addBoard(newData);
+      await addBoard(newData);
     }
   }
 

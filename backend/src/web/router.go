@@ -72,7 +72,10 @@ func Init(config *HttpsConfig, debugMode bool) {
 	router.POST("/api/login", loginHandler)
 	router.POST("/api/register", registerHandler)
 	router.GET("/api/home/:username/boards", authMiddleware(), getBoardsHandler)
+	/* TODO: Investigate if it is necessary for the route to contain :board as it already is part of the body */
 	router.POST("/api/home/:username/add/:board", authMiddleware(), addBoardHandler)
+	router.POST("/api/home/:username/edit/:board", authMiddleware(), editBoardHandler)
+	router.POST("/api/home/:username/delete/:board", authMiddleware(), deleteBoardHandler)
 
 	// err := router.RunTLS(fmt.Sprintf("%s:%d", config.Address, config.Port), config.Cert, config.Key)
 	err := router.Run(fmt.Sprintf("%s:%d", config.Address, config.Port))
@@ -90,7 +93,7 @@ func loginHandler(c *gin.Context) {
 	var requestData map[string]interface{}
 	if err := c.BindJSON(&requestData); err != nil {
 		fmt.Println("Error binding JSON:", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request!"})
 		return
 	}
 
@@ -121,7 +124,7 @@ func registerHandler(c *gin.Context) {
 	var requestData map[string]interface{}
 	if err := c.BindJSON(&requestData); err != nil {
 		fmt.Println("Error binding JSON:", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request!"})
 		return
 	}
 
@@ -148,6 +151,7 @@ func getBoardsHandler(c *gin.Context) {
 	username := c.Param("username")
 	boards, err := db.GetBoards(username)
 	if err != nil {
+		logger.Println(err)
 		c.JSON(http.StatusOK, gin.H{"error": "Could not communicate with the database!"})
 		return
 	}
@@ -162,23 +166,53 @@ func getBoardsHandler(c *gin.Context) {
 
 func addBoardHandler(c *gin.Context) {
 	username := c.Param("username")
-	var requestData map[string]interface{}
 	var boardData dashboard.BoardData
 
-	if err := c.BindJSON(&requestData); err != nil {
-		fmt.Println("Error binding JSON:", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request"})
-		return
-	}
-
-	boardData.Board = requestData["board"].(string)
+	parseBoardData(c, &boardData)
 
 	err := db.AddBoard(username, &boardData)
 	if err != nil {
+		logger.Println(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Could not add the %s board into the database!", boardData.Board)})
 		return
 	}
 
 	/* TODO: Analyze if it makes sense to query the DB one more time in order to return the full list of the boards => solves sync problem between different terminals */
+	c.JSON(http.StatusOK, gin.H{})
+}
+
+func editBoardHandler(c *gin.Context) {
+	username := c.Param("username")
+	oldBoard := c.Param("board")
+	var boardData dashboard.BoardData
+
+	err := parseBoardData(c, &boardData)
+	if err != nil {
+		logger.Println(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request!"})
+		return
+	}
+
+	err = db.EditBoard(username, &boardData, oldBoard)
+	if err != nil {
+		logger.Println(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Could not edit the %s board into the database!", boardData.Board)})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{})
+}
+
+func deleteBoardHandler(c *gin.Context) {
+	username := c.Param("username")
+	board := c.Param("board")
+
+	err := db.DeleteBoard(username, board)
+	if err != nil {
+		logger.Println(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Could not delete the %s board from the database!", board)})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{})
 }

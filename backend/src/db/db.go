@@ -113,7 +113,7 @@ func GetBoards(username string) ([]string, error) {
     `
 	rows, err := db.Query(query, username)
 	if err != nil {
-		logger.Printf("error querying board names: %v", err)
+		logger.Printf("Error querying board names: %v", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -121,13 +121,13 @@ func GetBoards(username string) ([]string, error) {
 	for rows.Next() {
 		var boardName string
 		if err := rows.Scan(&boardName); err != nil {
-			logger.Printf("error scanning board name row: %v", err)
+			logger.Printf("Error scanning board name row: %v", err)
 			return nil, err
 		}
 		boards = append(boards, boardName)
 	}
 	if err := rows.Err(); err != nil {
-		logger.Printf("error iterating over board name rows: %v", err)
+		logger.Printf("Error iterating over board name rows: %v", err)
 		return nil, err
 	}
 
@@ -136,12 +136,44 @@ func GetBoards(username string) ([]string, error) {
 
 func AddBoard(username string, boardData *dashboard.BoardData) error {
 	command := `
-	INSERT INTO boards (name, user_id)
-	SELECT $1, id FROM users WHERE username = $2
-`
+		INSERT INTO boards (name, user_id)
+		SELECT $1, id FROM users WHERE username = $2
+	`
 	_, err := db.Exec(command, boardData.Board, username)
 	if err != nil {
-		return fmt.Errorf("error adding %s to 'boards' table: %w", boardData.Board, err)
+		logger.Println(err)
+		return err
+	}
+
+	return nil
+}
+
+func EditBoard(username string, boardData *dashboard.BoardData, oldBoardName string) error {
+	command := `
+		UPDATE boards AS b
+		SET name = $1
+		FROM users AS u
+		WHERE b.user_id = u.id AND b.name = $2 AND u.username = $3
+	`
+	_, err := db.Exec(command, boardData.Board, oldBoardName, username)
+	if err != nil {
+		logger.Println(err)
+		return err
+	}
+
+	return nil
+}
+
+func DeleteBoard(username, boardName string) error {
+	command := `
+        DELETE FROM boards
+        WHERE name = $1
+		AND user_id = (SELECT id FROM users WHERE username = $2)
+    `
+	_, err := db.Exec(command, boardName, username)
+	if err != nil {
+		logger.Println(err)
+		return err
 	}
 
 	return nil

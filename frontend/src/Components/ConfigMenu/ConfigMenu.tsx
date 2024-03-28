@@ -12,7 +12,7 @@ interface ConfigMenuProps {
   data: BoardData | undefined;
 
   hideBind: [() => boolean, (newValue: boolean) => void];
-  callbackFunction: (newData: BoardData, oldBoardName?: string | undefined) => void;
+  callbackFunction: (newData: BoardData, oldBoardName?: string | undefined) => Promise<void>;
 }
 
 const ConfigMenu: Component<ConfigMenuProps> = (props) => {
@@ -25,14 +25,14 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
     event.stopPropagation();
   };
 
-  const handleSubmit = (event: Event) => {
+  const handleSubmit = async (event: Event) => {
     event.preventDefault();
     let newData: BoardData = {
       board: formBoardName(),
     }
 
     try {
-      props.callbackFunction(newData, (props.data !== undefined) ? props.data.board : undefined);
+      await props.callbackFunction(newData, (props.data !== undefined) ? props.data.board : undefined);
       setIsOn(false);
     }
     catch (error: any) {

@@ -13,10 +13,12 @@ import { BoardData, editBoardApi, deleteBoardApi } from '../Api/Board';
 
 import "../Styles/index.css";
 import { authorizedFetch } from '../Api/Fetch';
+import DeleteBoardDialog from '../Components/AlarmDialog';
 
 const Home: Component = () => {
   const params = useParams();
   const navigate = useNavigate();
+  let [deleteDialogBoard, setDeleteDialogBoard] = createSignal('');
   let [isConfigMenuOn, setIsConfigMenuOn] = createSignal(false);
   let [configMenuData, setConfigMenuData] = createSignal<BoardData>();
   let [boardList, setBoardList] = createSignal<string[]>([]);
@@ -80,7 +82,6 @@ const Home: Component = () => {
       }
     }
     await editBoardApi(params.username, newData, oldBoardName);
-    console.log("dupa ce face editboardapi");
     setBoardList(prevList => prevList.map(board => {
       if (board === oldBoardName) {
         return newData.board;
@@ -89,6 +90,10 @@ const Home: Component = () => {
     }));
     setBoardList(prevList => prevList.map(board => board === oldBoardName ? newData.board : board));
   };
+
+  const prepareDeleteBoard = (boardToBeDeleted: string) => {
+    setDeleteDialogBoard(boardToBeDeleted);
+  }
 
   const deleteBoard = async (boardToBeDeleted: string) => {
     await deleteBoardApi(params.username, boardToBeDeleted);
@@ -109,7 +114,11 @@ const Home: Component = () => {
     <div>
       {
         isConfigMenuOn() &&
-        <ConfigMenu data={configMenuData()} callbackFunction={configMenuCallback} hideBind={[isConfigMenuOn, setIsConfigMenuOn]}></ConfigMenu>
+        <ConfigMenu
+          data={configMenuData()}
+          callbackFunction={configMenuCallback}
+          hideBind={[isConfigMenuOn, setIsConfigMenuOn]}>
+        </ConfigMenu>
       }
       <TopMenu username={params.username} />
       <div class="container mx-auto justify-between items-center">
@@ -121,7 +130,10 @@ const Home: Component = () => {
           <List>
             {boardList().map((board, _) => (
               <>
-                <BoardListItem board={board} editHandler={prepareEditBoard} deleteHandler={deleteBoard} />
+                <BoardListItem
+                  board={board}
+                  editHandler={prepareEditBoard}
+                  deleteHandler={prepareDeleteBoard} />
                 <Divider />
               </>
             ))}
@@ -140,6 +152,10 @@ const Home: Component = () => {
           </IconButton>
         </div>
       </div>
+      {
+        deleteDialogBoard() &&
+        <DeleteBoardDialog showBind={[deleteDialogBoard, setDeleteDialogBoard]} callbackFunction={deleteBoard}/>
+      }
     </div>
   );
 

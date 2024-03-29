@@ -9,7 +9,7 @@ import TopMenu from '../Components/TopMenu';
 import BoardListItem from '../Components/BoardListItem';
 import ConfigMenu from '../Components/ConfigMenu';
 
-import { BoardData, editBoardApi, deleteBoardApi } from '../Api/Board';
+import { BoardData, addBoardApi, editBoardApi, deleteBoardApi, downloadBoardDataApi, otaUpdateApi } from '../Api/Board';
 
 import "../Styles/index.css";
 import { authorizedFetch } from '../Api/Fetch';
@@ -53,19 +53,7 @@ const Home: Component = () => {
       throw new Error("The name of the board must be unique!")
     }
 
-    const response = await authorizedFetch(params.username, `/api/home/${params.username}/add/${newData.board}`, {
-      method: 'POST',
-      body: JSON.stringify(newData),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to communicate with the server! Status: ${response.status}`);
-    }
-
-    const responseData = await response.json();
-    if (responseData.error !== undefined) {
-      throw new Error(responseData.error);
-    }
+    await addBoardApi(params.username, newData);
 
     setBoardList(prevList => [...prevList, newData.board]);
   };
@@ -90,6 +78,24 @@ const Home: Component = () => {
     }));
     setBoardList(prevList => prevList.map(board => board === oldBoardName ? newData.board : board));
   };
+
+  const prepareDownloadBoardData = (board: string) => {
+    try {
+      downloadBoardDataApi(params.username, board);
+    } catch (error: any) {
+      /* TODO: Visual response in case of failure */
+      console.log(error);
+    }
+  }
+
+  const prepareOtaUpdate = (board: string) => {
+    /* TODO: This should trigger the OTA menu component, the call to the API is performed from there */
+    try {
+      otaUpdateApi(params.username, board);
+    } catch (error: any) {
+      console.log(error);
+    }
+  }
 
   const prepareDeleteBoard = (boardToBeDeleted: string) => {
     setDeleteDialogBoard(boardToBeDeleted);
@@ -133,8 +139,10 @@ const Home: Component = () => {
               <>
                 <BoardListItem
                   board={board}
-                  editHandler={prepareEditBoard}
-                  deleteHandler={prepareDeleteBoard} />
+                  editCallback={prepareEditBoard}
+                  otaCallback={prepareOtaUpdate}
+                  downloadCallback={prepareDownloadBoardData}
+                  deleteCallback={prepareDeleteBoard} />
                 <Divider />
               </>
             ))}

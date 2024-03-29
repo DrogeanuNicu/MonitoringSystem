@@ -1,13 +1,16 @@
 import { createSignal } from 'solid-js';
 
-import { HiSolidPencil, HiOutlineTrash } from "solid-icons/hi";
+import { HiSolidPencil, HiOutlineTrash, HiSolidArrowDownTray, HiSolidArrowUpTray } from "solid-icons/hi";
 import { IoBarChart } from "solid-icons/io";
 import { IconButton, ListItem, ListItemButton, ListItemIcon, ListItemText } from '@suid/material';
+import { downloadBoardDataApi } from '../../Api/Board';
 
 interface BoardListItemProps {
   board: string;
-  deleteHandler: (boardToBeDeleted: string) => void;
-  editHandler: (board: string) => void;
+  editCallback: (board: string) => void;
+  otaCallback: (board: string) => void;
+  deleteCallback: (boardToBeDeleted: string) => void;
+  downloadCallback: (board: string) => void;
 }
 
 const BoardListItem = (props: BoardListItemProps) => {
@@ -15,10 +18,6 @@ const BoardListItem = (props: BoardListItemProps) => {
   const goToDashboard = () => {
     console.log("Go to Dashboard " + props.board);
   };
-
-  const editBoard = () => {
-    props.editHandler(props.board);
-  }
 
   return (
     <ListItem disablePadding class="flex items-center">
@@ -29,21 +28,43 @@ const BoardListItem = (props: BoardListItemProps) => {
         </ListItemIcon>
         <ListItemText primary={props.board} class="flex-grow" />
       </ListItemButton>
+
       <IconButton
         id="add-board-button"
         color="inherit"
         component="span"
         aria-haspopup="true"
-        onClick={editBoard}
+        onClick={() => props.editCallback(props.board)}
       >
         <HiSolidPencil size={32} class="icon-main-color" />
       </IconButton>
+
+      <IconButton
+        id="ota-board-button"
+        color="inherit"
+        component="span"
+        aria-haspopup="true"
+        onClick={() => props.otaCallback(props.board)}
+      >
+        <HiSolidArrowUpTray size={32} class="icon-main-color" />
+      </IconButton>
+
+      <IconButton
+        id="download-board-data-button"
+        color="inherit"
+        component="span"
+        aria-haspopup="true"
+        onClick={() => props.downloadCallback(props.board)}
+      >
+        <HiSolidArrowDownTray size={32} class="icon-main-color" />
+      </IconButton>
+
       <IconButton
         id="add-board-button"
         color="inherit"
         component="span"
         aria-haspopup="true"
-        onClick={() => props.deleteHandler(props.board)}
+        onClick={() => props.deleteCallback(props.board)}
       >
         <HiOutlineTrash size={32} class="icon-main-color" />
       </IconButton>

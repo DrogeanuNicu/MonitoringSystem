@@ -18,10 +18,10 @@ import DeleteBoardDialog from '../Components/AlarmDialog';
 const Home: Component = () => {
   const params = useParams();
   const navigate = useNavigate();
-  let [deleteDialogBoard, setDeleteDialogBoard] = createSignal('');
-  let [isConfigMenuOn, setIsConfigMenuOn] = createSignal(false);
-  let [configMenuData, setConfigMenuData] = createSignal<BoardData>();
-  let [boardList, setBoardList] = createSignal<string[]>([]);
+  const [deleteDialogBoard, setDeleteDialogBoard] = createSignal('');
+  const [isConfigMenuOn, setIsConfigMenuOn] = createSignal(false);
+  const [configMenuBoard, setConfigMenuBoard] = createSignal<string | undefined>();
+  const [boardList, setBoardList] = createSignal<string[]>([]);
 
   const fetchData = async () => {
     try {
@@ -44,7 +44,7 @@ const Home: Component = () => {
   };
 
   const prepareAddBoard = () => {
-    setConfigMenuData(undefined);
+    setConfigMenuBoard(undefined);
     setIsConfigMenuOn(true);
   }
 
@@ -70,8 +70,8 @@ const Home: Component = () => {
     setBoardList(prevList => [...prevList, newData.board]);
   };
 
-  const prepareEditBoard = (data: BoardData) => {
-    setConfigMenuData(data);
+  const prepareEditBoard = (board: string) => {
+    setConfigMenuBoard(board);
     setIsConfigMenuOn(true);
   }
 
@@ -115,7 +115,8 @@ const Home: Component = () => {
       {
         isConfigMenuOn() &&
         <ConfigMenu
-          data={configMenuData()}
+          username={params.username}
+          board={configMenuBoard()}
           callbackFunction={configMenuCallback}
           hideBind={[isConfigMenuOn, setIsConfigMenuOn]}>
         </ConfigMenu>
@@ -154,7 +155,7 @@ const Home: Component = () => {
       </div>
       {
         deleteDialogBoard() &&
-        <DeleteBoardDialog showBind={[deleteDialogBoard, setDeleteDialogBoard]} callbackFunction={deleteBoard}/>
+        <DeleteBoardDialog showBind={[deleteDialogBoard, setDeleteDialogBoard]} callbackFunction={deleteBoard} />
       }
     </div>
   );

@@ -6,10 +6,13 @@ import FormInputField from '../FormInputField';
 import ErrorMessage from '../ErrorMessage';
 import { BoardData } from '../../Api/Board';
 
+import { authorizedFetch } from '../../Api/Fetch';
+
 import { HiSolidXCircle } from "solid-icons/hi";
 
 interface ConfigMenuProps {
-  data: BoardData | undefined;
+  username: string;
+  board: string | undefined;
 
   hideBind: [() => boolean, (newValue: boolean) => void];
   callbackFunction: (newData: BoardData, oldBoardName?: string | undefined) => Promise<void>;
@@ -32,7 +35,7 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
     }
 
     try {
-      await props.callbackFunction(newData, (props.data !== undefined) ? props.data.board : undefined);
+      await props.callbackFunction(newData, (props.board !== undefined) ? props.board : undefined);
       setIsOn(false);
     }
     catch (error: any) {
@@ -40,10 +43,24 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
     }
   };
 
-  const loadData = () => {
-    /*TODO: Load data here into the form fields*/
-    if (props.data !== undefined) {
-      setFormBoardName(props.data.board);
+  const loadData = async () => {
+    if (props.board !== undefined) {
+      setFormBoardName(props.board);
+      try {
+        const response = await authorizedFetch(props.username, `/api/home/${props.username}/config/${props.board}`, {
+          method: 'GET',
+        });
+
+        if (!response.ok) {
+          throw new Error('Could not communicate with the server!');
+        }
+
+        const boardData: BoardData = await response.json();
+        console.log(boardData);
+
+      } catch (error: any) {
+        setErrorMessage(error.message);
+      }
     }
   }
 
@@ -57,7 +74,7 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
     >
       <div class="fixed top-1/2 left-1/2 w-1/3 transform -translate-x-1/2 -translate-y-1/2 bg-white p-3 rounded-md shadow-md text-black" onClick={handleMenuClick}>
         <div class="flex items-center justify-between">
-          <p class="p-2">{(props.data === undefined) ? "New Board" : props.data.board} Config</p>
+          <p class="p-2">{(props.board === undefined) ? "New Board" : props.board} Config</p>
           <div class="relative">
             <IconButton
               id="hide-config-menu"
@@ -81,7 +98,7 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
               hasVisibilityToggle={false}
               bind={[formBoardName, setFormBoardName]}></FormInputField>
             <ErrorMessage errorSignalBind={[errorMessage, setErrorMessage]} />
-            <button type="submit" class="submit-button">{(props.data === undefined) ? "Add" : "Edit"}</button>
+            <button type="submit" class="submit-button">{(props.board === undefined) ? "Add" : "Edit"}</button>
           </form>
         </div>
 

@@ -78,6 +78,7 @@ const Login: Component = () => {
       <div class="max-w-md w-full bg-white rounded-lg shadow-lg px-6 py-8">
         <div class="text-center mb-4">
           <div class="flex justify-between mb-4">
+            {/* TODO: Update the buttons to use the SUID elements */}
             <button
               type="button"
               class={`active-button ${isRegistering() ? 'inactive-button' : ''}`}

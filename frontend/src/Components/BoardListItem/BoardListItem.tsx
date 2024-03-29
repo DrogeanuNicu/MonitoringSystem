@@ -4,12 +4,10 @@ import { HiSolidPencil, HiOutlineTrash } from "solid-icons/hi";
 import { IoBarChart } from "solid-icons/io";
 import { IconButton, ListItem, ListItemButton, ListItemIcon, ListItemText } from '@suid/material';
 
-import { BoardData } from '../../Api/Board';
-
 interface BoardListItemProps {
   board: string;
   deleteHandler: (boardToBeDeleted: string) => void;
-  editHandler: (boardData: BoardData) => void;
+  editHandler: (board: string) => void;
 }
 
 const BoardListItem = (props: BoardListItemProps) => {
@@ -19,8 +17,7 @@ const BoardListItem = (props: BoardListItemProps) => {
   };
 
   const editBoard = () => {
-    /* TODO: This component should fetch the data from the server and pass it to the edit handler */
-    props.editHandler({ board: props.board });
+    props.editHandler(props.board);
   }
 
   return (

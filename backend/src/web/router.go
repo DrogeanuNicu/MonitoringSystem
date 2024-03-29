@@ -73,9 +73,11 @@ func Init(config *HttpsConfig, debugMode bool) {
 	router.POST("/api/register", registerHandler)
 	router.GET("/api/home/:username/boards", authMiddleware(), getBoardsHandler)
 	/* TODO: Investigate if it is necessary for the route to contain :board as it already is part of the body */
+	/* TODO: Make the api routes more general, remove /home/ */
 	router.POST("/api/home/:username/add/:board", authMiddleware(), addBoardHandler)
 	router.POST("/api/home/:username/edit/:board", authMiddleware(), editBoardHandler)
 	router.POST("/api/home/:username/delete/:board", authMiddleware(), deleteBoardHandler)
+	router.GET("/api/home/:username/config/:board", authMiddleware(), getBoardConfigHandler)
 
 	// err := router.RunTLS(fmt.Sprintf("%s:%d", config.Address, config.Port), config.Cert, config.Key)
 	err := router.Run(fmt.Sprintf("%s:%d", config.Address, config.Port))
@@ -215,4 +217,21 @@ func deleteBoardHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{})
+}
+
+func getBoardConfigHandler(c *gin.Context) {
+	var boardData dashboard.BoardData
+
+	// username := c.Param("username")
+	board := c.Param("board")
+
+	boardData.Board = board
+	err := dashboard.ReadBoardConfig(&boardData)
+	if err != nil {
+		logger.Println(err)
+		c.JSON(http.StatusOK, gin.H{"error": "Could not communicate with the server!"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"board": boardData.Board})
 }

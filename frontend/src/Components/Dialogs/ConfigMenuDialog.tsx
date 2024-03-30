@@ -41,7 +41,10 @@ const ConfigMenuDialog: Component<ConfigMenuDialogProps> = (props) => {
   };
 
   const loadData = async () => {
-    if (props.board !== undefined) {
+    if (props.board === undefined) {
+      setFormBoardName('');
+    }
+    else {
       setFormBoardName(props.board);
       try {
         const response = await authorizedFetch(props.username, `/api/home/${props.username}/config/${props.board}`, {

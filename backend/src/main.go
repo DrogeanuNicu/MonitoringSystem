@@ -1,6 +1,7 @@
 package main
 
 import (
+	"backend/src/dashboard"
 	"backend/src/db"
 	"backend/src/mqtt"
 	"backend/src/web"
@@ -25,10 +26,11 @@ import (
 //
 // ================================================================================================
 type config struct {
-	Debug    bool              `json:"debug"`
-	Https    web.HttpsConfig   `json:"https"`
-	Mqtts    mqtt.MqttsConfig  `json:"mqtts"`
-	Database db.DatabaseConfig `json:"database"`
+	Debug     bool                      `json:"debug"`
+	Https     web.HttpsConfig           `json:"https"`
+	Mqtts     mqtt.MqttsConfig          `json:"mqtts"`
+	Database  db.DatabaseConfig         `json:"database"`
+	Dashboard dashboard.DashboardConfig `json:"dashboard"`
 }
 
 // ================================================================================================
@@ -61,6 +63,7 @@ func main() {
 	readConfig(&configFile, &config)
 	go db.Init(&config.Database)
 	go mqtt.Init(&ctx, &config.Mqtts, config.Debug)
+	go dashboard.Init(&config.Dashboard)
 	web.Init(&config.Https, config.Debug)
 }
 
@@ -106,6 +109,7 @@ func readConfig(path *string, config *config) error {
 	config.Mqtts.Ca = getAbsPath(&config.Mqtts.Ca)
 	config.Mqtts.Cert = getAbsPath(&config.Mqtts.Cert)
 	config.Mqtts.Key = getAbsPath(&config.Mqtts.Key)
+	config.Dashboard.DataPath = getAbsPath(&config.Dashboard.DataPath)
 
 	return nil
 }

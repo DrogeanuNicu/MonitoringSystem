@@ -1,10 +1,19 @@
 package dashboard
 
+import (
+	"log"
+	"os"
+)
+
 // ================================================================================================
 //
 //	Global Types
 //
 // ================================================================================================
+type DashboardConfig struct {
+	DataPath string `json:"DataPath"`
+}
+
 type BoardData struct {
 	Board string
 }
@@ -26,15 +35,25 @@ type BoardData struct {
 //	Local Variables
 //
 // ================================================================================================
+var logger = log.New(os.Stdout, "[DSHBD] ", log.Ldate|log.Ltime)
+
+var dataPath string
 
 // ================================================================================================
 //
 //	Global Functions
 //
 // ================================================================================================
-func ReadBoardConfig(data *BoardData) error {
+func Init(config *DashboardConfig) {
 
-	return nil
+	dataPath = config.DataPath
+
+	_, err := os.Stat(dataPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			panic(err)
+		}
+	}
 }
 
 // ================================================================================================

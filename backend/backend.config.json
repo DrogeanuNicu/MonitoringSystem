@@ -22,5 +22,8 @@
         "User": "postgres",
         "Password": "ParolaDb",
         "Name": "monitoring_system"
+    },
+    "dashboard": {
+        "DataPath": "../../data"
     }
 }

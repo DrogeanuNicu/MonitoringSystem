@@ -10,7 +10,7 @@ interface BoardListItemProps {
   editCallback: (board: string) => void;
   otaCallback: (board: string) => void;
   deleteCallback: (boardToBeDeleted: string) => void;
-  downloadCallback: (board: string) => void;
+  downloadCallback: (board: string) => Promise<void>;
 }
 
 const BoardListItem = (props: BoardListItemProps) => {

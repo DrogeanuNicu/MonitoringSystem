@@ -78,6 +78,7 @@ func Init(config *HttpsConfig, debugMode bool) {
 	router.POST("/api/home/:username/edit/:board", authMiddleware(), editBoardHandler)
 	router.POST("/api/home/:username/delete/:board", authMiddleware(), deleteBoardHandler)
 	router.GET("/api/home/:username/config/:board", authMiddleware(), getBoardConfigHandler)
+	router.GET("/api/home/:username/download/:board", authMiddleware(), downloadBoardDataHandler)
 
 	// err := router.RunTLS(fmt.Sprintf("%s:%d", config.Address, config.Port), config.Cert, config.Key)
 	err := router.Run(fmt.Sprintf("%s:%d", config.Address, config.Port))
@@ -145,6 +146,8 @@ func registerHandler(c *gin.Context) {
 		return
 	}
 
+	go dashboard.AddUser(username)
+
 	token := generateJwtToken(username)
 	c.JSON(http.StatusOK, gin.H{"token": token})
 }
@@ -172,12 +175,21 @@ func addBoardHandler(c *gin.Context) {
 
 	parseBoardData(c, &boardData)
 
-	err := db.AddBoard(username, &boardData)
+	err := dashboard.AddBoard(username, &boardData)
 	if err != nil {
 		logger.Println(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Could not add the %s board into the database!", boardData.Board)})
 		return
 	}
+
+	err = db.AddBoard(username, &boardData)
+	if err != nil {
+		logger.Println(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Could not add the %s board into the database!", boardData.Board)})
+		return
+	}
+
+	go dashboard.AddBoard(username, &boardData)
 
 	/* TODO: Analyze if it makes sense to query the DB one more time in order to return the full list of the boards => solves sync problem between different terminals */
 	c.JSON(http.StatusOK, gin.H{})
@@ -216,17 +228,19 @@ func deleteBoardHandler(c *gin.Context) {
 		return
 	}
 
+	go dashboard.DeleteBoard(username, board)
+
 	c.JSON(http.StatusOK, gin.H{})
 }
 
 func getBoardConfigHandler(c *gin.Context) {
 	var boardData dashboard.BoardData
 
-	// username := c.Param("username")
+	username := c.Param("username")
 	board := c.Param("board")
 
 	boardData.Board = board
-	err := dashboard.ReadBoardConfig(&boardData)
+	err := dashboard.ReadBoardConfig(username, &boardData)
 	if err != nil {
 		logger.Println(err)
 		c.JSON(http.StatusOK, gin.H{"error": "Could not communicate with the server!"})
@@ -234,4 +248,17 @@ func getBoardConfigHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"board": boardData.Board})
+}
+
+func downloadBoardDataHandler(c *gin.Context) {
+	username := c.Param("username")
+	board := c.Param("board")
+
+	filePath, err := dashboard.DownloadBoardData(username, board)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"error": fmt.Sprintf("The CSV file of the '%s' board is not present on the server!", board)})
+		return
+	}
+
+	c.FileAttachment(filePath, "board.csv")
 }

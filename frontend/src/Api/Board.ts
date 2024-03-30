@@ -34,7 +34,25 @@ const deleteBoardApi = async (username: string, board: string) => {
 }
 
 const downloadBoardDataApi = async (username: string, board: string) => {
-  console.log(`Download data for board ${board} from username ${username}`);
+  const response = await authorizedFetch(username, `/api/home/${username}/download/${board}`, {
+    method: 'GET',
+  });
+
+  try {
+    if (response.ok) {
+      const blob = await response.blob();
+      const filename = `${board}.csv`;
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }
+  } catch (error: any) {
+    throw new Error(`Error download the CSV file for board '${board}'! Status: ${response.status}`);
+  }
 }
 
 const otaUpdateApi = async (username: string, board: string) => {

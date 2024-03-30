@@ -72,18 +72,12 @@ const Home: Component = () => {
       }
     }
     await editBoardApi(params.username, newData, oldBoardName);
-    setBoardList(prevList => prevList.map(board => {
-      if (board === oldBoardName) {
-        return newData.board;
-      }
-      return board;
-    }));
     setBoardList(prevList => prevList.map(board => board === oldBoardName ? newData.board : board));
   };
 
-  const prepareDownloadBoardData = (board: string) => {
+  const prepareDownloadBoardData = async (board: string) => {
     try {
-      downloadBoardDataApi(params.username, board);
+      await downloadBoardDataApi(params.username, board);
     } catch (error: any) {
       setErrorDialog(error.message);
     }

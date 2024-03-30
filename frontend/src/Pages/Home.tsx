@@ -1,23 +1,24 @@
 import { Component, onMount, createSignal } from 'solid-js';
 import { useParams } from "@solidjs/router";
 import { useNavigate } from "@solidjs/router";
-
 import { HiSolidPlusCircle } from "solid-icons/hi";
 import { IconButton, Divider, List, Backdrop } from '@suid/material';
+import "../Styles/index.css";
 
 import TopMenu from '../Components/TopMenu';
 import BoardListItem from '../Components/BoardListItem';
 import ConfigMenu from '../Components/ConfigMenu';
+import DeleteBoardDialog from '../Components/Dialogs/DeleteBoardDialog';
+import ErrorMessageDialog from '../Components/Dialogs/ErrorMessageDialog';
 
+import { authorizedFetch } from '../Api/Fetch';
 import { BoardData, addBoardApi, editBoardApi, deleteBoardApi, downloadBoardDataApi, otaUpdateApi } from '../Api/Board';
 
-import "../Styles/index.css";
-import { authorizedFetch } from '../Api/Fetch';
-import DeleteBoardDialog from '../Components/AlarmDialog';
 
 const Home: Component = () => {
   const params = useParams();
   const navigate = useNavigate();
+  const [errorDialog, setErrorDialog] = createSignal('');
   const [deleteDialogBoard, setDeleteDialogBoard] = createSignal('');
   const [isConfigMenuOn, setIsConfigMenuOn] = createSignal(false);
   const [configMenuBoard, setConfigMenuBoard] = createSignal<string | undefined>();
@@ -83,8 +84,7 @@ const Home: Component = () => {
     try {
       downloadBoardDataApi(params.username, board);
     } catch (error: any) {
-      /* TODO: Visual response in case of failure */
-      console.log(error);
+      setErrorDialog(error.message);
     }
   }
 
@@ -127,6 +127,7 @@ const Home: Component = () => {
           hideBind={[isConfigMenuOn, setIsConfigMenuOn]}>
         </ConfigMenu>
       }
+      <ErrorMessageDialog errorSignalBind={[errorDialog, setErrorDialog]}/>
       <TopMenu username={params.username} />
       <div class="container mx-auto justify-between items-center">
         <div class="flex justify-center items-center mt-8">

@@ -20,4 +20,5 @@ const ErrorMessage: Component<ErrorMessageProps> = (props) => {
   );
 };
 
+export type { ErrorMessageProps };
 export default ErrorMessage;

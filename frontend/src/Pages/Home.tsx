@@ -7,9 +7,10 @@ import "../Styles/index.css";
 
 import TopMenu from '../Components/TopMenu';
 import BoardListItem from '../Components/BoardListItem';
-import ConfigMenu from '../Components/ConfigMenu';
 import DeleteBoardDialog from '../Components/Dialogs/DeleteBoardDialog';
 import ErrorMessageDialog from '../Components/Dialogs/ErrorMessageDialog';
+import ConfigMenuDialog from '../Components/Dialogs/ConfigMenuDialog';
+
 
 import { authorizedFetch } from '../Api/Fetch';
 import { BoardData, addBoardApi, editBoardApi, deleteBoardApi, downloadBoardDataApi, otaUpdateApi } from '../Api/Board';
@@ -118,39 +119,35 @@ const Home: Component = () => {
 
   return (
     <div>
-      {
-        isConfigMenuOn() &&
-        <ConfigMenu
-          username={params.username}
-          board={configMenuBoard()}
-          callbackFunction={configMenuCallback}
-          hideBind={[isConfigMenuOn, setIsConfigMenuOn]}>
-        </ConfigMenu>
-      }
-      <ErrorMessageDialog errorSignalBind={[errorDialog, setErrorDialog]}/>
       <TopMenu username={params.username} />
+      <ConfigMenuDialog
+        username={params.username}
+        board={configMenuBoard()}
+        callbackFunction={configMenuCallback}
+        showBind={[isConfigMenuOn, setIsConfigMenuOn]}>
+      </ConfigMenuDialog>
+      <ErrorMessageDialog errorMsgBind={[errorDialog, setErrorDialog]} />
+      <DeleteBoardDialog showBind={[deleteDialogBoard, setDeleteDialogBoard]} callbackFunction={deleteBoard} />
       <div class="container mx-auto justify-between items-center">
         <div class="flex justify-center items-center mt-8">
           <h1 class="text-2xl text-center text-main-color font-bold">Boards</h1>
         </div>
 
-        <nav aria-label="boards list">
-          <List>
-            {boardList().map((board, _) => (
-              <>
-                <BoardListItem
-                  board={board}
-                  editCallback={prepareEditBoard}
-                  otaCallback={prepareOtaUpdate}
-                  downloadCallback={prepareDownloadBoardData}
-                  deleteCallback={prepareDeleteBoard} />
-                <Divider />
-              </>
-            ))}
-          </List>
-        </nav>
+        <List>
+          {boardList().map((board, _) => (
+            <>
+              <BoardListItem
+                board={board}
+                editCallback={prepareEditBoard}
+                otaCallback={prepareOtaUpdate}
+                downloadCallback={prepareDownloadBoardData}
+                deleteCallback={prepareDeleteBoard} />
+              <Divider />
+            </>
+          ))}
+        </List>
 
-        <div class="fixed left-1/2 transform -translate-x-1/2 mb-8">
+        <div class="flex justify-center items-center mt-8">
           <IconButton
             id="add-board-button"
             color="inherit"
@@ -162,10 +159,6 @@ const Home: Component = () => {
           </IconButton>
         </div>
       </div>
-      {
-        deleteDialogBoard() &&
-        <DeleteBoardDialog showBind={[deleteDialogBoard, setDeleteDialogBoard]} callbackFunction={deleteBoard} />
-      }
     </div>
   );
 

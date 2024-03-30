@@ -8,11 +8,10 @@ import Transition from './Transition';
 
 
 const ErrorMessageDialog: Component<ErrorMessageProps> = (props) => {
-  const [error, setError] = props.errorSignalBind || createSignal('');
+  const [error, setError] = props.errorMsgBind || createSignal('');
 
   const handleClose = () => {
     setError('');
-    console.log((error() === '' || error() === undefined) ? false : true);
   };
 
   return (
@@ -21,15 +20,15 @@ const ErrorMessageDialog: Component<ErrorMessageProps> = (props) => {
         open={(error() === '' || error() === undefined) ? false : true}
         TransitionComponent={Transition}
         onClose={handleClose}
-        aria-describedby="alert-dialog-slide-description"
+        aria-describedby="alert-dialog-slide"
       >
-        <DialogTitle>{"Error"}</DialogTitle>
+        <DialogTitle>Error</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-error-dialog-slide">
-            <ErrorMessage errorSignalBind={[error, setError]}></ErrorMessage>
+            <ErrorMessage errorMsgBind={[error, setError]}></ErrorMessage>
           </DialogContentText>
         </DialogContent>
-        <DialogActions class="text-main-color flex items-center justify-between">
+        <DialogActions class="text-main-color">
           <Button color="inherit" onClick={handleClose}>Close</Button>
         </DialogActions>
       </Dialog>

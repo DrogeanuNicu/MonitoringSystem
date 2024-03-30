@@ -31,10 +31,10 @@ const DeleteBoardDialog: Component<AlarmDialogProps> = (props) => {
   return (
     <div>
       <Dialog
-        open={(boardToBeDeleted() !== '' || boardToBeDeleted() !== undefined) ? true : false}
+        open={(boardToBeDeleted() === '' || boardToBeDeleted() === undefined) ? false : true}
         TransitionComponent={Transition}
         onClose={handleClose}
-        aria-describedby="alert-dialog-slide-description"
+        aria-describedby="alert-dialog-slide"
       >
         <DialogTitle>{`Delete the board '${boardToBeDeleted()}'?`}</DialogTitle>
         <DialogContent>
@@ -43,7 +43,7 @@ const DeleteBoardDialog: Component<AlarmDialogProps> = (props) => {
           </DialogContentText>
         </DialogContent>
         <div class="p-5">
-          <ErrorMessage errorSignalBind={[errorMessage, setErrorMessage]}></ErrorMessage>
+          <ErrorMessage errorMsgBind={[errorMessage, setErrorMessage]}></ErrorMessage>
         </div>
         <DialogActions class="text-main-color">
           <Button color="inherit" onClick={handleYes}>Yes</Button>

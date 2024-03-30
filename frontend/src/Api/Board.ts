@@ -6,52 +6,60 @@ interface BoardData {
 
 const addBoardApi = async (username: string, data: BoardData) => {
 
-  const response = await authorizedFetch(username, `/api/home/${username}/add/${data.board}`, {
+  const response = await authorizedFetch(username, `/api/${username}/add/${data.board}`, {
     method: 'POST',
     body: JSON.stringify(data),
   });
 
-  processResponseCode(response);
+  await processResponseCode(response);
 }
 
 const editBoardApi = async (username: string, data: BoardData, oldBoard: string) => {
 
-  const response = await authorizedFetch(username, `/api/home/${username}/edit/${oldBoard}`, {
+  const response = await authorizedFetch(username, `/api/${username}/edit/${oldBoard}`, {
     method: 'POST',
     body: JSON.stringify(data),
   });
 
-  processResponseCode(response);
+  await processResponseCode(response);
 }
 
 const deleteBoardApi = async (username: string, board: string) => {
 
-  const response = await authorizedFetch(username, `/api/home/${username}/delete/${board}`, {
+  const response = await authorizedFetch(username, `/api/${username}/delete/${board}`, {
     method: 'POST',
   });
 
-  processResponseCode(response);
+  await processResponseCode(response);
 }
 
 const downloadBoardDataApi = async (username: string, board: string) => {
-  const response = await authorizedFetch(username, `/api/home/${username}/download/${board}`, {
+  const response = await authorizedFetch(username, `/api/${username}/download/${board}`, {
     method: 'GET',
   });
 
-  try {
-    if (response.ok) {
-      const blob = await response.blob();
-      const filename = `${board}.csv`;
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
+  if (response.ok) {
+    const disposition = response.headers.get('Content-Disposition');
+    if (disposition && disposition.includes('attachment')) {
+      try {
+        const blob = await response.blob();
+        const filename = `${board}.csv`;
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } catch (error: any) {
+        throw new Error(`Error download the CSV file for board '${board}'! Status: ${response.status}`);
+      }
+    } else {
+      await processResponseCode(response);
     }
-  } catch (error: any) {
-    throw new Error(`Error download the CSV file for board '${board}'! Status: ${response.status}`);
+  }
+  else {
+    throw new Error(`Failed to communicate with the server! Status: ${response.status}`);
   }
 }
 

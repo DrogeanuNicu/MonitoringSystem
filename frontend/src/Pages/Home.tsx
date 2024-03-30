@@ -27,7 +27,7 @@ const Home: Component = () => {
 
   const fetchData = async () => {
     try {
-      const response = await authorizedFetch(params.username, `/api/home/${params.username}/boards`, {
+      const response = await authorizedFetch(params.username, `/api/${params.username}/boards`, {
         method: 'GET',
       });
 

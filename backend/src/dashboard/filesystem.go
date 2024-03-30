@@ -125,6 +125,24 @@ func DeleteBoard(username string, board string) error {
 	return nil
 }
 
+func EditBoardData(username string, data *BoardData, oldBoard string) error {
+	oldFilePath := filepath.Join(dataPath, username, oldBoard, oldBoard+".csv")
+
+	_, err := os.Stat(oldFilePath)
+	if !os.IsNotExist(err) {
+		err = DeleteBoard(username, oldBoard)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = AddBoard(username, data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func DownloadBoardData(username string, board string) (string, error) {
 	filePath := filepath.Join(dataPath, username, board, board+".csv")
 

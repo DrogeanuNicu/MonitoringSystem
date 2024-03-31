@@ -4,7 +4,7 @@ import useTheme from "@suid/material/styles/useTheme";
 
 import FormInputField from '../FormInputField';
 import ErrorMessage from '../ErrorMessage';
-import { BoardData } from '../../Api/Board';
+import { BoardConfig } from '../../Api/Board';
 
 import { authorizedFetch } from '../../Api/Fetch';
 
@@ -15,7 +15,7 @@ interface ConfigMenuProps {
   board: string | undefined;
 
   hideBind: [() => boolean, (newValue: boolean) => void];
-  callbackFunction: (newData: BoardData, oldBoardName?: string | undefined) => Promise<void>;
+  callbackFunction: (newData: BoardConfig, oldBoardName?: string | undefined) => Promise<void>;
 }
 
 const ConfigMenu: Component<ConfigMenuProps> = (props) => {
@@ -30,7 +30,7 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
 
   const handleSubmit = async (event: Event) => {
     event.preventDefault();
-    let newData: BoardData = {
+    let newData: BoardConfig = {
       board: formBoardName(),
     }
 
@@ -55,7 +55,7 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
           throw new Error('Could not communicate with the server!');
         }
 
-        const boardData: BoardData = await response.json();
+        const boardData: BoardConfig = await response.json();
         console.log(boardData);
 
       } catch (error: any) {

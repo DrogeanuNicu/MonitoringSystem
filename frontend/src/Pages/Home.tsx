@@ -13,7 +13,7 @@ import ConfigMenuDialog from '../Components/Dialogs/ConfigMenuDialog';
 
 
 import { authorizedFetch } from '../Api/Fetch';
-import { BoardData, addBoardApi, editBoardApi, deleteBoardApi, downloadBoardDataApi, otaUpdateApi } from '../Api/Board';
+import { BoardConfig, addBoardApi, editBoardApi, deleteBoardApi, downloadBoardDataApi, otaUpdateApi } from '../Api/Board';
 
 
 const Home: Component = () => {
@@ -50,14 +50,14 @@ const Home: Component = () => {
     setIsConfigMenuOn(true);
   }
 
-  const addBoard = async (newData: BoardData) => {
-    if (boardList().includes(newData.board)) {
+  const addBoard = async (newConfig: BoardConfig) => {
+    if (boardList().includes(newConfig.board)) {
       throw new Error("The name of the board must be unique!")
     }
 
-    await addBoardApi(params.username, newData);
+    await addBoardApi(params.username, newConfig);
 
-    setBoardList(prevList => [...prevList, newData.board]);
+    setBoardList(prevList => [...prevList, newConfig.board]);
   };
 
   const prepareEditBoard = (board: string) => {
@@ -65,14 +65,14 @@ const Home: Component = () => {
     setIsConfigMenuOn(true);
   }
 
-  const editBoard = async (newData: BoardData, oldBoardName: string) => {
-    if (newData.board !== oldBoardName) {
-      if (boardList().includes(newData.board)) {
+  const editBoard = async (newConfig: BoardConfig, oldBoardName: string) => {
+    if (newConfig.board !== oldBoardName) {
+      if (boardList().includes(newConfig.board)) {
         throw new Error("The name of the board must be unique!")
       }
     }
-    await editBoardApi(params.username, newData, oldBoardName);
-    setBoardList(prevList => prevList.map(board => board === oldBoardName ? newData.board : board));
+    await editBoardApi(params.username, newConfig, oldBoardName);
+    setBoardList(prevList => prevList.map(board => board === oldBoardName ? newConfig.board : board));
   };
 
   const prepareDownloadBoardData = async (board: string) => {
@@ -101,11 +101,11 @@ const Home: Component = () => {
     setBoardList(prevBoardList => prevBoardList.filter(board => board !== boardToBeDeleted));
   };
 
-  const configMenuCallback = async (newData: BoardData, oldBoardName?: string | undefined) => {
+  const configMenuCallback = async (newConfig: BoardConfig, oldBoardName?: string | undefined) => {
     if (oldBoardName !== undefined) {
-      await editBoard(newData, oldBoardName);
+      await editBoard(newConfig, oldBoardName);
     } else {
-      await addBoard(newData);
+      await addBoard(newConfig);
     }
   }
 

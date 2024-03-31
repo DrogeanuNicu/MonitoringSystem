@@ -1,10 +1,10 @@
 import { authorizedFetch } from "./Fetch";
 
-interface BoardData {
+interface BoardConfig {
   board: string;
 }
 
-const addBoardApi = async (username: string, data: BoardData) => {
+const addBoardApi = async (username: string, data: BoardConfig) => {
 
   const response = await authorizedFetch(username, `/api/${username}/add/${data.board}`, {
     method: 'POST',
@@ -14,7 +14,7 @@ const addBoardApi = async (username: string, data: BoardData) => {
   await processResponseCode(response);
 }
 
-const editBoardApi = async (username: string, data: BoardData, oldBoard: string) => {
+const editBoardApi = async (username: string, data: BoardConfig, oldBoard: string) => {
 
   const response = await authorizedFetch(username, `/api/${username}/edit/${oldBoard}`, {
     method: 'POST',
@@ -79,5 +79,5 @@ const processResponseCode = async (response: Response) => {
   }
 }
 
-export type { BoardData };
+export type { BoardConfig };
 export { addBoardApi, editBoardApi, deleteBoardApi, downloadBoardDataApi, otaUpdateApi };

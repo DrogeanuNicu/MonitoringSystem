@@ -41,7 +41,7 @@ import (
 //	Local Functions
 //
 // ================================================================================================
-func parseBoardData(c *gin.Context, boardData *dashboard.BoardData) error {
+func parseBoardData(c *gin.Context, boardData *dashboard.BoardConfig) error {
 
 	err := c.BindJSON(boardData)
 	if err != nil {

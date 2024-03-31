@@ -2,7 +2,7 @@ import { Component, createSignal, onMount } from 'solid-js';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@suid/material";
 import FormInputField from '../FormInputField';
 import ErrorMessage from '../ErrorMessage';
-import { BoardData } from '../../Api/Board';
+import { BoardConfig } from '../../Api/Board';
 
 import { authorizedFetch } from '../../Api/Fetch';
 
@@ -13,7 +13,7 @@ interface ConfigMenuDialogProps {
   board: string | undefined;
 
   showBind: [() => boolean, (newValue: boolean) => void];
-  callbackFunction: (newData: BoardData, oldBoardName?: string | undefined) => Promise<void>;
+  callbackFunction: (newConfig: BoardConfig, oldBoardName?: string | undefined) => Promise<void>;
 }
 
 const ConfigMenuDialog: Component<ConfigMenuDialogProps> = (props) => {
@@ -27,17 +27,19 @@ const ConfigMenuDialog: Component<ConfigMenuDialogProps> = (props) => {
   };
 
   const handleSubmit = async () => {
-    let newData: BoardData = {
+    let newConfig: BoardConfig = {
       board: formBoardName(),
     }
 
     try {
-      await props.callbackFunction(newData, (props.board !== undefined) ? props.board : undefined);
+      await props.callbackFunction(newConfig, (props.board !== undefined) ? props.board : undefined);
       setIsOn(false);
     }
     catch (error: any) {
       setError(error.message);
     }
+
+    setFormBoardName('');
   };
 
   const loadData = async () => {
@@ -55,7 +57,7 @@ const ConfigMenuDialog: Component<ConfigMenuDialogProps> = (props) => {
           throw new Error('Could not communicate with the server!');
         }
 
-        const boardData: BoardData = await response.json();
+        const boardData: BoardConfig = await response.json();
         console.log(boardData);
 
       } catch (error: any) {

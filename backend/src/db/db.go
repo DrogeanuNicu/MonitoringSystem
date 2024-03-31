@@ -134,7 +134,7 @@ func GetBoards(username string) ([]string, error) {
 	return boards, nil
 }
 
-func AddBoard(username string, boardData *dashboard.BoardData) error {
+func AddBoard(username string, boardData *dashboard.BoardConfig) error {
 	command := `
 		INSERT INTO boards (name, user_id)
 		SELECT $1, id FROM users WHERE username = $2
@@ -148,7 +148,7 @@ func AddBoard(username string, boardData *dashboard.BoardData) error {
 	return nil
 }
 
-func EditBoard(username string, boardData *dashboard.BoardData, oldBoardName string) error {
+func EditBoard(username string, boardData *dashboard.BoardConfig, oldBoardName string) error {
 	command := `
 		UPDATE boards AS b
 		SET name = $1

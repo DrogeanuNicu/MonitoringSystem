@@ -58,7 +58,7 @@ func AddUser(username string) error {
 	return nil
 }
 
-func AddBoard(username string, boardData *BoardData) error {
+func AddBoard(username string, boardData *BoardConfig) error {
 	boardFolderPath := filepath.Join(dataPath, username, boardData.Board)
 
 	if _, err := os.Stat(boardFolderPath); err == nil {
@@ -125,7 +125,7 @@ func DeleteBoard(username string, board string) error {
 	return nil
 }
 
-func EditBoardData(username string, data *BoardData, oldBoard string) error {
+func EditBoardData(username string, data *BoardConfig, oldBoard string) error {
 	oldFilePath := filepath.Join(dataPath, username, oldBoard, oldBoard+".csv")
 
 	_, err := os.Stat(oldFilePath)
@@ -155,7 +155,7 @@ func DownloadBoardData(username string, board string) (string, error) {
 	return filePath, nil
 }
 
-func ReadBoardConfig(username string, data *BoardData) error {
+func ReadBoardConfig(username string, data *BoardConfig) error {
 
 	return nil
 }

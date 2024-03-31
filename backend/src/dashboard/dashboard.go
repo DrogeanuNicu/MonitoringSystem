@@ -14,7 +14,7 @@ type DashboardConfig struct {
 	DataPath string `json:"DataPath"`
 }
 
-type BoardData struct {
+type BoardConfig struct {
 	Board string
 }
 

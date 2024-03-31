@@ -170,7 +170,7 @@ func getBoardsHandler(c *gin.Context) {
 
 func addBoardHandler(c *gin.Context) {
 	username := c.Param("username")
-	var boardData dashboard.BoardData
+	var boardData dashboard.BoardConfig
 
 	parseBoardData(c, &boardData)
 
@@ -197,7 +197,7 @@ func addBoardHandler(c *gin.Context) {
 func editBoardHandler(c *gin.Context) {
 	username := c.Param("username")
 	oldBoard := c.Param("board")
-	var boardData dashboard.BoardData
+	var boardData dashboard.BoardConfig
 
 	err := parseBoardData(c, &boardData)
 	if err != nil {
@@ -235,7 +235,7 @@ func deleteBoardHandler(c *gin.Context) {
 }
 
 func getBoardConfigHandler(c *gin.Context) {
-	var boardData dashboard.BoardData
+	var boardData dashboard.BoardConfig
 
 	username := c.Param("username")
 	board := c.Param("board")

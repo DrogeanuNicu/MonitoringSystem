@@ -2,7 +2,7 @@ import { Component, onMount, createSignal } from 'solid-js';
 import { useParams } from "@solidjs/router";
 import { useNavigate } from "@solidjs/router";
 import { HiSolidPlusCircle } from "solid-icons/hi";
-import { IconButton, Divider, List, Backdrop } from '@suid/material';
+import { IconButton, Divider, List } from '@suid/material';
 import "../Styles/index.css";
 
 import TopMenu from '../Components/TopMenu';
@@ -44,6 +44,10 @@ const Home: Component = () => {
       navigate(`/`);
     }
   };
+
+  const goToDashboard = (board: string) => {
+    navigate(`/dashboard/${params.username}/${board}`);
+  }
 
   const prepareAddBoard = () => {
     setConfigMenuBoard(undefined);
@@ -113,7 +117,7 @@ const Home: Component = () => {
 
   return (
     <div>
-      <TopMenu username={params.username} />
+      <TopMenu username={params.username} board='' />
       <ConfigMenuDialog
         username={params.username}
         board={configMenuBoard()}
@@ -132,6 +136,7 @@ const Home: Component = () => {
             <>
               <BoardListItem
                 board={board}
+                dashboardCallback={goToDashboard}
                 editCallback={prepareEditBoard}
                 otaCallback={prepareOtaUpdate}
                 downloadCallback={prepareDownloadBoardData}

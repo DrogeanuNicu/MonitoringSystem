@@ -1,13 +1,13 @@
 import { Component, createSignal } from 'solid-js';
 
 import { IconButton, Menu, MenuItem } from "@suid/material";
-import { HiOutlineUserCircle, HiSolidCog8Tooth, HiSolidArrowLeftOnRectangle } from "solid-icons/hi";
+import { HiOutlineCpuChip, HiSolidPencil, HiOutlineTrash, HiSolidArrowDownTray, HiSolidArrowUpTray } from "solid-icons/hi";
 
-interface UserMenuProps {
-  username: string;
+interface BoardMenuProps {
+  board: string | undefined;
 }
 
-const UserMenu: Component<UserMenuProps> = (props) => {
+const BoardMenu: Component<BoardMenuProps> = (props) => {
   const [anchorEl, setAnchorEl] = createSignal<null | HTMLElement>(null);
 
   const open = () => Boolean(anchorEl());
@@ -29,8 +29,8 @@ const UserMenu: Component<UserMenuProps> = (props) => {
           setAnchorEl(event.currentTarget);
         }}
       >
-        <p class='pr-1'>{props.username}</p>
-        <HiOutlineUserCircle size={40} color="white" />
+        <p class='pr-1'>{props.board}</p>
+        <HiOutlineCpuChip size={40} color="white" />
       </IconButton>
       <Menu
         id="basic-menu"
@@ -40,17 +40,25 @@ const UserMenu: Component<UserMenuProps> = (props) => {
         MenuListProps={{ "aria-labelledby": "user-menu-button" }}
       >
         <MenuItem onClick={handleClose} divider={true}>
-          <span class="pr-4">Settings</span>
-          <HiSolidCog8Tooth size={32} class="icon-main-color ml-auto" />
+          <span class="pr-4">Edit</span>
+          <HiSolidPencil size={32} class="icon-main-color ml-auto" />
+        </MenuItem>
+        <MenuItem onClick={handleClose} divider={true}>
+          <span class="pr-4">OTA Update</span>
+          <HiSolidArrowUpTray size={32} class="icon-main-color ml-auto" />
+        </MenuItem>
+        <MenuItem onClick={handleClose} divider={true}>
+          <span class="pr-4">Download</span>
+          <HiSolidArrowDownTray size={32} class="icon-main-color ml-auto" />
         </MenuItem>
         <MenuItem onClick={handleClose}>
-          <span class="pr-4">Logout</span>
-          <HiSolidArrowLeftOnRectangle size={32} class="icon-main-color ml-auto" />
+          <span class="pr-4">Delete</span>
+          <HiOutlineTrash size={32} class="icon-main-color ml-auto" />
         </MenuItem>
       </Menu>
     </div>
   );
 };
 
-export type { UserMenuProps };
-export default UserMenu;
+export type { BoardMenuProps };
+export default BoardMenu;

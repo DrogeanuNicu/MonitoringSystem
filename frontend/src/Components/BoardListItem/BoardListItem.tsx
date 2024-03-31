@@ -1,12 +1,10 @@
-import { createSignal } from 'solid-js';
-
 import { HiSolidPencil, HiOutlineTrash, HiSolidArrowDownTray, HiSolidArrowUpTray } from "solid-icons/hi";
 import { IoBarChart } from "solid-icons/io";
 import { IconButton, ListItem, ListItemButton, ListItemIcon, ListItemText } from '@suid/material';
-import { downloadBoardDataApi } from '../../Api/Board';
 
 interface BoardListItemProps {
   board: string;
+  dashboardCallback: (board: string) => void;
   editCallback: (board: string) => void;
   otaCallback: (board: string) => void;
   deleteCallback: (boardToBeDeleted: string) => void;
@@ -15,14 +13,10 @@ interface BoardListItemProps {
 
 const BoardListItem = (props: BoardListItemProps) => {
 
-  const goToDashboard = () => {
-    console.log("Go to Dashboard " + props.board);
-  };
-
   return (
     <ListItem disablePadding class="flex items-center">
       <ListItemButton
-        onClick={() => goToDashboard()}>
+        onClick={() => props.dashboardCallback(props.board)}>
         <ListItemIcon>
           <IoBarChart size={32} class="icon-main-color" />
         </ListItemIcon>

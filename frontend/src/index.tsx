@@ -4,6 +4,7 @@ import { Router, Route } from "@solidjs/router";
 
 import Login from './Pages/Login';
 import Home from './Pages/Home';
+import Dashboard from './Pages/Dashboard';
 import NotFound from './Pages/NotFound';
 
 import './Styles/index.css';
@@ -21,6 +22,7 @@ render(
     <Router>
       <Route path="/" component={Login} />
       <Route path="/home/:username" component={Home} />
+      <Route path="/dashboard/:username/:board" component={Dashboard} />
       <Route path="*" component={NotFound} />
     </Router>
   ),

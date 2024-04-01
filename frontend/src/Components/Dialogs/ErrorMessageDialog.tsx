@@ -8,7 +8,7 @@ import Transition from './Transition';
 
 
 const ErrorMessageDialog: Component<ErrorMessageProps> = (props) => {
-  const [error, setError] = props.errorMsgBind || createSignal('');
+  const [error, setError] = props.errorMsg || createSignal('');
 
   const handleClose = () => {
     setError('');
@@ -25,7 +25,7 @@ const ErrorMessageDialog: Component<ErrorMessageProps> = (props) => {
         <DialogTitle>Error</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-error-dialog-slide">
-            <ErrorMessage errorMsgBind={[error, setError]}></ErrorMessage>
+            <ErrorMessage errorMsg={[error, setError]}></ErrorMessage>
           </DialogContentText>
         </DialogContent>
         <DialogActions class="text-main-color">

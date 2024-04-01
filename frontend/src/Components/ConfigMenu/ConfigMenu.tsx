@@ -97,7 +97,7 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
               value={formBoardName()}
               hasVisibilityToggle={false}
               bind={[formBoardName, setFormBoardName]}></FormInputField>
-            <ErrorMessage errorMsgBind={[errorMessage, setErrorMessage]} />
+            <ErrorMessage errorMsg={[errorMessage, setErrorMessage]} />
             <button type="submit" class="submit-button">{(props.board === undefined) ? "Add" : "Edit"}</button>
           </form>
         </div>

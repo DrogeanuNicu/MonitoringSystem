@@ -3,63 +3,58 @@ import { Button, Dialog, DialogActions, DialogContent, DialogContentText, Dialog
 import FormInputField from '../FormInputField';
 import ErrorMessage from '../ErrorMessage';
 import { BoardConfig } from '../../Api/Board';
-
-import { authorizedFetch } from '../../Api/Fetch';
+import { getBoardConfig } from '../../Api/Board';
+import { authorizedFetch, } from '../../Api/Fetch';
 
 import Transition from './Transition';
 
 interface ConfigMenuDialogProps {
   username: string;
-  board: string | undefined;
+  board: string;
 
-  showBind: [() => boolean, (newValue: boolean) => void];
-  callbackFunction: (newConfig: BoardConfig, oldBoardName?: string | undefined) => Promise<void>;
+  show: [() => boolean, (newValue: boolean) => void];
+  cb: (newConfig: BoardConfig, oldBoardName?: string | undefined) => Promise<void>;
 }
 
 const ConfigMenuDialog: Component<ConfigMenuDialogProps> = (props) => {
-  const [isOn, setIsOn] = props.showBind || createSignal(false);
+  const [isOn, setIsOn] = props.show;
   const [error, setError] = createSignal('');
-  const [formBoardName, setFormBoardName] = createSignal('');
+  const [boardName, setBoardName] = createSignal('');
 
   const handleClose = () => {
     setError('');
+    setBoardName('');
     setIsOn(false);
   };
 
   const handleSubmit = async () => {
     let newConfig: BoardConfig = {
-      board: formBoardName(),
+      board: boardName(),
     }
 
     try {
-      await props.callbackFunction(newConfig, (props.board !== undefined) ? props.board : undefined);
-      setIsOn(false);
+      /* TODO: add protobuf constants, types */
+      if (newConfig.board.length > 20) {
+        throw new Error("The length of the board's name cannot be bigger than 20!");
+      }
+
+      await props.cb(newConfig, (props.board !== '') ? props.board : undefined);
+      handleClose();
     }
     catch (error: any) {
       setError(error.message);
     }
-
-    setFormBoardName('');
   };
 
   const loadData = async () => {
-    if (props.board === undefined) {
-      setFormBoardName('');
+    if (props.board === '') {
+      setBoardName('');
     }
     else {
-      setFormBoardName(props.board);
+      setBoardName(props.board);
       try {
-        const response = await authorizedFetch(props.username, `/api/${props.username}/config/${props.board}`, {
-          method: 'GET',
-        });
-
-        if (!response.ok) {
-          throw new Error('Could not communicate with the server!');
-        }
-
-        const boardData: BoardConfig = await response.json();
-        console.log(boardData);
-
+        const config: BoardConfig = await getBoardConfig(props.username, props.board);
+        console.log(config);
       } catch (error: any) {
         setError(error.message);
       }
@@ -76,20 +71,20 @@ const ConfigMenuDialog: Component<ConfigMenuDialogProps> = (props) => {
         onClose={handleClose}
         aria-describedby="config-menu-dialog-slide"
       >
-        <DialogTitle>{(props.board === undefined) ? "New Board" : props.board} Config</DialogTitle>
+        <DialogTitle>{(props.board === '') ? "New Board" : props.board} Config</DialogTitle>
         <DialogContent>
           <FormInputField
             label="Name"
             type="text"
             minlength="3"
             maxlength="40"
-            value={formBoardName()}
+            value={boardName()}
             hasVisibilityToggle={false}
-            bind={[formBoardName, setFormBoardName]}></FormInputField>
-          <ErrorMessage errorMsgBind={[error, setError]}></ErrorMessage>
+            bind={[boardName, setBoardName]}></FormInputField>
+          <ErrorMessage errorMsg={[error, setError]}></ErrorMessage>
         </DialogContent>
         <DialogActions class="text-main-color">
-          <Button color="inherit" onClick={handleSubmit}>{(props.board === undefined) ? "Add" : "Edit"}</Button>
+          <Button color="inherit" onClick={handleSubmit}>{(props.board === '') ? "Add" : "Edit"}</Button>
           <Button color="inherit" onClick={handleClose}>Close</Button>
         </DialogActions>
       </Dialog>

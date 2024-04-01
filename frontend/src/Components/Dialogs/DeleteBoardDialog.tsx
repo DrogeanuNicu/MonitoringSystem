@@ -2,21 +2,23 @@ import { Component } from 'solid-js';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@suid/material";
 import { createSignal } from "solid-js";
 import ErrorMessage from '../ErrorMessage';
-
+import { deleteBoardApi } from '../../Api/Board';
 import Transition from './Transition';
 
 interface AlarmDialogProps {
-  showBind: [() => string, (newValue: string) => void];
-  callbackFunction: (boardToBeDeleted: string) => Promise<void>;
+  username: string;
+  board: [() => string, (newValue: string) => void];
+  cb: (board: string) => Promise<void>;
 }
 
 const DeleteBoardDialog: Component<AlarmDialogProps> = (props) => {
-  const [boardToBeDeleted, setBoardToBeDeleted] = props.showBind || createSignal('');
+  const [board, setBoard] = props.board;
   const [errorMessage, setErrorMessage] = createSignal('');
 
   const handleYes = async () => {
     try {
-      await props.callbackFunction(boardToBeDeleted());
+      await deleteBoardApi(props.username, board());
+      await props.cb(board());
       handleClose();
     }
     catch (error: any) {
@@ -25,25 +27,25 @@ const DeleteBoardDialog: Component<AlarmDialogProps> = (props) => {
   };
 
   const handleClose = () => {
-    setBoardToBeDeleted('');
+    setBoard('');
   };
 
   return (
     <div>
       <Dialog
-        open={(boardToBeDeleted() === '' || boardToBeDeleted() === undefined) ? false : true}
+        open={(board() === '' || board() === undefined) ? false : true}
         TransitionComponent={Transition}
         onClose={handleClose}
         aria-describedby="alert-dialog-slide"
       >
-        <DialogTitle>{`Delete the board '${boardToBeDeleted()}'?`}</DialogTitle>
+        <DialogTitle>{`Delete the board '${board()}'?`}</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-delete-dialog-slide-description">
-            {`Do you really want to delete the board '${boardToBeDeleted()}'? All data will be lost.`}
+            {`Do you really want to delete the board '${board()}'? All data will be lost.`}
           </DialogContentText>
         </DialogContent>
         <div class="p-5">
-          <ErrorMessage errorMsgBind={[errorMessage, setErrorMessage]}></ErrorMessage>
+          <ErrorMessage errorMsg={[errorMessage, setErrorMessage]}></ErrorMessage>
         </div>
         <DialogActions class="text-main-color">
           <Button color="inherit" onClick={handleYes}>Yes</Button>

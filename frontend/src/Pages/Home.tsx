@@ -6,7 +6,7 @@ import { IconButton, Divider, List } from '@suid/material';
 import "../Styles/index.css";
 
 import TopMenu from '../Components/TopMenu';
-import BoardListItem from '../Components/BoardListItem';
+import BoardListItem from '../Components/Board';
 import DeleteBoardDialog from '../Components/Dialogs/DeleteBoardDialog';
 import ErrorMessageDialog from '../Components/Dialogs/ErrorMessageDialog';
 import ConfigMenuDialog from '../Components/Dialogs/ConfigMenuDialog';
@@ -22,7 +22,7 @@ const Home: Component = () => {
   const [errorDialog, setErrorDialog] = createSignal('');
   const [deleteDialogBoard, setDeleteDialogBoard] = createSignal('');
   const [isConfigMenuOn, setIsConfigMenuOn] = createSignal(false);
-  const [configMenuBoard, setConfigMenuBoard] = createSignal<string | undefined>();
+  const [configMenuBoard, setConfigMenuBoard] = createSignal('');
   const [boardList, setBoardList] = createSignal<string[]>([]);
 
   const fetchData = async () => {
@@ -50,7 +50,7 @@ const Home: Component = () => {
   }
 
   const prepareAddBoard = () => {
-    setConfigMenuBoard(undefined);
+    setConfigMenuBoard('');
     setIsConfigMenuOn(true);
   }
 
@@ -60,7 +60,6 @@ const Home: Component = () => {
     }
 
     await addBoardApi(params.username, newConfig);
-
     setBoardList(prevList => [...prevList, newConfig.board]);
   };
 
@@ -96,12 +95,7 @@ const Home: Component = () => {
     }
   }
 
-  const prepareDeleteBoard = (boardToBeDeleted: string) => {
-    setDeleteDialogBoard(boardToBeDeleted);
-  }
-
-  const deleteBoard = async (boardToBeDeleted: string) => {
-    await deleteBoardApi(params.username, boardToBeDeleted);
+  const deleteBoardCb = async (boardToBeDeleted: string) => {
     setBoardList(prevBoardList => prevBoardList.filter(board => board !== boardToBeDeleted));
   };
 
@@ -117,15 +111,22 @@ const Home: Component = () => {
 
   return (
     <div>
-      <TopMenu username={params.username} board='' />
-      <ConfigMenuDialog
+      <TopMenu username={params.username} boardMenu={undefined} />
+      {
+        isConfigMenuOn() &&
+        <ConfigMenuDialog
+          username={params.username}
+          board={configMenuBoard()}
+          cb={configMenuCallback}
+          show={[isConfigMenuOn, setIsConfigMenuOn]}>
+        </ConfigMenuDialog>
+      }
+      <ErrorMessageDialog errorMsg={[errorDialog, setErrorDialog]} />
+      <DeleteBoardDialog
         username={params.username}
-        board={configMenuBoard()}
-        callbackFunction={configMenuCallback}
-        showBind={[isConfigMenuOn, setIsConfigMenuOn]}>
-      </ConfigMenuDialog>
-      <ErrorMessageDialog errorMsgBind={[errorDialog, setErrorDialog]} />
-      <DeleteBoardDialog showBind={[deleteDialogBoard, setDeleteDialogBoard]} callbackFunction={deleteBoard} />
+        board={[deleteDialogBoard, setDeleteDialogBoard]}
+        cb={deleteBoardCb}
+      />
       <div class="container mx-auto justify-between items-center">
         <div class="flex justify-center items-center mt-8">
           <h1 class="text-2xl text-center text-main-color font-bold">Boards</h1>
@@ -140,7 +141,7 @@ const Home: Component = () => {
                 editCallback={prepareEditBoard}
                 otaCallback={prepareOtaUpdate}
                 downloadCallback={prepareDownloadBoardData}
-                deleteCallback={prepareDeleteBoard} />
+                deleteCallback={setDeleteDialogBoard} />
               <Divider />
             </>
           ))}

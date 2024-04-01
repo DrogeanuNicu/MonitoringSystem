@@ -177,14 +177,14 @@ func addBoardHandler(c *gin.Context) {
 	err := dashboard.AddBoard(username, &boardData)
 	if err != nil {
 		logger.Println(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Could not add the %s board into the database!", boardData.Board)})
+		c.JSON(http.StatusOK, gin.H{"error": fmt.Sprintf("Could not add the %s board into the database!", boardData.Board)})
 		return
 	}
 
 	err = db.AddBoard(username, &boardData)
 	if err != nil {
 		logger.Println(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Could not add the %s board into the database!", boardData.Board)})
+		c.JSON(http.StatusOK, gin.H{"error": fmt.Sprintf("Could not add the %s board into the database!", boardData.Board)})
 		return
 	}
 
@@ -202,14 +202,14 @@ func editBoardHandler(c *gin.Context) {
 	err := parseBoardData(c, &boardData)
 	if err != nil {
 		logger.Println(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request!"})
+		c.JSON(http.StatusOK, gin.H{"error": "Invalid board data!"})
 		return
 	}
 
 	err = db.EditBoard(username, &boardData, oldBoard)
 	if err != nil {
 		logger.Println(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Could not edit the %s board into the database!", boardData.Board)})
+		c.JSON(http.StatusOK, gin.H{"error": fmt.Sprintf("Could not edit the %s board into the database!", boardData.Board)})
 		return
 	}
 
@@ -225,7 +225,7 @@ func deleteBoardHandler(c *gin.Context) {
 	err := db.DeleteBoard(username, board)
 	if err != nil {
 		logger.Println(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Could not delete the %s board from the database!", board)})
+		c.JSON(http.StatusOK, gin.H{"error": fmt.Sprintf("Could not delete the %s board from the database!", board)})
 		return
 	}
 

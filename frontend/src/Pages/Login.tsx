@@ -126,7 +126,7 @@ const Login: Component = () => {
                 bind={[retypedPassword, setRetypedPassword]}
               />
             )}
-            <ErrorMessage errorMsgBind={[errorMessage, setErrorMessage]} />
+            <ErrorMessage errorMsg={[errorMessage, setErrorMessage]} />
             <button type="submit" class="submit-button">
               {isRegistering() ? 'Register' : 'Login'}
             </button>

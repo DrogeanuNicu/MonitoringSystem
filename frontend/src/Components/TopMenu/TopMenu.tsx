@@ -1,12 +1,12 @@
 import { Component } from 'solid-js';
 import UserMenu from './UserMenu';
 import BoardMenu from './BoardMenu';
+import { BoardMenuProps } from './BoardMenu';
 
 interface TopMenuProps {
   username: string;
-  board: string | undefined;
+  boardMenu: BoardMenuProps | undefined;
 }
-
 
 const TopMenu: Component<TopMenuProps> = (props) => {
   return (
@@ -18,9 +18,15 @@ const TopMenu: Component<TopMenuProps> = (props) => {
         <div class="text-white flex items-center">
 
           {
-            props.board &&
+            props.boardMenu &&
             < div class="md:ml-auto flex space-x-4 items-center pr-3">
-              <BoardMenu board={props.board} />
+              <BoardMenu 
+                board={props.boardMenu.board}
+                editCb={props.boardMenu.editCb}
+                otaCb={props.boardMenu.otaCb}
+                deleteCb={props.boardMenu.deleteCb}
+                downloadCb={props.boardMenu.downloadCb}
+              />
             </div>
           }
 

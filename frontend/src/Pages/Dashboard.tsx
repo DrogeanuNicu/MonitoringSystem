@@ -21,11 +21,6 @@ const Dashboard: Component = () => {
     setIsConfigMenuOn(true);
   }
 
-  const editBoard = async (newConfig: BoardConfig, oldBoardName: string) => {
-    await editBoardApi(params.username, newConfig, oldBoardName);
-    navigate(`/dashboard/${params.username}/${newConfig.board}`)
-  };
-
   const prepareDownloadBoardData = async (board: string) => {
     try {
       await downloadBoardDataApi(params.username, board);
@@ -47,9 +42,10 @@ const Dashboard: Component = () => {
     navigate(`/home/${params.username}`)
   };
 
-  const configMenuCallback = async (newConfig: BoardConfig, oldBoardName?: string | undefined) => {
+  const configMenuCb = async (newConfig: BoardConfig, oldBoardName?: string | undefined) => {
     if (oldBoardName !== undefined) {
-      await editBoard(newConfig, oldBoardName);
+      await editBoardApi(params.username, newConfig, oldBoardName);
+      navigate(`/dashboard/${params.username}/${newConfig.board}`)
     } else {
       throw new Error("the board you are trying to edit does not exist anymore!");
     }
@@ -82,7 +78,7 @@ const Dashboard: Component = () => {
         <ConfigMenuDialog
           username={params.username}
           board={configMenuBoard()}
-          cb={configMenuCallback}
+          cb={configMenuCb}
           show={[isConfigMenuOn, setIsConfigMenuOn]}>
         </ConfigMenuDialog>
       }

@@ -21,6 +21,7 @@ const ErrorMessageDialog: Component<ErrorMessageProps> = (props) => {
         TransitionComponent={Transition}
         onClose={handleClose}
         aria-describedby="alert-dialog-slide"
+        fullWidth
       >
         <DialogTitle>Error</DialogTitle>
         <DialogContent>

@@ -37,6 +37,7 @@ const DeleteBoardDialog: Component<AlarmDialogProps> = (props) => {
         TransitionComponent={Transition}
         onClose={handleClose}
         aria-describedby="alert-dialog-slide"
+        fullWidth
       >
         <DialogTitle>{`Delete the board '${board()}'?`}</DialogTitle>
         <DialogContent>

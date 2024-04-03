@@ -1,10 +1,11 @@
-import { Component, createSignal, onMount } from 'solid-js';
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@suid/material";
-import FormInputField from '../FormInputField';
+import { Component, createSignal, onMount, Signal, createEffect } from 'solid-js';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@suid/material";
 import ErrorMessage from '../ErrorMessage';
-import { BoardConfig } from '../../Api/Board';
+import ShowHideToggle from '../ShowHideToggle';
+import BoardParameter from '../Board/BoardParameter';
+
+import { BoardConfig, Parameter } from '../../Api/Board';
 import { getBoardConfig } from '../../Api/Board';
-import { authorizedFetch, } from '../../Api/Fetch';
 
 import Transition from './Transition';
 
@@ -19,7 +20,14 @@ interface ConfigMenuDialogProps {
 const ConfigMenuDialog: Component<ConfigMenuDialogProps> = (props) => {
   const [isOn, setIsOn] = props.show;
   const [error, setError] = createSignal('');
+  const [toggleDetails, setToggleDetails] = createSignal(true);
   const [boardName, setBoardName] = createSignal('');
+  const [boardDesc, setBoardDesc] = createSignal('');
+  const [toggleParams, setToggleParams] = createSignal(true);
+  const [parameters, setParameters] = createSignal<Signal<Parameter>[]>([]);
+  const [toggleCharts, setToggleCharts] = createSignal(true);
+  const [toggleGauges, setToggleGauges] = createSignal(true);
+  const [toggleMaps, setToggleMaps] = createSignal(true);
 
   const handleClose = () => {
     setError('');
@@ -27,13 +35,18 @@ const ConfigMenuDialog: Component<ConfigMenuDialogProps> = (props) => {
     setIsOn(false);
   };
 
+  const addParameter = () => {
+    setParameters(prevParams => [...prevParams, createSignal<Parameter>({ name: "", uom: "" })]);
+  };
+
   const handleSubmit = async () => {
     let newConfig: BoardConfig = {
       board: boardName(),
+      parameters: [],
     }
 
     try {
-      /* TODO: add protobuf constants, types */
+      /* TODO: add protobuf or something else for constants, types */
       if (newConfig.board.length > 20) {
         throw new Error("The length of the board's name cannot be bigger than 20!");
       }
@@ -70,17 +83,69 @@ const ConfigMenuDialog: Component<ConfigMenuDialogProps> = (props) => {
         TransitionComponent={Transition}
         onClose={handleClose}
         aria-describedby="config-menu-dialog-slide"
+        fullWidth
+        maxWidth="lg"
       >
         <DialogTitle>{(props.board === '') ? "New Board" : props.board} Config</DialogTitle>
         <DialogContent>
-          <FormInputField
-            label="Name"
-            type="text"
-            minlength="3"
-            maxlength="40"
-            value={boardName()}
-            hasVisibilityToggle={false}
-            bind={[boardName, setBoardName]}></FormInputField>
+
+          <div class="text-main-color">
+            <ShowHideToggle text="Details" show={[toggleDetails, setToggleDetails]} />
+            <div classList={{ 'hidden': !toggleDetails(), 'text-black': true }}>
+              <div class="flex justify-between space-x-1">
+                <TextField
+                  required
+                  label="Name"
+                  variant="outlined"
+                  fullWidth
+                  size="small"
+                  value={boardName()}
+                  onChange={(e) => setBoardName(e.target.value)}
+                />
+                <TextField
+                  label="Description"
+                  variant="outlined"
+                  fullWidth
+                  multiline
+                  size="small"
+                  value={boardDesc()}
+                  onChange={(e) => setBoardDesc(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <ShowHideToggle text="Parameters" show={[toggleParams, setToggleParams]} />
+            <div classList={{ 'hidden': !toggleParams() }} class="flex flex-col items-center">
+              <div class="text-black">
+                {parameters().map(paramSignal => (
+                  <BoardParameter paramSignal={paramSignal} />
+                ))}
+              </div>
+              <Button color="inherit" onClick={addParameter}>Add</Button>
+            </div>
+
+            <ShowHideToggle text="Charts" show={[toggleCharts, setToggleCharts]} />
+            <div classList={{ 'hidden': !toggleCharts() }} class="flex flex-col items-center">
+              <div class="text-black">
+              </div>
+              <Button color="inherit" >Add</Button>
+            </div>
+
+            <ShowHideToggle text="Gauges" show={[toggleGauges, setToggleGauges]} />
+            <div classList={{ 'hidden': !toggleGauges() }} class="flex flex-col items-center">
+              <div class="text-black">
+              </div>
+              <Button color="inherit" >Add</Button>
+            </div>
+
+            <ShowHideToggle text="Maps" show={[toggleMaps, setToggleMaps]} />
+            <div classList={{ 'hidden': !toggleMaps() }} class="flex flex-col items-center">
+              <div class="text-black">
+              </div>
+              <Button color="inherit" >Add</Button>
+            </div>
+          </div>
+
           <ErrorMessage errorMsg={[error, setError]}></ErrorMessage>
         </DialogContent>
         <DialogActions class="text-main-color">

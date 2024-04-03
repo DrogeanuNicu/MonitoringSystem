@@ -3,11 +3,11 @@ import { Component } from 'solid-js';
 import { Alert } from "@suid/material"
 
 interface ErrorMessageProps {
-  errorMsg?: [() => string, (newValue: string) => void];
+  errorMsg: [() => string, (newValue: string) => void];
 }
 
 const ErrorMessage: Component<ErrorMessageProps> = (props) => {
-  const [error, setError] = props.errorMsg || createSignal('');
+  const [error, setError] = props.errorMsg;
 
   return (
     <div>

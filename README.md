@@ -126,3 +126,7 @@ mosquitto_pub -h drogeanunicusor.go.ro -p 8883 --cafile certs/mqtts/ca.crt -t te
 ```
 
 More details can be found here: [Mosquitto TLS Guide](http://www.steves-internet-guide.com/mosquitto-tls/)
+
+
+## PostgreSQL
+

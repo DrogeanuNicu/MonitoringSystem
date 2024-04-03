@@ -57,7 +57,7 @@ const BoardMenu: Component<BoardMenuProps> = (props) => {
         <HiOutlineCpuChip size={40} color="white" />
       </IconButton>
       <Menu
-        id="basic-menu"
+        id="board-menu"
         anchorEl={anchorEl()}
         open={open()}
         onClose={handleClose}

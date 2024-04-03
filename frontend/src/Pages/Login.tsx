@@ -94,36 +94,56 @@ const Login: Component = () => {
             <FormInputField
               label="Username"
               type="text"
-              minlength="3"
-              maxlength="30"
+              required
+              fullWidth
+              disableUnderline="true"
+              inputProps={{
+                minlength: 3,
+                maxlength: 30
+              }}
               hasVisibilityToggle={false}
-              bind={[username, setUsername]}
+              signal={[username, setUsername]}
             />
             {isRegistering() && (
               <FormInputField
                 label="Email"
                 type="email"
-                minlength="3"
-                maxlength="30"
+                required
+                fullWidth
+                disableUnderline="true"
+                inputProps={{
+                  minlength: 3,
+                  maxlength: 30,
+                }}
                 hasVisibilityToggle={false}
-                bind={[email, setEmail]}
+                signal={[email, setEmail]}
               />
             )}
             {/* TODO: Add info message for each field, eg: describe the password pattern */}
             <FormInputField
               label="Password"
-              minlength="8"
-              maxlength="30"
+              required
+              fullWidth
+              disableUnderline="true"
+              inputProps={{
+                minlength: 8,
+                maxlength: 30
+              }}
               hasVisibilityToggle={true}
-              bind={[password, setPassword]}
+              signal={[password, setPassword]}
             />
             {isRegistering() && (
               <FormInputField
                 label="Retype Password"
-                minlength="8"
-                maxlength="30"
+                required
+                fullWidth
+                disableUnderline="true"
+                inputProps={{
+                  minlength: 8,
+                  maxlength: 30
+                }}
                 hasVisibilityToggle={true}
-                bind={[retypedPassword, setRetypedPassword]}
+                signal={[retypedPassword, setRetypedPassword]}
               />
             )}
             <ErrorMessage errorMsg={[errorMessage, setErrorMessage]} />

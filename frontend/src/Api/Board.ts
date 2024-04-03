@@ -1,7 +1,15 @@
 import { authorizedFetch } from "./Fetch";
 
+interface Parameter {
+  name: string;
+  uom: string;
+}
+
 interface BoardConfig {
   board: string;
+
+  parameters: Parameter[];
+
 }
 
 const addBoardApi = async (username: string, data: BoardConfig) => {
@@ -92,5 +100,5 @@ const processResponseCode = async (response: Response) => {
   }
 }
 
-export type { BoardConfig };
+export type { BoardConfig, Parameter };
 export { addBoardApi, editBoardApi, deleteBoardApi, downloadBoardDataApi, otaUpdateApi, getBoardConfig };

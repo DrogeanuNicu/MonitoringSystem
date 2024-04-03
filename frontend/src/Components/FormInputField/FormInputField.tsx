@@ -1,11 +1,11 @@
-import { createSignal } from 'solid-js';
+import { Component, createSignal } from 'solid-js';
+import { Input, InputLabel, InputAdornment, IconButton, FormControl } from '@suid/material';
 
 import { HiSolidEye, HiSolidEyeSlash } from "solid-icons/hi";
 import "../../Styles/index.css";
 
-
-const FormInputField = (props) => {
-  const [value, setValue] = props.bind || createSignal('');
+const FormInputField = (props: any) => {
+  const [value, setValue] = props.signal || createSignal('');
   const [showPassword, setShowPassword] = createSignal(false);
 
   const togglePasswordVisibility = () => {
@@ -14,20 +14,32 @@ const FormInputField = (props) => {
 
   return (
     <div class="mb-2">
-      <label class="text-left block mb-1">{props.label}</label>
+      <InputLabel class="text-left block mb-1">{props.label}</InputLabel>
       {props.hasVisibilityToggle ? (
-        <div class="relative">
-          <input type={showPassword() ? 'text' : 'password'} onChange={(e) => setValue(e.target.value)} class="w-full input-field pr-10" required {...props} />
-          <button type="button" class="absolute top-0 right-0 mt-2 mr-2" onClick={togglePasswordVisibility}>
-            {showPassword() ? (
-              <HiSolidEye size={24} class="icon-main-color" />
-            ) : (
-              <HiSolidEyeSlash size={24} class="icon-main-color" />
-            )}
-          </button>
-        </div>
+        <Input class="w-full input-field"
+          value={value()}
+          onChange={(e) => setValue(e.target.value)}
+          {...props}
+          type={showPassword() ? 'text' : 'password'}
+          endAdornment={
+            <InputAdornment position="end">
+              <IconButton
+                aria-label="toggle password visibility"
+                onClick={togglePasswordVisibility}
+              >
+                {showPassword() ? <HiSolidEye size={24} class="icon-main-color" /> : <HiSolidEyeSlash size={24} class="icon-main-color" />}
+              </IconButton>
+            </InputAdornment>
+          }
+        />
       ) : (
-        <input value={value()} onInput={(e) => setValue(e.target.value)} class="w-full input-field" required {...props} />
+        <Input class="w-full input-field"
+          value={value()}
+          onChange={(e) => setValue(e.target.value)}
+          minlength="3"
+          maxlength="8"
+          {...props}
+        />
       )
       }
     </div >

@@ -1,13 +1,19 @@
 import { Component, createSignal, onMount, Signal, createEffect } from 'solid-js';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@suid/material";
 import ErrorMessage from '../ErrorMessage';
-import ShowHideToggle from '../ShowHideToggle';
-import BoardParameter from '../Board/BoardParameter';
+import ShowHideToggle from '../DropDowns/ShowHideToggle';
+import { DropDownType } from '../DropDowns/DropDown';
 
-import { BoardConfig, Parameter } from '../../Api/Board';
+import { BoardConfig } from '../../Api/Board';
+import { IParameter } from '../../Api/Parameter';
+import { IChart } from '../../Api/Chart';
+import { IGauge } from '../../Api/Gauge';
+import { IMap } from '../../Api/Map';
+
 import { getBoardConfig } from '../../Api/Board';
 
 import Transition from './Transition';
+import DropDown from '../DropDowns/DropDown';
 
 interface ConfigMenuDialogProps {
   username: string;
@@ -22,21 +28,15 @@ const ConfigMenuDialog: Component<ConfigMenuDialogProps> = (props) => {
   const [error, setError] = createSignal('');
   const [toggleDetails, setToggleDetails] = createSignal(true);
   const [boardName, setBoardName] = createSignal('');
-  const [boardDesc, setBoardDesc] = createSignal('');
-  const [toggleParams, setToggleParams] = createSignal(true);
-  const [parameters, setParameters] = createSignal<Signal<Parameter>[]>([]);
-  const [toggleCharts, setToggleCharts] = createSignal(true);
-  const [toggleGauges, setToggleGauges] = createSignal(true);
-  const [toggleMaps, setToggleMaps] = createSignal(true);
+  const [parameters, setParameters] = createSignal<Signal<IParameter>[]>([]);
+  const [charts, setCharts] = createSignal<Signal<IChart>[]>([]);
+  const [gauges, setGauges] = createSignal<Signal<IGauge>[]>([]);
+  const [maps, setMaps] = createSignal<Signal<IMap>[]>([]);
 
   const handleClose = () => {
     setError('');
     setBoardName('');
     setIsOn(false);
-  };
-
-  const addParameter = () => {
-    setParameters(prevParams => [...prevParams, createSignal<Parameter>({ name: "", uom: "" })]);
   };
 
   const handleSubmit = async () => {
@@ -102,48 +102,13 @@ const ConfigMenuDialog: Component<ConfigMenuDialogProps> = (props) => {
                   value={boardName()}
                   onChange={(e) => setBoardName(e.target.value)}
                 />
-                <TextField
-                  label="Description"
-                  variant="outlined"
-                  fullWidth
-                  multiline
-                  size="small"
-                  value={boardDesc()}
-                  onChange={(e) => setBoardDesc(e.target.value)}
-                />
               </div>
             </div>
 
-            <ShowHideToggle text="Parameters" show={[toggleParams, setToggleParams]} />
-            <div classList={{ 'hidden': !toggleParams() }} class="flex flex-col items-center">
-              <div class="text-black">
-                {parameters().map(paramSignal => (
-                  <BoardParameter paramSignal={paramSignal} />
-                ))}
-              </div>
-              <Button color="inherit" onClick={addParameter}>Add</Button>
-            </div>
-
-            <ShowHideToggle text="Charts" show={[toggleCharts, setToggleCharts]} />
-            <div classList={{ 'hidden': !toggleCharts() }} class="flex flex-col items-center">
-              <div class="text-black">
-              </div>
-              <Button color="inherit" >Add</Button>
-            </div>
-
-            <ShowHideToggle text="Gauges" show={[toggleGauges, setToggleGauges]} />
-            <div classList={{ 'hidden': !toggleGauges() }} class="flex flex-col items-center">
-              <div class="text-black">
-              </div>
-              <Button color="inherit" >Add</Button>
-            </div>
-
-            <ShowHideToggle text="Maps" show={[toggleMaps, setToggleMaps]} />
-            <div classList={{ 'hidden': !toggleMaps() }} class="flex flex-col items-center">
-              <div class="text-black">
-              </div>
-              <Button color="inherit" >Add</Button>
-            </div>
+            <DropDown name="Parameters" type={DropDownType.PARAMETERS} signals={[parameters, setParameters]} ></DropDown>
+            <DropDown name="Charts" type={DropDownType.CHARTS} signals={[charts, setCharts]} ></DropDown>
+            <DropDown name="Gauges" type={DropDownType.GAUGES} signals={[gauges, setGauges]} ></DropDown>
+            <DropDown name="Maps" type={DropDownType.MAPS} signals={[maps, setMaps]} ></DropDown>
           </div>
 
           <ErrorMessage errorMsg={[error, setError]}></ErrorMessage>

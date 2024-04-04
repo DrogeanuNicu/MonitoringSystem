@@ -11,6 +11,8 @@ import BoardGauge from './BoardGauge';
 import { IMap } from '../../Api/Map';
 import BoardMap from './BoardMap';
 
+import ParamSelect from './ParamSelect';
+
 enum DropDownType {
   PARAMETERS,
   CHARTS,
@@ -22,10 +24,12 @@ interface DropDownProps {
   name: string;
   type: DropDownType;
   signals: Signal<Signal<any>[]>;
+  params?: Signal<Signal<IParameter>[]>;
 }
 
 const DropDown: Component<DropDownProps> = (props) => {
   const [signals, setSignals] = props.signals;
+  const [params, setParams] = props.params ?? createSignal<Signal<IParameter>[]>([]);;
   const [toggle, setToggle] = createSignal(true);
 
   const addSignal = () => {
@@ -64,7 +68,9 @@ const DropDown: Component<DropDownProps> = (props) => {
           elements.push(<BoardParameter index={i} signal={signals()[i]} deleteCb={deleteSignal} />);
           break;
         case DropDownType.CHARTS:
-          elements.push(<BoardChart signal={signals()[i]} />);
+          if (params !== undefined) {
+            elements.push(<BoardChart index={i} signal={signals()[i]} deleteCb={deleteSignal} params={[params, setParams]} />);
+          }
           break;
         case DropDownType.GAUGES:
           elements.push(<BoardGauge signal={signals()[i]} />);

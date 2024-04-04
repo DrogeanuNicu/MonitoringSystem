@@ -106,7 +106,7 @@ const ConfigMenuDialog: Component<ConfigMenuDialogProps> = (props) => {
             </div>
 
             <DropDown name="Parameters" type={DropDownType.PARAMETERS} signals={[parameters, setParameters]} ></DropDown>
-            <DropDown name="Charts" type={DropDownType.CHARTS} signals={[charts, setCharts]} ></DropDown>
+            <DropDown name="Charts" type={DropDownType.CHARTS} signals={[charts, setCharts]} params={[parameters, setParameters]} ></DropDown>
             <DropDown name="Gauges" type={DropDownType.GAUGES} signals={[gauges, setGauges]} ></DropDown>
             <DropDown name="Maps" type={DropDownType.MAPS} signals={[maps, setMaps]} ></DropDown>
           </div>

@@ -1,3 +1,4 @@
+import { IChart } from "./Chart";
 import { authorizedFetch } from "./Fetch";
 import { IParameter } from "./Parameter";
 
@@ -5,6 +6,7 @@ interface BoardConfig {
   board: string;
 
   parameters: IParameter[];
+  charts: IChart[];
 }
 
 const addBoardApi = async (username: string, data: BoardConfig) => {

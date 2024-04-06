@@ -2,6 +2,7 @@ package dashboard
 
 import (
 	"encoding/csv"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -58,35 +59,35 @@ func AddUser(username string) error {
 	return nil
 }
 
-func AddBoard(username string, boardData *BoardConfig) error {
-	boardFolderPath := filepath.Join(dataPath, username, boardData.Board)
+func AddBoard(username string, boardConf *BoardConfig) error {
+	boardFolderPath := filepath.Join(dataPath, username, boardConf.Board)
 
 	if _, err := os.Stat(boardFolderPath); err == nil {
 		if err := os.RemoveAll(boardFolderPath); err != nil {
-			logger.Printf("Failed to remove existing board folder for %s/%s: %v\n", username, boardData.Board, err)
+			logger.Printf("Failed to remove existing board folder for %s/%s: %v\n", username, boardConf.Board, err)
 			return err
 		}
 	} else if !os.IsNotExist(err) {
-		logger.Printf("Failed to check if board folder exists for %s/%s: %v\n", username, boardData.Board, err)
+		logger.Printf("Failed to check if board folder exists for %s/%s: %v\n", username, boardConf.Board, err)
 		return err
 	}
 
 	if err := os.Mkdir(boardFolderPath, folderPermissions); err != nil {
-		logger.Printf("Failed to create board folder for %s/%s: %v\n", username, boardData.Board, err)
+		logger.Printf("Failed to create board folder for %s/%s: %v\n", username, boardConf.Board, err)
 		return err
 	}
 
-	fileName := boardData.Board + ".csv"
+	fileName := boardConf.Board + ".csv"
 	filePath := filepath.Join(boardFolderPath, fileName)
 	if _, err := os.Stat(filePath); err != nil {
 		if !os.IsNotExist(err) {
-			logger.Printf("Failed to check if CSV file exists for %s/%s: %v\n", username, boardData.Board, err)
+			logger.Printf("Failed to check if CSV file exists for %s/%s: %v\n", username, boardConf.Board, err)
 			return err
 		}
 
 		file, err := os.Create(filePath)
 		if err != nil {
-			logger.Printf("Failed to create CSV file for %s/%s: %v\n", username, boardData.Board, err)
+			logger.Printf("Failed to create CSV file for %s/%s: %v\n", username, boardConf.Board, err)
 			return err
 		}
 		defer file.Close()
@@ -94,11 +95,19 @@ func AddBoard(username string, boardData *BoardConfig) error {
 		writer := csv.NewWriter(file)
 		defer writer.Flush()
 
-		headers := []string{"Column1", "Column2", "Column3"}
+		headers := make([]string, len(boardConf.Parameters))
+		for i, param := range boardConf.Parameters {
+			if param.Uom != "" {
+				headers[i] = fmt.Sprintf("%s [%s]", param.Name, param.Uom)
+			} else {
+				headers[i] = param.Name
+			}
+		}
 		if err := writer.Write(headers); err != nil {
-			logger.Printf("Failed to write CSV headers for %s/%s: %v\n", username, boardData.Board, err)
+			logger.Printf("Failed to write CSV headers for %s/%s: %v\n", username, boardConf.Board, err)
 			return err
 		}
+		headers = nil
 	}
 
 	return nil

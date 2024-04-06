@@ -43,12 +43,30 @@ const ConfigMenuDialog: Component<ConfigMenuDialogProps> = (props) => {
     let newConfig: BoardConfig = {
       board: boardName(),
       parameters: [],
+      charts: [],
+    };
+
+    for (let i = 0; i < parameters().length; i++) {
+      const [x, setX] = parameters()[i];
+      newConfig.parameters.push(x());
+    }
+    
+    for (let i = 0; i < charts().length; i++) {
+      const [x, setX] = charts()[i];
+      newConfig.charts.push(x());
     }
 
+    console.log(newConfig);
+
     try {
+      /* TODO: Add more checks to be sure the data is correct before sending to the backend */
       /* TODO: add protobuf or something else for constants, types */
       if (newConfig.board.length > 20) {
         throw new Error("The length of the board's name cannot be bigger than 20!");
+      }
+
+      if (newConfig.board === "") {
+        throw new Error("The board's name cannot be empty!");
       }
 
       await props.cb(newConfig, (props.board !== '') ? props.board : undefined);

@@ -5,7 +5,7 @@ interface IParameter {
 
 namespace IParameter {
   export function create(name: string = "", uom: string = ""): IParameter {
-    return { name, uom };
+    return { name: name, uom: uom };
   }
 }
 

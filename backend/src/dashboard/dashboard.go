@@ -14,8 +14,28 @@ type DashboardConfig struct {
 	DataPath string `json:"DataPath"`
 }
 
+type IParameter struct {
+	Name string
+	Uom  string
+}
+
+type IChartOy struct {
+	Index uint
+	Color string
+}
+
+type IChart struct {
+	Name string
+	Type string
+	Ox   uint
+	Oy   []IChartOy
+}
+
 type BoardConfig struct {
 	Board string
+
+	Parameters []IParameter
+	Charts     []IChart
 }
 
 // ================================================================================================

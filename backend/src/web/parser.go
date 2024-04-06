@@ -41,9 +41,9 @@ import (
 //	Local Functions
 //
 // ================================================================================================
-func parseBoardData(c *gin.Context, boardData *dashboard.BoardConfig) error {
+func parseBoardConf(c *gin.Context, boardConf *dashboard.BoardConfig) error {
 
-	err := c.BindJSON(boardData)
+	err := c.BindJSON(boardConf)
 	if err != nil {
 		logger.Printf("Error binding JSON: %s", err)
 		return err

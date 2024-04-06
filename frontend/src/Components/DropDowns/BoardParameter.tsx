@@ -15,7 +15,7 @@ const BoardParameter: Component<BoardParameterProps> = (props) => {
   const [signal, setSignal] = props.signal;
 
   return (
-    <div draggable class="mb-4 flex items-center space-x-2">
+    <div class="mb-4 flex items-center space-x-2">
       <TextField
         required
         label="Name"

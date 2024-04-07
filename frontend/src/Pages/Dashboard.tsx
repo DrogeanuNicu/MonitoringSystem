@@ -45,7 +45,7 @@ const Dashboard: Component = () => {
   const configMenuCb = async (newConfig: BoardConfig, oldBoardName?: string | undefined) => {
     if (oldBoardName !== undefined) {
       await editBoardApi(params.username, newConfig, oldBoardName);
-      navigate(`/dashboard/${params.username}/${newConfig.board}`)
+      navigate(`/dashboard/${params.username}/${newConfig.Board}`)
     } else {
       throw new Error("the board you are trying to edit does not exist anymore!");
     }

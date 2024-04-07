@@ -3,16 +3,17 @@ import { TextField } from '@suid/material';
 import { HiOutlineTrash } from 'solid-icons/hi';
 import { IconButton } from '@suid/material';
 
-import { IParameter } from '../../Api/Parameter';
+import { IParameter, IParameterSignals } from '../../Api/Parameter';
 
 interface BoardParameterProps {
   index: number;
-  signal: Signal<IParameter>;
+  signal: IParameterSignals;
   deleteCb: (index: number) => void;
 }
 
 const BoardParameter: Component<BoardParameterProps> = (props) => {
-  const [signal, setSignal] = props.signal;
+  const [name, setName] = props.signal.Name;
+  const [uom, setUom] = props.signal.Uom;
 
   return (
     <div class="mb-4 flex items-center space-x-2">
@@ -22,8 +23,8 @@ const BoardParameter: Component<BoardParameterProps> = (props) => {
         variant="outlined"
         fullWidth
         size="small"
-        value={signal().name}
-        onChange={(e) => setSignal({ ...signal(), name: e.target.value })}
+        value={name()}
+        onChange={(e) => setName(e.target.value)}
       />
       <TextField
         label="Unit of measurement"
@@ -31,8 +32,8 @@ const BoardParameter: Component<BoardParameterProps> = (props) => {
         fullWidth
         multiline
         size="small"
-        value={signal().uom}
-        onChange={(e) => setSignal({ ...signal(), uom: e.target.value })}
+        value={uom()}
+        onChange={(e) => setUom(e.target.value)}
       />
       <IconButton
         id="add-board-button"

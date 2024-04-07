@@ -11,7 +11,7 @@ const BoardGauge: Component<BoardGaugeProps> = (props) => {
 
   return (
     <div>
-        <p>{signal().name}</p>
+        <p>{signal().Name}</p>
     </div>
   );
 };

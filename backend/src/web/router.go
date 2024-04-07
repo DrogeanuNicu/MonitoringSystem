@@ -234,14 +234,18 @@ func getBoardConfigHandler(c *gin.Context) {
 	board := c.Param("board")
 
 	boardConf.Board = board
-	err := dashboard.ReadBoardConfig(username, &boardConf)
+	err := dashboard.ReadBoardConfig(username, board, &boardConf)
 	if err != nil {
 		logger.Println(err)
 		c.JSON(http.StatusOK, gin.H{"error": "Could not communicate with the server!"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"board": boardConf.Board})
+	c.JSON(http.StatusOK, gin.H{
+		"Board":      boardConf.Board,
+		"Parameters": boardConf.Parameters,
+		"Charts":     boardConf.Charts,
+	})
 }
 
 func downloadBoardDataHandler(c *gin.Context) {

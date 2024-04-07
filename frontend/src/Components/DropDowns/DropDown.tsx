@@ -2,16 +2,14 @@ import { Component, Signal, createSignal } from 'solid-js';
 import ShowHideToggle from './ShowHideToggle';
 import { Button } from '@suid/material';
 
-import { IParameter } from '../../Api/Parameter';
+import { IParameter, IParameterSignals } from '../../Api/Parameter';
 import BoardParameter from './BoardParameter';
-import { IChart } from '../../Api/Chart';
+import { IChart, IChartSignals } from '../../Api/Chart';
 import BoardChart from './BoardChart';
 import { IGauge } from '../../Api/Gauge';
 import BoardGauge from './BoardGauge';
 import { IMap } from '../../Api/Map';
 import BoardMap from './BoardMap';
-
-import ParamSelect from './ParamSelect';
 
 enum DropDownType {
   PARAMETERS,
@@ -23,22 +21,22 @@ enum DropDownType {
 interface DropDownProps {
   name: string;
   type: DropDownType;
-  signals: Signal<Signal<any>[]>;
-  params?: Signal<Signal<IParameter>[]>;
+  signals: Signal<any[]>;
+  params?: Signal<IParameterSignals[]>;
 }
 
 const DropDown: Component<DropDownProps> = (props) => {
   const [signals, setSignals] = props.signals;
-  const [params, setParams] = props.params ?? createSignal<Signal<IParameter>[]>([]);;
+  const [params, setParams] = props.params ?? createSignal<IParameterSignals[]>([]);
   const [toggle, setToggle] = createSignal(true);
 
   const addSignal = () => {
     switch (props.type) {
       case DropDownType.PARAMETERS:
-        setSignals([...signals(), createSignal<IParameter>(IParameter.create())]);
+        setSignals([...signals(), IParameterSignals.create(IParameter.create())]);
         break;
       case DropDownType.CHARTS:
-        setSignals([...signals(), createSignal<IChart>(IChart.create())]);
+        setSignals([...signals(), IChartSignals.create(IChart.create())]);
         break;
       case DropDownType.GAUGES:
         setSignals([...signals(), createSignal<IGauge>(IGauge.create())]);
@@ -65,11 +63,22 @@ const DropDown: Component<DropDownProps> = (props) => {
     for (let i = 0; i < signals().length; i++) {
       switch (props.type) {
         case DropDownType.PARAMETERS:
-          elements.push(<BoardParameter index={i} signal={signals()[i]} deleteCb={deleteSignal} />);
+          elements.push(
+            <BoardParameter
+              index={i}
+              signal={signals()[i]}
+              deleteCb={deleteSignal}
+            />);
           break;
         case DropDownType.CHARTS:
           if (params !== undefined) {
-            elements.push(<BoardChart index={i} signal={signals()[i]} deleteCb={deleteSignal} params={[params, setParams]} />);
+            elements.push(
+              <BoardChart
+                index={i}
+                signal={signals()[i]}
+                deleteCb={deleteSignal}
+                params={[params, setParams]}
+              />);
           }
           break;
         case DropDownType.GAUGES:

@@ -1,19 +1,19 @@
-import { Component } from 'solid-js';
+import { Component, Signal } from 'solid-js';
 
 interface ColorPickerProps {
   oyIndex: number;
-  initColor?: string;
-  cb: (oyIndex: number, color: string) => void;
+  signal: Signal<string>;
 }
 
 const ColorPicker: Component<ColorPickerProps> = (props) => {
-
-  const handleColorChange = (event: any) => {
-    props.cb(props.oyIndex, String(event.target.value));
-  };
+  const [color, setColor] = props.signal;
 
   return (
-    <input type="color" value={props.initColor ?? "0xFFFFFF"} onChange={handleColorChange}></input>
+    <input
+      type="color"
+      value={color()}
+      onChange={(e) => { setColor(String(e.target.value)) }}>
+    </input>
   );
 };
 

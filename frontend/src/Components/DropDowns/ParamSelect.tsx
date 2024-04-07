@@ -1,21 +1,20 @@
-import { Component, createSignal, Signal, onMount } from 'solid-js';
+import { Component, Signal } from 'solid-js';
 import { MenuItem, Select, FormControl, InputLabel } from '@suid/material';
 import { SelectChangeEvent } from "@suid/material/Select";
 
-import { IParameter } from '../../Api/Parameter';
-import { IChartOy } from '../../Api/Chart';
+import { IParameterSignals } from '../../Api/Parameter';
 
 interface ParamSelectProps {
-  params: Signal<Signal<IParameter>[]>;
+  params: Signal<IParameterSignals[]>;
+  signal: Signal<number>
   label: string;
-  initIndex?: number;
   oyIndex?: number;
   cb: (paramIndex: number, oyIndex?: number) => void;
 }
 
 const ParamSelect: Component<ParamSelectProps> = (props) => {
   const [params, setParams] = props.params;
-  const [signal, setSignal] = createSignal(0);
+  const [signal, setSignal] = props.signal;
 
   const onSelectChange = (event: SelectChangeEvent) => {
     setSignal(parseInt(event.target.value));
@@ -26,23 +25,12 @@ const ParamSelect: Component<ParamSelectProps> = (props) => {
     const elements = [];
 
     for (let i: number = 0; i < params().length; i++) {
-      const [paramSignal, setParamSignal] = params()[i];
-      if (paramSignal().name !== "") {
-        elements.push(<MenuItem value={i} >{paramSignal().name}</MenuItem>)
+      if (params()[i].Name[0]() !== "") {
+        elements.push(<MenuItem value={i} >{params()[i].Name[0]()}</MenuItem>)
       }
     }
     return elements;
   }
-
-  const setInitIndex = () => {
-    if (props.initIndex !== undefined) {
-      if (props.initIndex < params().length) {
-        setSignal(props.initIndex);
-      }
-    }
-  }
-
-  onMount(setInitIndex);
 
   return (
     <FormControl class="w-full" size="small">

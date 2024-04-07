@@ -55,12 +55,12 @@ const Home: Component = () => {
   }
 
   const addBoard = async (newConfig: BoardConfig) => {
-    if (boardList().includes(newConfig.board)) {
+    if (boardList().includes(newConfig.Board)) {
       throw new Error("The name of the board must be unique!")
     }
 
     await addBoardApi(params.username, newConfig);
-    setBoardList(prevList => [...prevList, newConfig.board]);
+    setBoardList(prevList => [...prevList, newConfig.Board]);
   };
 
   const prepareEditBoard = (board: string) => {
@@ -69,13 +69,13 @@ const Home: Component = () => {
   }
 
   const editBoard = async (newConfig: BoardConfig, oldBoardName: string) => {
-    if (newConfig.board !== oldBoardName) {
-      if (boardList().includes(newConfig.board)) {
+    if (newConfig.Board !== oldBoardName) {
+      if (boardList().includes(newConfig.Board)) {
         throw new Error("The name of the board must be unique!")
       }
     }
     await editBoardApi(params.username, newConfig, oldBoardName);
-    setBoardList(prevList => prevList.map(board => board === oldBoardName ? newConfig.board : board));
+    setBoardList(prevList => prevList.map(board => board === oldBoardName ? newConfig.Board : board));
   };
 
   const prepareDownloadBoardData = async (board: string) => {

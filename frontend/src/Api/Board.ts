@@ -3,15 +3,15 @@ import { authorizedFetch } from "./Fetch";
 import { IParameter } from "./Parameter";
 
 interface BoardConfig {
-  board: string;
+  Board: string;
 
-  parameters: IParameter[];
-  charts: IChart[];
+  Parameters: IParameter[];
+  Charts: IChart[];
 }
 
 const addBoardApi = async (username: string, data: BoardConfig) => {
 
-  const response = await authorizedFetch(username, `/api/${username}/add/${data.board}`, {
+  const response = await authorizedFetch(username, `/api/${username}/add/${data.Board}`, {
     method: 'POST',
     body: JSON.stringify(data),
   });

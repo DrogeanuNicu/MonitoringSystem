@@ -5,65 +5,37 @@ import { HiOutlineTrash } from 'solid-icons/hi';
 import ParamSelect from './ParamSelect';
 import ColorPicker from '../ColorPicker/ColorPicker';
 
-import { IChart, IChartType, IChartOy } from '../../Api/Chart';
-import { IParameter } from '../../Api/Parameter';
+import { IChartOySignals, IChartType, IChartOy, IChartSignals } from '../../Api/Chart';
+import { IParameterSignals } from '../../Api/Parameter';
 
 interface BoardChartProps {
   index: number;
-  signal: Signal<IChart>;
+  signal: IChartSignals;
   deleteCb: (index: number) => void;
-  params: Signal<Signal<IParameter>[]>;
+  params: Signal<IParameterSignals[]>;
 }
 
 const BoardChart: Component<BoardChartProps> = (props) => {
-  const [signal, setSignal] = props.signal;
-  const [params, setParams] = props.params;
-  const [oys, setOys] = createSignal<IChartOy[]>(signal().oy);
-
-  const onTypeSelectChange = (event: SelectChangeEvent) => {
-    setSignal({ ...signal(), type: event.target.value });
-  };
-
-  const onOxSelectChange = (paramIndex: number) => {
-    setSignal({ ...signal(), ox: paramIndex });
-  };
-
-  const onOySelectChange = (paramIndex: number, oyIndex: number) => {
-    const currOy = [...signal().oy];
-    currOy[oyIndex] = { ...currOy[oyIndex], index: paramIndex };
-    setSignal({ ...signal(), oy: currOy });
-    setOys(signal().oy);
-  };
+  const [name, setName] = props.signal.Name;
+  const [type, setType] = props.signal.Type;
+  const [ox, setOx] = props.signal.Ox;
+  const [oys, setOys] = props.signal.Oy;
 
   const paramSelectCb = (paramIndex: number, oyIndex?: number) => {
     if (oyIndex !== undefined) {
-      onOySelectChange(paramIndex, oyIndex);
+      oys()[oyIndex].Index[1](paramIndex);
     } else {
-      onOxSelectChange(paramIndex);
+      setOx(paramIndex);
     }
   }
 
-  const colorPickerCb = (oyIndex: number, color: string) => {
-    const currOy = [...signal().oy];
-    currOy[oyIndex] = { ...currOy[oyIndex], color: color };
-    setSignal({ ...signal(), oy: currOy });
-    setOys(signal().oy);
-  };
-
   const addOy = () => {
-    const currOy = [...signal().oy];
-    const newOy = IChartOy.create();
-    currOy.push(newOy);
-    setSignal({ ...signal(), oy: currOy });
-    setOys(signal().oy);
+    setOys(prevOys => [...prevOys, IChartOySignals.create(IChartOy.create())]);
   };
 
   const deleteOy = (oyIndex: number) => {
-    const currOy = [...signal().oy];
-    currOy.splice(oyIndex, 1);
-    setSignal({ ...signal(), oy: currOy });
-    setOys(signal().oy);
-  }
+    setOys(prevOys => prevOys.filter(oySignal => oySignal.Index[0]() !== oyIndex));
+  };
 
   const populateOys = () => {
     const elements = [];
@@ -74,10 +46,13 @@ const BoardChart: Component<BoardChartProps> = (props) => {
           <ParamSelect
             oyIndex={i}
             label={`Oy-${i + 1}`}
-            initIndex={oys()[i].index}
+            signal={oys()[i].Index}
             cb={paramSelectCb}
-            params={[params, setParams]}></ParamSelect>
-          <ColorPicker oyIndex={i} initColor={oys()[i].color} cb={colorPickerCb}></ColorPicker>
+            params={props.params}></ParamSelect>
+          <ColorPicker
+            oyIndex={i}
+            signal={oys()[i].Color}
+          ></ColorPicker>
           <IconButton
             color="inherit"
             component="span"
@@ -101,16 +76,16 @@ const BoardChart: Component<BoardChartProps> = (props) => {
           variant="outlined"
           fullWidth
           size="small"
-          value={signal().name}
-          onChange={(e) => setSignal({ ...signal(), name: e.target.value })}
+          value={name()}
+          onChange={(e) => setName(e.target.value)}
         />
         <FormControl class="w-full" size="small">
           <InputLabel id="chart-type">Type</InputLabel>
           <Select
             labelId="chart-type"
             label="Type"
-            value={signal().type}
-            onChange={onTypeSelectChange}
+            value={type()}
+            onChange={(e) => setType(e.target.value)}
           >
             <MenuItem value={IChartType.LINE}>{IChartType.LINE}</MenuItem>
           </Select>
@@ -125,7 +100,7 @@ const BoardChart: Component<BoardChartProps> = (props) => {
         </IconButton>
       </div>
       <div class="mb-4 flex items-center space-x-2 w-1/2">
-        <ParamSelect label='Ox' cb={paramSelectCb} params={[params, setParams]}></ParamSelect>
+        <ParamSelect label='Ox' signal={[ox, setOx]} cb={paramSelectCb} params={props.params}></ParamSelect>
       </div>
       <div class="mb-4 flex-col space-y-4">
         {populateOys()}

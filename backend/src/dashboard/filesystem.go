@@ -2,7 +2,9 @@ package dashboard
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -110,6 +112,28 @@ func AddBoard(username string, boardConf *BoardConfig) error {
 		headers = nil
 	}
 
+	/* TODO: Remove this after you have updated the database to contain the board config as well*/
+	fileName = boardConf.Board + ".json"
+	filePath = filepath.Join(boardFolderPath, fileName)
+	jsonFile, err := os.Create(filePath)
+	if err != nil {
+		logger.Printf("Failed to create CSV file for %s/%s: %v\n", username, boardConf.Board, err)
+		return err
+	}
+	defer jsonFile.Close()
+
+	jsonData, err := json.Marshal(*boardConf)
+	if err != nil {
+		fmt.Println("Error marshaling JSON:", err)
+		return err
+	}
+
+	_, err = jsonFile.Write(jsonData)
+	if err != nil {
+		fmt.Println("Error writing JSON to file:", err)
+		return err
+	}
+
 	return nil
 }
 
@@ -164,7 +188,27 @@ func DownloadBoardData(username string, board string) (string, error) {
 	return filePath, nil
 }
 
-func ReadBoardConfig(username string, data *BoardConfig) error {
+func ReadBoardConfig(username string, board string, boardConf *BoardConfig) error {
+	filePath := filepath.Join(dataPath, username, board, board+".json")
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		fmt.Println("Error opening file:", err)
+		return err
+	}
+	defer file.Close()
+
+	jsonData, err := io.ReadAll(file)
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+		return err
+	}
+
+	err = json.Unmarshal(jsonData, boardConf)
+	if err != nil {
+		fmt.Println("Error unmarshaling JSON:", err)
+		return err
+	}
 
 	return nil
 }

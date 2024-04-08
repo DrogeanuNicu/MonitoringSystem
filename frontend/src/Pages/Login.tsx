@@ -2,7 +2,7 @@ import { Component, createSignal } from 'solid-js';
 import { useNavigate } from "@solidjs/router";
 
 import FormInputField from "../Components/FormInputField"
-import ErrorMessage from '../Components/ErrorMessage';
+import ErrorAlert from '../Components/Alerts';
 
 import "../Styles/index.css";
 import { storeToken } from '../Api/Fetch';
@@ -146,7 +146,7 @@ const Login: Component = () => {
                 signal={[retypedPassword, setRetypedPassword]}
               />
             )}
-            <ErrorMessage errorMsg={[errorMessage, setErrorMessage]} />
+            <ErrorAlert errorMsg={[errorMessage, setErrorMessage]} />
             <button type="submit" class="submit-button">
               {isRegistering() ? 'Register' : 'Login'}
             </button>

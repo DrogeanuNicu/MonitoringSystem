@@ -1,17 +1,17 @@
 import { Component } from 'solid-js';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@suid/material";
 import { createSignal } from "solid-js";
-import ErrorMessage from '../ErrorMessage';
+import ErrorAlert from '../Alerts';
 import { deleteBoardApi } from '../../Api/Board';
 import Transition from './Transition';
 
-interface AlarmDialogProps {
+interface DeleteBoardProps {
   username: string;
   board: [() => string, (newValue: string) => void];
   cb: (board: string) => Promise<void>;
 }
 
-const DeleteBoardDialog: Component<AlarmDialogProps> = (props) => {
+const DeleteBoard: Component<DeleteBoardProps> = (props) => {
   const [board, setBoard] = props.board;
   const [errorMessage, setErrorMessage] = createSignal('');
 
@@ -46,7 +46,7 @@ const DeleteBoardDialog: Component<AlarmDialogProps> = (props) => {
           </DialogContentText>
         </DialogContent>
         <div class="p-5">
-          <ErrorMessage errorMsg={[errorMessage, setErrorMessage]}></ErrorMessage>
+          <ErrorAlert errorMsg={[errorMessage, setErrorMessage]}></ErrorAlert>
         </div>
         <DialogActions class="text-main-color">
           <Button color="inherit" onClick={handleYes}>Yes</Button>
@@ -57,4 +57,4 @@ const DeleteBoardDialog: Component<AlarmDialogProps> = (props) => {
   );
 };
 
-export default DeleteBoardDialog;
+export default DeleteBoard;

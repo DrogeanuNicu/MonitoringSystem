@@ -2,11 +2,11 @@ import { createSignal } from 'solid-js';
 import { Component } from 'solid-js';
 import { Alert } from "@suid/material"
 
-interface ErrorMessageProps {
+interface ErrorAlertProps {
   errorMsg: [() => string, (newValue: string) => void];
 }
 
-const ErrorMessage: Component<ErrorMessageProps> = (props) => {
+const ErrorAlert: Component<ErrorAlertProps> = (props) => {
   const [error, setError] = props.errorMsg;
 
   return (
@@ -20,5 +20,5 @@ const ErrorMessage: Component<ErrorMessageProps> = (props) => {
   );
 };
 
-export type { ErrorMessageProps };
-export default ErrorMessage;
+export type { ErrorAlertProps };
+export default ErrorAlert;

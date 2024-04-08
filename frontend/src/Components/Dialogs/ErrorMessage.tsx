@@ -1,13 +1,13 @@
 import { Component } from 'solid-js';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@suid/material";
 import { createSignal } from "solid-js";
-import ErrorMessage from '../ErrorMessage';
-import { ErrorMessageProps } from '../ErrorMessage';
+import ErrorAlert from '../Alerts';
+import { ErrorAlertProps } from '../Alerts';
 
 import Transition from './Transition';
 
 
-const ErrorMessageDialog: Component<ErrorMessageProps> = (props) => {
+const ErrorMessage: Component<ErrorAlertProps> = (props) => {
   const [error, setError] = props.errorMsg || createSignal('');
 
   const handleClose = () => {
@@ -26,7 +26,7 @@ const ErrorMessageDialog: Component<ErrorMessageProps> = (props) => {
         <DialogTitle>Error</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-error-dialog-slide">
-            <ErrorMessage errorMsg={[error, setError]}></ErrorMessage>
+            <ErrorAlert errorMsg={[error, setError]}></ErrorAlert>
           </DialogContentText>
         </DialogContent>
         <DialogActions class="text-main-color">
@@ -37,4 +37,4 @@ const ErrorMessageDialog: Component<ErrorMessageProps> = (props) => {
   );
 };
 
-export default ErrorMessageDialog;
+export default ErrorMessage;

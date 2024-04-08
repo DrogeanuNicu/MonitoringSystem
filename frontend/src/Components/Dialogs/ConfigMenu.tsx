@@ -1,6 +1,6 @@
 import { Component, createSignal, onMount, Signal, createEffect } from 'solid-js';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@suid/material";
-import ErrorMessage from '../ErrorMessage';
+import ErrorAlert from '../Alerts';
 import ShowHideToggle from '../DropDowns/ShowHideToggle';
 import { DropDownType } from '../DropDowns/DropDown';
 
@@ -15,7 +15,7 @@ import { getBoardConfig } from '../../Api/Board';
 import Transition from './Transition';
 import DropDown from '../DropDowns/DropDown';
 
-interface ConfigMenuDialogProps {
+interface ConfigMenuProps {
   username: string;
   board: string;
 
@@ -23,7 +23,7 @@ interface ConfigMenuDialogProps {
   cb: (newConfig: BoardConfig, oldBoardName?: string | undefined) => Promise<void>;
 }
 
-const ConfigMenuDialog: Component<ConfigMenuDialogProps> = (props) => {
+const ConfigMenu: Component<ConfigMenuProps> = (props) => {
   const [isOn, setIsOn] = props.show;
   const [error, setError] = createSignal('');
   const [toggleDetails, setToggleDetails] = createSignal(true);
@@ -140,7 +140,7 @@ const ConfigMenuDialog: Component<ConfigMenuDialogProps> = (props) => {
             <DropDown name="Maps" type={DropDownType.MAPS} signals={[maps, setMaps]} ></DropDown>
           </div>
 
-          <ErrorMessage errorMsg={[error, setError]}></ErrorMessage>
+          <ErrorAlert errorMsg={[error, setError]}></ErrorAlert>
         </DialogContent>
         <DialogActions class="text-main-color">
           <Button color="inherit" onClick={handleSubmit}>{(props.board === '') ? "Add" : "Edit"}</Button>
@@ -151,4 +151,4 @@ const ConfigMenuDialog: Component<ConfigMenuDialogProps> = (props) => {
   );
 };
 
-export default ConfigMenuDialog;
+export default ConfigMenu;

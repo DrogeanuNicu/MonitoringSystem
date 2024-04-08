@@ -3,10 +3,12 @@ import { useParams } from "@solidjs/router";
 import { useNavigate } from "@solidjs/router";
 
 import TopMenu from '../Components/TopMenu';
-import ConfigMenuDialog from '../Components/Dialogs/ConfigMenuDialog';
-import ErrorMessageDialog from '../Components/Dialogs/ErrorMessageDialog';
-import DeleteBoardDialog from '../Components/Dialogs/DeleteBoardDialog';
-import { BoardConfig, getBoardConfig, editBoardApi, deleteBoardApi, downloadBoardDataApi, otaUpdateApi } from '../Api/Board';
+import ConfigMenu from '../Components/Dialogs/ConfigMenu';
+import ErrorMessage from '../Components/Dialogs/ErrorMessage';
+import DeleteBoard from '../Components/Dialogs/DeleteBoard';
+import { BoardConfig, getBoardConfig, editBoardApi, downloadBoardDataApi, otaUpdateApi } from '../Api/Board';
+import { PanelGroup, Panel, ResizeHandle } from "solid-resizable-panels";
+import "solid-resizable-panels/styles.css";
 
 const Dashboard: Component = () => {
   const params = useParams();
@@ -75,22 +77,34 @@ const Dashboard: Component = () => {
         }} />
       {
         isConfigMenuOn() &&
-        <ConfigMenuDialog
+        <ConfigMenu
           username={params.username}
           board={configMenuBoard()}
           cb={configMenuCb}
           show={[isConfigMenuOn, setIsConfigMenuOn]}>
-        </ConfigMenuDialog>
+        </ConfigMenu>
       }
-      <ErrorMessageDialog errorMsg={[errorDialog, setErrorDialog]} />
-      <DeleteBoardDialog
+      <ErrorMessage errorMsg={[errorDialog, setErrorDialog]} />
+      <DeleteBoard
         username={params.username}
         board={[deleteDialogBoard, setDeleteDialogBoard]}
         cb={deleteBoardCb}
       />
 
-      <p>Dashboard page for user {params.username}, board {params.board}</p>
-    </div>
+      <PanelGroup direction="row">
+        <Panel id="table-div" minSize={20}>
+          <div class="bg-blue-500">
+            <p>table</p>
+          </div>
+        </Panel>
+        <ResizeHandle />
+        <Panel id="chart-div" minSize={20}>
+          <div class="bg-red-500">
+            <p>chart</p>
+          </div>
+        </Panel>
+      </PanelGroup>
+    </div >
   );
 };
 

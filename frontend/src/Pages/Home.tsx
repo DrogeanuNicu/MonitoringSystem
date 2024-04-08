@@ -7,13 +7,13 @@ import "../Styles/index.css";
 
 import TopMenu from '../Components/TopMenu';
 import BoardListItem from '../Components/Board';
-import DeleteBoardDialog from '../Components/Dialogs/DeleteBoardDialog';
-import ErrorMessageDialog from '../Components/Dialogs/ErrorMessageDialog';
-import ConfigMenuDialog from '../Components/Dialogs/ConfigMenuDialog';
+import DeleteBoard from '../Components/Dialogs/DeleteBoard';
+import ErrorMessage from '../Components/Dialogs/ErrorMessage';
+import ConfigMenu from '../Components/Dialogs/ConfigMenu';
 
 
 import { authorizedFetch } from '../Api/Fetch';
-import { BoardConfig, addBoardApi, editBoardApi, deleteBoardApi, downloadBoardDataApi, otaUpdateApi } from '../Api/Board';
+import { BoardConfig, addBoardApi, editBoardApi, downloadBoardDataApi, otaUpdateApi } from '../Api/Board';
 
 
 const Home: Component = () => {
@@ -114,15 +114,15 @@ const Home: Component = () => {
       <TopMenu username={params.username} boardMenu={undefined} />
       {
         isConfigMenuOn() &&
-        <ConfigMenuDialog
+        <ConfigMenu
           username={params.username}
           board={configMenuBoard()}
           cb={configMenuCallback}
           show={[isConfigMenuOn, setIsConfigMenuOn]}>
-        </ConfigMenuDialog>
+        </ConfigMenu>
       }
-      <ErrorMessageDialog errorMsg={[errorDialog, setErrorDialog]} />
-      <DeleteBoardDialog
+      <ErrorMessage errorMsg={[errorDialog, setErrorDialog]} />
+      <DeleteBoard
         username={params.username}
         board={[deleteDialogBoard, setDeleteDialogBoard]}
         cb={deleteBoardCb}

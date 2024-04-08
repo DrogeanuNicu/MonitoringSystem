@@ -153,7 +153,7 @@ func registerHandler(c *gin.Context) {
 		return
 	}
 
-	go dashboard.AddUser(username)
+	go dashboard.FsAddUser(username)
 
 	token := generateJwtToken(username)
 	c.JSON(http.StatusOK, gin.H{"token": token})
@@ -189,7 +189,7 @@ func addBoardHandler(c *gin.Context) {
 		return
 	}
 
-	go dashboard.AddBoard(username, &boardConf)
+	go dashboard.FsAddBoard(username, &boardConf)
 
 	/* TODO: Analyze if it makes sense to query the DB one more time in order to return the full list of the boards => solves sync problem between different terminals */
 	c.JSON(http.StatusOK, gin.H{})
@@ -214,7 +214,7 @@ func editBoardHandler(c *gin.Context) {
 		return
 	}
 
-	go dashboard.EditBoardData(username, &boardConf, oldBoard)
+	go dashboard.FsEditBoardData(username, &boardConf, oldBoard)
 
 	c.JSON(http.StatusOK, gin.H{})
 }
@@ -230,7 +230,7 @@ func deleteBoardHandler(c *gin.Context) {
 		return
 	}
 
-	go dashboard.DeleteBoard(username, board)
+	go dashboard.FsDeleteBoard(username, board)
 
 	c.JSON(http.StatusOK, gin.H{})
 }
@@ -242,7 +242,7 @@ func getBoardConfigHandler(c *gin.Context) {
 	board := c.Param("board")
 
 	boardConf.Board = board
-	err := dashboard.ReadBoardConfig(username, board, &boardConf)
+	err := dashboard.FsReadBoardConfig(username, board, &boardConf)
 	if err != nil {
 		logger.Println(err)
 		c.JSON(http.StatusOK, gin.H{"error": "Could not communicate with the server!"})
@@ -260,7 +260,7 @@ func downloadBoardDataHandler(c *gin.Context) {
 	username := c.Param("username")
 	board := c.Param("board")
 
-	filePath, err := dashboard.DownloadBoardData(username, board)
+	filePath, err := dashboard.FsDownloadBoardData(username, board)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{"error": fmt.Sprintf("The CSV file of the '%s' board is not present on the server!", board)})
 		return

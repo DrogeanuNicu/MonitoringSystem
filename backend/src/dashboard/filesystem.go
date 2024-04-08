@@ -40,7 +40,7 @@ const folderPermissions fs.FileMode = 0755
 //	Global Functions
 //
 // ================================================================================================
-func AddUser(username string) error {
+func FsAddUser(username string) error {
 	usernameFolderPath := filepath.Join(dataPath, username)
 
 	if _, err := os.Stat(usernameFolderPath); err == nil {
@@ -61,7 +61,7 @@ func AddUser(username string) error {
 	return nil
 }
 
-func AddBoard(username string, boardConf *BoardConfig) error {
+func FsAddBoard(username string, boardConf *BoardConfig) error {
 	boardFolderPath := filepath.Join(dataPath, username, boardConf.Board)
 
 	if _, err := os.Stat(boardFolderPath); err == nil {
@@ -137,7 +137,7 @@ func AddBoard(username string, boardConf *BoardConfig) error {
 	return nil
 }
 
-func DeleteBoard(username string, board string) error {
+func FsDeleteBoard(username string, board string) error {
 	boardFolderPath := filepath.Join(dataPath, username, board)
 
 	if _, err := os.Stat(boardFolderPath); err == nil {
@@ -158,25 +158,25 @@ func DeleteBoard(username string, board string) error {
 	return nil
 }
 
-func EditBoardData(username string, data *BoardConfig, oldBoard string) error {
+func FsEditBoardData(username string, data *BoardConfig, oldBoard string) error {
 	oldFilePath := filepath.Join(dataPath, username, oldBoard, oldBoard+".csv")
 
 	_, err := os.Stat(oldFilePath)
 	if !os.IsNotExist(err) {
-		err = DeleteBoard(username, oldBoard)
+		err = FsDeleteBoard(username, oldBoard)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = AddBoard(username, data)
+	err = FsAddBoard(username, data)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func DownloadBoardData(username string, board string) (string, error) {
+func FsDownloadBoardData(username string, board string) (string, error) {
 	filePath := filepath.Join(dataPath, username, board, board+".csv")
 
 	_, err := os.Stat(filePath)
@@ -188,7 +188,7 @@ func DownloadBoardData(username string, board string) (string, error) {
 	return filePath, nil
 }
 
-func ReadBoardConfig(username string, board string, boardConf *BoardConfig) error {
+func FsReadBoardConfig(username string, board string, boardConf *BoardConfig) error {
 	filePath := filepath.Join(dataPath, username, board, board+".json")
 
 	file, err := os.Open(filePath)

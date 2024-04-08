@@ -1,4 +1,4 @@
-import { Component, onMount, createSignal } from 'solid-js';
+import { Component, onMount, createSignal, onCleanup } from 'solid-js';
 import { useParams } from "@solidjs/router";
 import { useNavigate } from "@solidjs/router";
 import { PanelGroup, Panel, ResizeHandle } from "solid-resizable-panels";
@@ -13,6 +13,7 @@ import { IParameterSignals } from '../Api/Parameter';
 import { IChartSignals } from '../Api/Chart';
 import { IGaugeSignals } from '../Api/Gauge';
 import { IMapSignals } from '../Api/Map';
+import { authorizedFetch } from '../Api/Fetch';
 
 const Dashboard: Component = () => {
   const params = useParams();
@@ -25,6 +26,8 @@ const Dashboard: Component = () => {
   const [charts, setCharts] = createSignal<IChartSignals[]>([]);
   const [gauges, setGauges] = createSignal<IGaugeSignals[]>([]);
   const [maps, setMaps] = createSignal<IMapSignals[]>([]);
+
+  let intervalId: number;
 
   const prepareEditBoard = (board: string) => {
     setConfigMenuBoard(board);
@@ -61,7 +64,26 @@ const Dashboard: Component = () => {
     }
   }
 
-  const generate = async () => {
+  const getData = async () => {
+    try {
+      const response = await authorizedFetch(params.username, `/api/${params.username}/data/${params.board}`, {
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        throw new Error('Could not communicate with the server! Please refresh!');
+      }
+      const boardData = await response.json();
+
+      console.log(boardData);
+      // TODO: Investigate if this makes SensorOccupied, or if the user should just refresh the page
+      setErrorDialog("");
+    } catch (error: any) {
+      setErrorDialog(error.message);
+    }
+  }
+
+  const init = async () => {
     try {
       await loadDataApi(
         params.username,
@@ -71,12 +93,21 @@ const Dashboard: Component = () => {
         [gauges, setGauges],
         [maps, setMaps]
       )
+
+      await getData();
+      intervalId = setInterval(getData, 1000);
+
     } catch (error: any) {
       setErrorDialog(error.message);
     }
   }
 
-  onMount(generate);
+  const deInit = () => {
+    clearInterval(intervalId);
+  }
+
+  onMount(init);
+  onCleanup(deInit);
 
   return (
     <div>

@@ -1,7 +1,6 @@
 package dashboard
 
 import (
-	"fmt"
 	"log"
 	"os"
 )
@@ -78,7 +77,9 @@ func Init(config *DashboardConfig) {
 }
 
 func UserLogout(username string) {
-	fmt.Println(username)
+}
+
+func GetBoardData(username string, board string) {
 }
 
 // ================================================================================================

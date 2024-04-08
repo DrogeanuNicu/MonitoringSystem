@@ -79,6 +79,7 @@ func Init(config *HttpsConfig, debugMode bool) {
 	router.POST("/api/:username/delete/:board", authMiddleware(), deleteBoardHandler)
 	router.GET("/api/:username/config/:board", authMiddleware(), getBoardConfigHandler)
 	router.GET("/api/:username/download/:board", authMiddleware(), downloadBoardDataHandler)
+	router.GET("/api/:username/data/:board", authMiddleware(), getBoardDataHandler)
 
 	// err := router.RunTLS(fmt.Sprintf("%s:%d", config.Address, config.Port), config.Cert, config.Key)
 	err := router.Run(fmt.Sprintf("%s:%d", config.Address, config.Port))
@@ -267,4 +268,13 @@ func downloadBoardDataHandler(c *gin.Context) {
 	}
 
 	c.FileAttachment(filePath, "board.csv")
+}
+
+func getBoardDataHandler(c *gin.Context) {
+	username := c.Param("username")
+	board := c.Param("board")
+
+	dashboard.GetBoardData(username, board)
+
+	c.JSON(http.StatusOK, gin.H{"board data": "data"})
 }

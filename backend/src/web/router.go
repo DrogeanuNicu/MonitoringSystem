@@ -71,6 +71,7 @@ func Init(config *HttpsConfig, debugMode bool) {
 
 	router.POST("/api/login", loginHandler)
 	router.POST("/api/register", registerHandler)
+	router.POST("/api/:username/logout", authMiddleware(), logoutHandler)
 	router.GET("/api/:username/boards", authMiddleware(), getBoardsHandler)
 	/* TODO: Investigate if it is necessary for the route to contain :board as it already is part of the body */
 	router.POST("/api/:username/add/:board", authMiddleware(), addBoardHandler)
@@ -120,6 +121,13 @@ func loginHandler(c *gin.Context) {
 
 	token := generateJwtToken(username)
 	c.JSON(http.StatusOK, gin.H{"token": token})
+}
+
+func logoutHandler(c *gin.Context) {
+	username := c.Param("username")
+
+	dashboard.UserLogout(username)
+	c.JSON(http.StatusOK, gin.H{})
 }
 
 func registerHandler(c *gin.Context) {

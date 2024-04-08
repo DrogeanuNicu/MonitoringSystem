@@ -5,6 +5,7 @@ import { IconButton, Menu, MenuItem } from "@suid/material";
 import { HiOutlineUserCircle, HiSolidCog8Tooth, HiSolidArrowLeftOnRectangle } from "solid-icons/hi";
 
 import { removeToken } from '../../Api/Fetch';
+import { authorizedFetch } from '../../Api/Fetch';
 
 interface UserMenuProps {
   username: string;
@@ -21,6 +22,9 @@ const UserMenu: Component<UserMenuProps> = (props) => {
   };
 
   const handleLogout = () => {
+    authorizedFetch(props.username, `/api/${props.username}/logout`, {
+      method: 'POST',
+    });
     removeToken(props.username);
     navigate("/");
   }

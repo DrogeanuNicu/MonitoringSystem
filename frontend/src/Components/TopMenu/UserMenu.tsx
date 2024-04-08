@@ -1,7 +1,10 @@
 import { Component, createSignal } from 'solid-js';
+import { useNavigate } from '@solidjs/router';
 
 import { IconButton, Menu, MenuItem } from "@suid/material";
 import { HiOutlineUserCircle, HiSolidCog8Tooth, HiSolidArrowLeftOnRectangle } from "solid-icons/hi";
+
+import { removeToken } from '../../Api/Fetch';
 
 interface UserMenuProps {
   username: string;
@@ -9,12 +12,18 @@ interface UserMenuProps {
 
 const UserMenu: Component<UserMenuProps> = (props) => {
   const [anchorEl, setAnchorEl] = createSignal<null | HTMLElement>(null);
+  const navigate = useNavigate();
 
   const open = () => Boolean(anchorEl());
 
   const handleClose = () => {
     setAnchorEl(null);
   };
+
+  const handleLogout = () => {
+    removeToken(props.username);
+    navigate("/");
+  }
 
   return (
     <div>
@@ -43,7 +52,7 @@ const UserMenu: Component<UserMenuProps> = (props) => {
           <span class="pr-4">Settings</span>
           <HiSolidCog8Tooth size={32} class="icon-main-color ml-auto" />
         </MenuItem>
-        <MenuItem onClick={handleClose}>
+        <MenuItem onClick={handleLogout}>
           <span class="pr-4">Logout</span>
           <HiSolidArrowLeftOnRectangle size={32} class="icon-main-color ml-auto" />
         </MenuItem>

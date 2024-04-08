@@ -1,6 +1,14 @@
-import { IChart } from "./Chart";
+import { Signal } from "solid-js";
+
 import { authorizedFetch } from "./Fetch";
 import { IParameter } from "./Parameter";
+import { IParameterSignals } from "./Parameter";
+import { IChart } from "./Chart";
+import { IChartSignals } from "./Chart";
+import { IGauge } from "./Gauge";
+import { IGaugeSignals } from "./Gauge";
+import { IMap } from "./Map";
+import { IMapSignals } from "./Map";
 
 interface BoardConfig {
   Board: string;
@@ -72,7 +80,7 @@ const otaUpdateApi = async (username: string, board: string) => {
   console.log(`Doing OTA update for ${board} from username ${username}`);
 }
 
-async function getBoardConfig(username: string, board: string): Promise<BoardConfig> {
+async function getBoardConfigApi(username: string, board: string): Promise<BoardConfig> {
   const response = await authorizedFetch(username, `/api/${username}/config/${board}`, {
     method: 'GET',
   });
@@ -97,5 +105,32 @@ const processResponseCode = async (response: Response) => {
   }
 }
 
+const loadDataApi = async (
+  username: string,
+  board: string,
+  [parameters, setParameters]: Signal<IParameterSignals[]>,
+  [charts, setCharts]: Signal<IChartSignals[]>,
+  [gauges, setGauges]: Signal<IGaugeSignals[]>,
+  [maps, setMaps]: Signal<IMapSignals[]>,
+) => {
+
+  const config: BoardConfig = await getBoardConfigApi(username, board);
+
+  let paramsSignals: IParameterSignals[] = [];
+  for (let i = 0; i < config.Parameters.length; i++) {
+    paramsSignals.push(IParameterSignals.create(config.Parameters[i]));
+  }
+  setParameters(paramsSignals);
+
+  let chartsSignals: IChartSignals[] = [];
+  for (let i = 0; i < config.Charts.length; i++) {
+    chartsSignals.push(IChartSignals.create(config.Charts[i]));
+  }
+  setCharts(chartsSignals);
+
+  console.log(config);
+}
+
+
 export type { BoardConfig };
-export { addBoardApi, editBoardApi, deleteBoardApi, downloadBoardDataApi, otaUpdateApi, getBoardConfig };
+export { addBoardApi, editBoardApi, deleteBoardApi, downloadBoardDataApi, otaUpdateApi, getBoardConfigApi, loadDataApi };

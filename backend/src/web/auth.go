@@ -96,7 +96,7 @@ func authMiddleware() gin.HandlerFunc {
 		/* TODO: Investigate if keeping the timestamp makes sense, it could be annoying to interact with */
 		timestamp := int64(claims["timestamp"].(float64))
 		tokenCreationTime := time.Unix(timestamp, 0)
-		expirationTime := tokenCreationTime.Add(time.Hour)
+		expirationTime := tokenCreationTime.Add(24 * time.Hour)
 
 		if time.Now().After(expirationTime) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token has expired"})

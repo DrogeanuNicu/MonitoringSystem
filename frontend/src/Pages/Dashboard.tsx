@@ -1,14 +1,18 @@
 import { Component, onMount, createSignal } from 'solid-js';
 import { useParams } from "@solidjs/router";
 import { useNavigate } from "@solidjs/router";
+import { PanelGroup, Panel, ResizeHandle } from "solid-resizable-panels";
+import "solid-resizable-panels/styles.css";
 
 import TopMenu from '../Components/TopMenu';
 import ConfigMenu from '../Components/Dialogs/ConfigMenu';
 import ErrorMessage from '../Components/Dialogs/ErrorMessage';
 import DeleteBoard from '../Components/Dialogs/DeleteBoard';
-import { BoardConfig, getBoardConfig, editBoardApi, downloadBoardDataApi, otaUpdateApi } from '../Api/Board';
-import { PanelGroup, Panel, ResizeHandle } from "solid-resizable-panels";
-import "solid-resizable-panels/styles.css";
+import { BoardConfig, loadDataApi, editBoardApi, downloadBoardDataApi, otaUpdateApi } from '../Api/Board';
+import { IParameterSignals } from '../Api/Parameter';
+import { IChartSignals } from '../Api/Chart';
+import { IGaugeSignals } from '../Api/Gauge';
+import { IMapSignals } from '../Api/Map';
 
 const Dashboard: Component = () => {
   const params = useParams();
@@ -17,6 +21,10 @@ const Dashboard: Component = () => {
   const [deleteDialogBoard, setDeleteDialogBoard] = createSignal('');
   const [isConfigMenuOn, setIsConfigMenuOn] = createSignal(false);
   const [configMenuBoard, setConfigMenuBoard] = createSignal('');
+  const [parameters, setParameters] = createSignal<IParameterSignals[]>([]);
+  const [charts, setCharts] = createSignal<IChartSignals[]>([]);
+  const [gauges, setGauges] = createSignal<IGaugeSignals[]>([]);
+  const [maps, setMaps] = createSignal<IMapSignals[]>([]);
 
   const prepareEditBoard = (board: string) => {
     setConfigMenuBoard(board);
@@ -55,8 +63,14 @@ const Dashboard: Component = () => {
 
   const generate = async () => {
     try {
-      const config: BoardConfig = await getBoardConfig(params.username, params.board);
-      console.log(config);
+      await loadDataApi(
+        params.username,
+        params.board,
+        [parameters, setParameters],
+        [charts, setCharts],
+        [gauges, setGauges],
+        [maps, setMaps]
+      )
     } catch (error: any) {
       setErrorDialog(error.message);
     }

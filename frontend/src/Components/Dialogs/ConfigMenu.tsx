@@ -4,13 +4,11 @@ import ErrorAlert from '../Alerts';
 import ShowHideToggle from '../DropDowns/ShowHideToggle';
 import { DropDownType } from '../DropDowns/DropDown';
 
-import { BoardConfig } from '../../Api/Board';
+import { BoardConfig, loadDataApi } from '../../Api/Board';
 import { IParameterSignals } from '../../Api/Parameter';
 import { IChartSignals } from '../../Api/Chart';
 import { IGaugeSignals } from '../../Api/Gauge';
 import { IMapSignals } from '../../Api/Map';
-
-import { getBoardConfig } from '../../Api/Board';
 
 import Transition from './Transition';
 import DropDown from '../DropDowns/DropDown';
@@ -76,30 +74,18 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
   };
 
   const loadData = async () => {
-    if (props.board === '') {
-      setBoardName('');
-    }
-    else {
-      try {
-        setBoardName(props.board);
-        const config: BoardConfig = await getBoardConfig(props.username, props.board);
-
-        let paramsSignals: IParameterSignals[] = [];
-        for (let i = 0; i < config.Parameters.length; i++) {
-          paramsSignals.push(IParameterSignals.create(config.Parameters[i]));
-        }
-        setParameters(paramsSignals);
-
-        let chartsSignals: IChartSignals[] = [];
-        for (let i = 0; i < config.Charts.length; i++) {
-          chartsSignals.push(IChartSignals.create(config.Charts[i]));
-        }
-        setCharts(chartsSignals);
-
-        console.log(config);
-      } catch (error: any) {
-        setError(error.message);
-      }
+    setBoardName(props.board);
+    try {
+      await loadDataApi(
+        props.username,
+        props.board,
+        [parameters, setParameters],
+        [charts, setCharts],
+        [gauges, setGauges],
+        [maps, setMaps]
+      )
+    } catch (error: any) {
+      setError(error.message);
     }
   }
 

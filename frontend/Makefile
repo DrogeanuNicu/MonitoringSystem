@@ -2,7 +2,7 @@ DIR_BUILD := ./dist
 DIR_SRC := ./src
 
 .PHONY: all
-all: build
+all: run
 
 .PHONY: run
 run:

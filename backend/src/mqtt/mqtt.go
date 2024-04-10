@@ -116,7 +116,7 @@ func createClient(ctxPtr *context.Context, u *url.URL, topic string,
 	caCertPool := x509.NewCertPool()
 	if !caCertPool.AppendCertsFromPEM(caCert) {
 		logger.Println("Error appending CA certificate to pool.")
-		panic("Failed to append CA certificate to pool")
+		panic("Failed to append CA certificate to pool!")
 	}
 
 	cliCfg := autopaho.ClientConfig{

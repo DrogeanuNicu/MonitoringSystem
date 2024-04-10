@@ -3,8 +3,8 @@
     "https": {
         "Address": "localhost",
         "Port": 5000,
-        "Cert": "../../certs/https/cert.pem",
-        "Key": "../../certs/https/key.pem"
+        "Cert": "../certs/https/cert.pem",
+        "Key": "../certs/https/key.pem"
     },
     "mqtts": {
         "NumClients": 4,
@@ -12,9 +12,9 @@
         "Port": 8883,
         "Topic": "$share/golang/#",
         "SendChSize": 100,
-        "Ca": "../../certs/mqtts/ca.crt",
-        "Cert": "../../certs/mqtts/server.crt",
-        "Key": "../../certs/mqtts/server.key"
+        "Ca": "../certs/mqtts/ca.crt",
+        "Cert": "../certs/mqtts/server.crt",
+        "Key": "../certs/mqtts/server.key"
     },
     "database": {
         "Address": "localhost",
@@ -24,6 +24,6 @@
         "Name": "monitoring_system"
     },
     "dashboard": {
-        "DataPath": "../../data"
+        "DataPath": "../data"
     }
 }

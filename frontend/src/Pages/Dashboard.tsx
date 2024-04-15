@@ -76,7 +76,7 @@ const Dashboard: Component = () => {
       const boardData = await response.json();
 
       console.log(boardData);
-      // TODO: Investigate if this makes SensorOccupied, or if the user should just refresh the page
+      // TODO: Investigate if this makes sense, or if the user should just refresh the page
       setErrorDialog("");
     } catch (error: any) {
       setErrorDialog(error.message);

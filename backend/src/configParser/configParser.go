@@ -62,7 +62,7 @@ func ReadConfig(path *string, config *Config) {
 	if err != nil {
 		panic("Invalid JSON config file!")
 	}
-	file.Close()
+	defer file.Close()
 
 	confFileDir := filepath.Dir(confFileAbsPath)
 	config.Https.Cert = filepath.Join(confFileDir, config.Https.Cert)

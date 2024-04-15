@@ -1,6 +1,7 @@
 package dashboard
 
 import (
+	"bufio"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // ================================================================================================
@@ -41,7 +43,7 @@ const folderPermissions fs.FileMode = 0755
 //
 // ================================================================================================
 func FsAddUser(username string) error {
-	usernameFolderPath := filepath.Join(dataPath, username)
+	usernameFolderPath := filepath.Join(config.DataPath, username)
 
 	if _, err := os.Stat(usernameFolderPath); err == nil {
 		if err := os.RemoveAll(usernameFolderPath); err != nil {
@@ -62,7 +64,7 @@ func FsAddUser(username string) error {
 }
 
 func FsAddBoard(username string, boardConf *BoardConfig) error {
-	boardFolderPath := filepath.Join(dataPath, username, boardConf.Board)
+	boardFolderPath := filepath.Join(config.DataPath, username, boardConf.Board)
 
 	if _, err := os.Stat(boardFolderPath); err == nil {
 		if err := os.RemoveAll(boardFolderPath); err != nil {
@@ -79,7 +81,7 @@ func FsAddBoard(username string, boardConf *BoardConfig) error {
 		return err
 	}
 
-	fileName := boardConf.Board + ".csv"
+	fileName := getCsvFilepath(&username, &boardConf.Board)
 	filePath := filepath.Join(boardFolderPath, fileName)
 	if _, err := os.Stat(filePath); err != nil {
 		if !os.IsNotExist(err) {
@@ -124,13 +126,13 @@ func FsAddBoard(username string, boardConf *BoardConfig) error {
 
 	jsonData, err := json.Marshal(*boardConf)
 	if err != nil {
-		fmt.Println("Error marshaling JSON:", err)
+		logger.Println("Error marshaling JSON:", err)
 		return err
 	}
 
 	_, err = jsonFile.Write(jsonData)
 	if err != nil {
-		fmt.Println("Error writing JSON to file:", err)
+		logger.Println("Error writing JSON to file:", err)
 		return err
 	}
 
@@ -138,7 +140,7 @@ func FsAddBoard(username string, boardConf *BoardConfig) error {
 }
 
 func FsDeleteBoard(username string, board string) error {
-	boardFolderPath := filepath.Join(dataPath, username, board)
+	boardFolderPath := filepath.Join(config.DataPath, username, board)
 
 	if _, err := os.Stat(boardFolderPath); err == nil {
 		if err := os.RemoveAll(boardFolderPath); err != nil {
@@ -159,7 +161,7 @@ func FsDeleteBoard(username string, board string) error {
 }
 
 func FsEditBoardData(username string, data *BoardConfig, oldBoard string) error {
-	oldFilePath := filepath.Join(dataPath, username, oldBoard, oldBoard+".csv")
+	oldFilePath := getCsvFilepath(&username, &oldBoard)
 
 	_, err := os.Stat(oldFilePath)
 	if !os.IsNotExist(err) {
@@ -177,7 +179,7 @@ func FsEditBoardData(username string, data *BoardConfig, oldBoard string) error 
 }
 
 func FsDownloadBoardData(username string, board string) (string, error) {
-	filePath := filepath.Join(dataPath, username, board, board+".csv")
+	filePath := getCsvFilepath(&username, &board)
 
 	_, err := os.Stat(filePath)
 	if os.IsNotExist(err) {
@@ -189,24 +191,24 @@ func FsDownloadBoardData(username string, board string) (string, error) {
 }
 
 func FsReadBoardConfig(username string, board string, boardConf *BoardConfig) error {
-	filePath := filepath.Join(dataPath, username, board, board+".json")
+	filePath := filepath.Join(config.DataPath, username, board, board+".json")
 
 	file, err := os.Open(filePath)
 	if err != nil {
-		fmt.Println("Error opening file:", err)
+		logger.Println("Error opening file:", err)
 		return err
 	}
 	defer file.Close()
 
 	jsonData, err := io.ReadAll(file)
 	if err != nil {
-		fmt.Println("Error reading file:", err)
+		logger.Println("Error reading file:", err)
 		return err
 	}
 
 	err = json.Unmarshal(jsonData, boardConf)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON:", err)
+		logger.Println("Error unmarshaling JSON:", err)
 		return err
 	}
 
@@ -218,3 +220,75 @@ func FsReadBoardConfig(username string, board string, boardConf *BoardConfig) er
 //	Local Functions
 //
 // ================================================================================================
+func getCsvFilepath(username *string, board *string) string {
+	return filepath.Join(config.DataPath, *username, *board, *board+".csv")
+}
+
+func fsAppendBoardData(username *string, board *string, newData *[]string) error {
+	filePath := getCsvFilepath(username, board)
+	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		logger.Printf("Could not open the csv file for: %s/%s. %v", *username, *board, err)
+		return err
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	err = writer.Write(*newData)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func fsReadLastBoardData(username *string, board *string, data *[][]string) error {
+	filePath := getCsvFilepath(username, board)
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		logger.Printf("Could not open the csv file: %s. %v\n", filePath, err)
+		return err
+	}
+	defer file.Close()
+
+	ringBuffer := make([]string, config.ChartsDataLength)
+	lineCount := 0
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		ringBuffer[lineCount%len(ringBuffer)] = line
+		lineCount++
+	}
+
+	if err := scanner.Err(); err != nil {
+		logger.Println(err)
+		return err
+	}
+
+	if lineCount == 1 {
+		return nil
+	}
+
+	startIndex := lineCount % config.ChartsDataLength
+	if lineCount < config.ChartsDataLength {
+		startIndex = 1
+		lineCount -= 1
+	}
+
+	if lineCount > config.ChartsDataLength {
+		lineCount = config.ChartsDataLength
+	}
+
+	fmt.Println("before adding elements", len(*data))
+	fmt.Println(ringBuffer)
+
+	for i := 0; i < lineCount; i++ {
+		*data = append(*data, strings.Split(ringBuffer[(startIndex+i)%len(ringBuffer)], ","))
+	}
+
+	return nil
+}

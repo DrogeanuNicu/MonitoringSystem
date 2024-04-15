@@ -24,6 +24,8 @@
         "Name": "monitoring_system"
     },
     "dashboard": {
-        "DataPath": "../data"
+        "DataPath": "../data",
+        "ChartsDataLength": 20,
+        "MaxSecondsOfInactivity": 10
     }
 }

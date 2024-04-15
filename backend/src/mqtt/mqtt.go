@@ -1,14 +1,17 @@
 package mqtt
 
 import (
+	"backend/src/dashboard"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"net/url"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/eclipse/paho.golang/autopaho"
@@ -29,6 +32,11 @@ type MqttsConfig struct {
 	Ca         string `json:"Ca"`
 	Cert       string `json:"Cert"`
 	Key        string `json:"Key"`
+}
+
+type PayloadElement struct {
+	Key   string
+	Value interface{}
 }
 
 // ================================================================================================
@@ -195,7 +203,26 @@ func onConnectError(err error) {
 }
 
 func onPublishReceived(pr paho.PublishReceived) (bool, error) {
+	var username string
+	var board string
+	var data []interface{}
+	var dataString []string
+
 	logger.Printf("%s: %s \n", pr.Packet.Topic, pr.Packet.Payload)
+
+	err := json.Unmarshal(pr.Packet.Payload, &data)
+	if err != nil {
+		logger.Printf("Can't decode the json data received on topic: %s", pr.Packet.Topic)
+		return true, nil
+	}
+
+	for i := range data {
+		dataString = append(dataString, fmt.Sprint(data[i]))
+	}
+
+	convertTopicToUsernameAndBoard(&pr.Packet.Topic, &username, &board)
+	dashboard.AppendBoardData(&username, &board, &dataString)
+
 	return true, nil
 }
 
@@ -209,4 +236,10 @@ func onServerDisconnect(d *paho.Disconnect) {
 	} else {
 		logger.Printf("Server requested disconnect; reason code: %d\n", d.ReasonCode)
 	}
+}
+
+func convertTopicToUsernameAndBoard(topic *string, username *string, board *string) {
+	topicArray := strings.Split(*topic, "/")
+	*username = topicArray[0]
+	*board = topicArray[1]
 }

@@ -2,12 +2,14 @@ package main
 
 import (
 	"backend/src/configParser"
+	"backend/src/dashboard"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"math/rand"
 	"net/url"
 	"os"
 	"time"
@@ -27,9 +29,6 @@ import (
 //	Local Types
 //
 // ================================================================================================
-type Message struct {
-	Message string `json:"message"`
-}
 
 // ================================================================================================
 //
@@ -69,6 +68,8 @@ func main() {
 	defer cancel()
 
 	configParser.ReadConfig(&configFile, &config)
+	dashboard.Init(&config.Dashboard)
+
 	clientCert, err := tls.LoadX509KeyPair(config.Mqtts.Cert, config.Mqtts.Key)
 	if err != nil {
 		panic(err)
@@ -118,13 +119,23 @@ func main() {
 		panic(err)
 	}
 
+	var boardConf dashboard.BoardConfig
+	err = dashboard.FsReadBoardConfig(username, board, &boardConf)
+	if err != nil {
+		panic(err)
+	}
+
+	parameters := make([]interface{}, len(boardConf.Parameters))
+
 	topic := fmt.Sprintf("%s/%s", username, board)
 	for {
-		message := Message{
-			Message: "This is my test message!",
+		for i := 0; i < len(parameters); i++ {
+			// TODO: add random value based on the type of the parameter
+			parameters[i] = rand.Uint32() % 1000
 		}
 
-		jsonMessage, err := json.Marshal(message)
+		fmt.Println(parameters)
+		jsonMessage, err := json.Marshal(parameters)
 		if err != nil {
 			panic(err)
 		}
@@ -136,7 +147,6 @@ func main() {
 		}
 		c.Publish(ctx, &mqttsMessage)
 
-		fmt.Println(message)
 		time.Sleep(1 * time.Second)
 	}
 }
@@ -155,4 +165,15 @@ func onClientError(err error) {
 }
 
 func onServerDisconnect(d *paho.Disconnect) {
+}
+
+func randomString(n int) string {
+	charset := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	charsetLen := uint32(len(charset))
+	var result string
+	for i := 0; i < n; i++ {
+		randIndex := rand.Uint32() % charsetLen
+		result += string(charset[randIndex])
+	}
+	return result
 }

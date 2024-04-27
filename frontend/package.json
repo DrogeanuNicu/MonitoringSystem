@@ -19,9 +19,12 @@
     "vite-plugin-solid": "^2.8.2"
   },
   "dependencies": {
+    "@solid-primitives/refs": "^1.0.8",
     "@solidjs/router": "^0.13.0",
     "@suid/icons-material": "^0.7.0",
     "@suid/material": "^0.16.0",
+    "chart.js": "^4.4.2",
+    "solid-chartjs": "^1.3.9",
     "solid-icons": "^1.1.0",
     "solid-js": "^1.8.11",
     "solid-resizable-panels": "^0.5.4"

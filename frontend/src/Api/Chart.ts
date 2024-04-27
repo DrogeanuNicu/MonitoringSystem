@@ -62,13 +62,17 @@ interface IChartSignals {
   Type: Signal<string>;
   Ox: Signal<number>;
   Oy: Signal<IChartOySignals[]>;
+  OxDataSet: Signal<string[]>;
+  OyDataSets: Signal<number[]>[];
 }
 
 namespace IChartSignals {
   export function create(chart: IChart): IChartSignals {
     let oySignals: IChartOySignals[] = [];
+    let oyDataSets: Signal<number[]>[] = [];
     for (let i = 0; i < chart.Oy.length; i++) {
       oySignals.push(IChartOySignals.create(chart.Oy[i]));
+      oyDataSets.push(createSignal<number[]>([]));  
     }
 
     return {
@@ -76,6 +80,8 @@ namespace IChartSignals {
       Type: createSignal(chart.Type),
       Ox: createSignal(chart.Ox),
       Oy: createSignal(oySignals),
+      OxDataSet: createSignal<string[]>([]),
+      OyDataSets: oyDataSets,
     };
   };
 

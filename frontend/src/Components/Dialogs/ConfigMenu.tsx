@@ -4,7 +4,7 @@ import ErrorAlert from '../Alerts';
 import ShowHideToggle from '../DropDowns/ShowHideToggle';
 import { DropDownType } from '../DropDowns/DropDown';
 
-import { BoardConfig, loadDataApi } from '../../Api/Board';
+import { BoardConfig, loadConfigApi } from '../../Api/Board';
 import { IParameterSignals } from '../../Api/Parameter';
 import { IChartSignals } from '../../Api/Chart';
 import { IGaugeSignals } from '../../Api/Gauge';
@@ -56,6 +56,7 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
 
     try {
       /* TODO: Add more checks to be sure the data is correct before sending to the backend */
+      /* TODO: Add types for parameters, because only numbers can be used as oy data for charts, os can use strings */
       /* TODO: add protobuf or something else for constants, types */
       if (newConfig.Board.length > 20) {
         throw new Error("The length of the board's name cannot be bigger than 20!");
@@ -73,23 +74,26 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
     }
   };
 
-  const loadData = async () => {
+  const loadConfig = async () => {
     setBoardName(props.board);
-    try {
-      await loadDataApi(
-        props.username,
-        props.board,
-        [parameters, setParameters],
-        [charts, setCharts],
-        [gauges, setGauges],
-        [maps, setMaps]
-      )
-    } catch (error: any) {
-      setError(error.message);
+
+    if (props.board !== "" && props.board !== undefined) {
+      try {
+        await loadConfigApi(
+          props.username,
+          props.board,
+          [parameters, setParameters],
+          [charts, setCharts],
+          [gauges, setGauges],
+          [maps, setMaps]
+        )
+      } catch (error: any) {
+        setError(error.message);
+      }
     }
   }
 
-  onMount(loadData);
+  onMount(loadConfig);
 
   return (
     <div>

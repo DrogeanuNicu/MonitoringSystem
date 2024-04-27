@@ -8,12 +8,14 @@ import TopMenu from '../Components/TopMenu';
 import ConfigMenu from '../Components/Dialogs/ConfigMenu';
 import ErrorMessage from '../Components/Dialogs/ErrorMessage';
 import DeleteBoard from '../Components/Dialogs/DeleteBoard';
-import { BoardConfig, loadDataApi, editBoardApi, downloadBoardDataApi, otaUpdateApi } from '../Api/Board';
+import { BoardConfig, loadConfigApi, editBoardApi, downloadBoardDataApi, otaUpdateApi } from '../Api/Board';
 import { IParameterSignals } from '../Api/Parameter';
 import { IChartSignals } from '../Api/Chart';
 import { IGaugeSignals } from '../Api/Gauge';
 import { IMapSignals } from '../Api/Map';
 import { authorizedFetch } from '../Api/Fetch';
+import DbTable from '../Components/Dashboard/Table/DbTable';
+import DbCharts from '../Components/Dashboard/Chart/DbCharts';
 
 const Dashboard: Component = () => {
   const params = useParams();
@@ -26,6 +28,8 @@ const Dashboard: Component = () => {
   const [charts, setCharts] = createSignal<IChartSignals[]>([]);
   const [gauges, setGauges] = createSignal<IGaugeSignals[]>([]);
   const [maps, setMaps] = createSignal<IMapSignals[]>([]);
+  /* TODO: Change this to have the same constants between BE and FE */
+  const MAX_ELEMS_PER_CHART = 20;
 
   let intervalId: number;
 
@@ -58,7 +62,7 @@ const Dashboard: Component = () => {
   const configMenuCb = async (newConfig: BoardConfig, oldBoardName?: string | undefined) => {
     if (oldBoardName !== undefined) {
       await editBoardApi(params.username, newConfig, oldBoardName);
-      navigate(`/dashboard/${params.username}/${newConfig.Board}`)
+      await init();
     } else {
       throw new Error("the board you are trying to edit does not exist anymore!");
     }
@@ -73,9 +77,43 @@ const Dashboard: Component = () => {
       if (!response.ok) {
         throw new Error('Could not communicate with the server! Please refresh!');
       }
-      const boardData = await response.json();
+      const boardData: string[][] = await response.json();
+
+      if (boardData !== null) {
+        if (boardData.length > 0) {
+          let lastData = boardData[boardData.length - 1]
+          for (let i = 0; i < parameters().length && i < lastData.length; i++) {
+            parameters()[i].Value[1](lastData[i])
+          }
+
+          charts()[0].OxDataSet[1](boardData[0])
+          charts()[0].OyDataSets[0][1]([Number(boardData[0][0])])
+
+          /* TODO: You have to check the current length, you can get the same sets on 2 consecutive seconds, therefor there is no new value to push */
+          // if (boardData.length < MAX_ELEMS_PER_CHART) {
+          //   for (let set = 0; set < boardData.length; set++) {
+          //     for (let chartIdx = 0; chartIdx < charts().length; chartIdx++) {
+          //       charts()[chartIdx].OxDataSet.push(boardData[set][charts()[chartIdx].Ox[0]()]);
+          //       for (let oyIdx = 0; oyIdx < charts()[chartIdx].Oy.length; oyIdx++) {
+          //         charts()[chartIdx].OyDataSets[oyIdx].push(boardData[set][charts()[chartIdx].Oy[0]()[oyIdx].Index[0]()]);
+          //       }
+          //     }
+          //   }
+          // } else {
+          //   for (let set = 0; set < boardData.length; set++) {
+          //     for (let chartIdx = 0; chartIdx < charts().length; chartIdx++) {
+          //       charts()[chartIdx].OxDataSet[chartIdx] = boardData[set][charts()[chartIdx].Ox[0]()];
+          //       for (let oyIdx = 0; oyIdx < charts()[chartIdx].Oy.length; oyIdx++) {
+          //         charts()[chartIdx].OyDataSets[oyIdx][oyIdx] = boardData[set][charts()[chartIdx].Oy[0]()[oyIdx].Index[0]()];
+          //       }
+          //     }
+          //   }
+          // }
+        }
+      }
 
       console.log(boardData);
+
       // TODO: Investigate if this makes sense, or if the user should just refresh the page
       setErrorDialog("");
     } catch (error: any) {
@@ -85,7 +123,7 @@ const Dashboard: Component = () => {
 
   const init = async () => {
     try {
-      await loadDataApi(
+      await loadConfigApi(
         params.username,
         params.board,
         [parameters, setParameters],
@@ -110,45 +148,45 @@ const Dashboard: Component = () => {
   onCleanup(deInit);
 
   return (
-    <div>
-      <TopMenu
-        username={params.username}
-        boardMenu={{
-          board: params.board,
-          editCb: prepareEditBoard,
-          otaCb: prepareOtaUpdate,
-          downloadCb: prepareDownloadBoardData,
-          deleteCb: setDeleteDialogBoard,
-        }} />
-      {
-        isConfigMenuOn() &&
-        <ConfigMenu
+    <div class="flex flex-col h-screen">
+      <div>
+        <TopMenu
           username={params.username}
-          board={configMenuBoard()}
-          cb={configMenuCb}
-          show={[isConfigMenuOn, setIsConfigMenuOn]}>
-        </ConfigMenu>
-      }
-      <ErrorMessage errorMsg={[errorDialog, setErrorDialog]} />
-      <DeleteBoard
-        username={params.username}
-        board={[deleteDialogBoard, setDeleteDialogBoard]}
-        cb={deleteBoardCb}
-      />
+          boardMenu={{
+            board: params.board,
+            editCb: prepareEditBoard,
+            otaCb: prepareOtaUpdate,
+            downloadCb: prepareDownloadBoardData,
+            deleteCb: setDeleteDialogBoard,
+          }} />
+        {
+          isConfigMenuOn() &&
+          <ConfigMenu
+            username={params.username}
+            board={configMenuBoard()}
+            cb={configMenuCb}
+            show={[isConfigMenuOn, setIsConfigMenuOn]}>
+          </ConfigMenu>
+        }
+        <ErrorMessage errorMsg={[errorDialog, setErrorDialog]} />
+        <DeleteBoard
+          username={params.username}
+          board={[deleteDialogBoard, setDeleteDialogBoard]}
+          cb={deleteBoardCb}
+        />
+      </div>
 
-      <PanelGroup direction="row">
-        <Panel id="table-div" minSize={20}>
-          <div class="bg-blue-500">
-            <p>table</p>
-          </div>
-        </Panel>
-        <ResizeHandle />
-        <Panel id="chart-div" minSize={20}>
-          <div class="bg-red-500">
-            <p>chart</p>
-          </div>
-        </Panel>
-      </PanelGroup>
+      <div class="flex flex-col h-screen">
+        <PanelGroup direction="row">
+          <Panel id="table-div" initialSize={27} minSize={20} collapsible>
+            <DbTable parameters={[parameters, setParameters]}></DbTable>
+          </Panel>
+          <ResizeHandle />
+          <Panel id="chart-div" initialSize={73} minSize={20} collapsible>
+            <DbCharts charts={[charts, setCharts]} parameters={[parameters, setParameters]}></DbCharts>
+          </Panel>
+        </PanelGroup>
+      </div>
     </div >
   );
 };

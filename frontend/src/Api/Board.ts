@@ -105,7 +105,7 @@ const processResponseCode = async (response: Response) => {
   }
 }
 
-const loadDataApi = async (
+const loadConfigApi = async (
   username: string,
   board: string,
   [parameters, setParameters]: Signal<IParameterSignals[]>,
@@ -133,4 +133,4 @@ const loadDataApi = async (
 
 
 export type { BoardConfig };
-export { addBoardApi, editBoardApi, deleteBoardApi, downloadBoardDataApi, otaUpdateApi, getBoardConfigApi, loadDataApi };
+export { addBoardApi, editBoardApi, deleteBoardApi, downloadBoardDataApi, otaUpdateApi, getBoardConfigApi, loadConfigApi };

@@ -81,8 +81,7 @@ func FsAddBoard(username string, boardConf *BoardConfig) error {
 		return err
 	}
 
-	fileName := getCsvFilepath(&username, &boardConf.Board)
-	filePath := filepath.Join(boardFolderPath, fileName)
+	filePath := getCsvFilepath(&username, &boardConf.Board)
 	if _, err := os.Stat(filePath); err != nil {
 		if !os.IsNotExist(err) {
 			logger.Printf("Failed to check if CSV file exists for %s/%s: %v\n", username, boardConf.Board, err)
@@ -115,11 +114,10 @@ func FsAddBoard(username string, boardConf *BoardConfig) error {
 	}
 
 	/* TODO: Remove this after you have updated the database to contain the board config as well*/
-	fileName = boardConf.Board + ".json"
-	filePath = filepath.Join(boardFolderPath, fileName)
+	filePath = getJsonFilepath(&username, &boardConf.Board)
 	jsonFile, err := os.Create(filePath)
 	if err != nil {
-		logger.Printf("Failed to create CSV file for %s/%s: %v\n", username, boardConf.Board, err)
+		logger.Printf("Failed to create JSON file for %s/%s: %v\n", username, boardConf.Board, err)
 		return err
 	}
 	defer jsonFile.Close()
@@ -191,7 +189,7 @@ func FsDownloadBoardData(username string, board string) (string, error) {
 }
 
 func FsReadBoardConfig(username string, board string, boardConf *BoardConfig) error {
-	filePath := filepath.Join(config.DataPath, username, board, board+".json")
+	filePath := getJsonFilepath(&username, &board)
 
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -222,6 +220,10 @@ func FsReadBoardConfig(username string, board string, boardConf *BoardConfig) er
 // ================================================================================================
 func getCsvFilepath(username *string, board *string) string {
 	return filepath.Join(config.DataPath, *username, *board, *board+".csv")
+}
+
+func getJsonFilepath(username *string, board *string) string {
+	return filepath.Join(config.DataPath, *username, *board, *board+".json")
 }
 
 func fsAppendBoardData(username *string, board *string, newData *[]string) error {

@@ -17,6 +17,7 @@ namespace IParameter {
 interface IParameterSignals {
   Name: Signal<string>;
   Uom: Signal<string>;
+  Value: Signal<string>;
 }
 
 namespace IParameterSignals {
@@ -24,6 +25,7 @@ namespace IParameterSignals {
     return {
       Name: createSignal(param.Name),
       Uom: createSignal(param.Uom),
+      Value: createSignal(""),
     };
   };
 

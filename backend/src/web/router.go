@@ -274,7 +274,7 @@ func getBoardDataHandler(c *gin.Context) {
 	username := c.Param("username")
 	board := c.Param("board")
 
-	var boardData dashboard.BoardData
+	boardData := dashboard.BoardData{}
 	boardData, err := dashboard.GetBoardData(&username, &board)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{"error": fmt.Sprintf("Could not get teh data of the board: %s", board)})

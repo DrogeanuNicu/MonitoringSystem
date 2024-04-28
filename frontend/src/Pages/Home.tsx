@@ -19,7 +19,7 @@ import { BoardConfig, addBoardApi, editBoardApi, downloadBoardDataApi, otaUpdate
 const Home: Component = () => {
   const params = useParams();
   const navigate = useNavigate();
-  const [errorDialog, setErrorDialog] = createSignal('');
+  const [errorMessage, setErrorMessage] = createSignal('');
   const [deleteDialogBoard, setDeleteDialogBoard] = createSignal('');
   const [isConfigMenuOn, setIsConfigMenuOn] = createSignal(false);
   const [configMenuBoard, setConfigMenuBoard] = createSignal('');
@@ -82,7 +82,7 @@ const Home: Component = () => {
     try {
       await downloadBoardDataApi(params.username, board);
     } catch (error: any) {
-      setErrorDialog(error.message);
+      setErrorMessage(error.message);
     }
   }
 
@@ -91,7 +91,7 @@ const Home: Component = () => {
     try {
       otaUpdateApi(params.username, board);
     } catch (error: any) {
-      console.log(error);
+      setErrorMessage(error.message);
     }
   }
 
@@ -121,7 +121,7 @@ const Home: Component = () => {
           show={[isConfigMenuOn, setIsConfigMenuOn]}>
         </ConfigMenu>
       }
-      <ErrorMessage errorMsg={[errorDialog, setErrorDialog]} />
+      <ErrorMessage errorMsg={[errorMessage, setErrorMessage]} />
       <DeleteBoard
         username={params.username}
         board={[deleteDialogBoard, setDeleteDialogBoard]}

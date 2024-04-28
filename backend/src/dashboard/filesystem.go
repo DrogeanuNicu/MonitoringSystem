@@ -285,9 +285,6 @@ func fsReadLastBoardData(username *string, board *string, data *[][]string) erro
 		lineCount = config.ChartsDataLength
 	}
 
-	fmt.Println("before adding elements", len(*data))
-	fmt.Println(ringBuffer)
-
 	for i := 0; i < lineCount; i++ {
 		*data = append(*data, strings.Split(ringBuffer[(startIndex+i)%len(ringBuffer)], ","))
 	}

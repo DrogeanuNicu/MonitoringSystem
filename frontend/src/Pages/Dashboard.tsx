@@ -20,7 +20,7 @@ import DbCharts from '../Components/Dashboard/Chart/DbCharts';
 const Dashboard: Component = () => {
   const params = useParams();
   const navigate = useNavigate();
-  const [errorDialog, setErrorDialog] = createSignal('');
+  const [errorMessage, setErrorMessage] = createSignal('');
   const [deleteDialogBoard, setDeleteDialogBoard] = createSignal('');
   const [isConfigMenuOn, setIsConfigMenuOn] = createSignal(false);
   const [configMenuBoard, setConfigMenuBoard] = createSignal('');
@@ -29,7 +29,7 @@ const Dashboard: Component = () => {
   const [gauges, setGauges] = createSignal<IGaugeSignals[]>([]);
   const [maps, setMaps] = createSignal<IMapSignals[]>([]);
   /* TODO: Change this to have the same constants between BE and FE */
-  const MAX_ELEMS_PER_CHART = 20;
+  const MAX_ELEMS_PER_CHART: number = 20;
 
   let intervalId: number;
 
@@ -42,7 +42,7 @@ const Dashboard: Component = () => {
     try {
       await downloadBoardDataApi(params.username, board);
     } catch (error: any) {
-      setErrorDialog(error.message);
+      setErrorMessage(error.message);
     }
   }
 
@@ -51,7 +51,7 @@ const Dashboard: Component = () => {
     try {
       otaUpdateApi(params.username, board);
     } catch (error: any) {
-      console.log(error);
+      setErrorMessage(error.message);
     }
   }
 
@@ -81,43 +81,43 @@ const Dashboard: Component = () => {
 
       if (boardData !== null) {
         if (boardData.length > 0) {
+          /* Update table */
           let lastData = boardData[boardData.length - 1]
           for (let i = 0; i < parameters().length && i < lastData.length; i++) {
             parameters()[i].Value[1](lastData[i])
           }
 
-          charts()[0].OxDataSet[1](boardData[0])
-          charts()[0].OyDataSets[0][1]([Number(boardData[0][0])])
+          /* Update charts */
+          if (boardData.length !== MAX_ELEMS_PER_CHART) {
+            for (let chartIdx = 0; chartIdx < charts().length; chartIdx++) {
+              const chart = charts()[chartIdx]?.Ref;
+              if (chart !== undefined) {
+                chart.data.labels = new Array(boardData.length);
+                for (let oyIdx = 0; oyIdx < charts()[chartIdx].Oy.length; oyIdx++) {
+                  chart.data.datasets[oyIdx].data = new Array(boardData.length);
+                }
+              }
+            }
+          }
+          for (let chartIdx = 0; chartIdx < charts().length; chartIdx++) {
+            const chart = charts()[chartIdx]?.Ref;
+            if (chart !== undefined) {
+              for (let set = 0; set < boardData.length; set++) {
+                chart.data.labels![set] = boardData[set][charts()[chartIdx].Ox[0]()];
+                for (let oyIdx = 0; oyIdx < charts()[chartIdx].Oy[0]().length; oyIdx++) {
+                  chart.data.datasets[oyIdx].data[set] = Number(boardData[set][charts()[chartIdx].Oy[0]()[oyIdx].Index[0]()]);
+                }
+              }
 
-          /* TODO: You have to check the current length, you can get the same sets on 2 consecutive seconds, therefor there is no new value to push */
-          // if (boardData.length < MAX_ELEMS_PER_CHART) {
-          //   for (let set = 0; set < boardData.length; set++) {
-          //     for (let chartIdx = 0; chartIdx < charts().length; chartIdx++) {
-          //       charts()[chartIdx].OxDataSet.push(boardData[set][charts()[chartIdx].Ox[0]()]);
-          //       for (let oyIdx = 0; oyIdx < charts()[chartIdx].Oy.length; oyIdx++) {
-          //         charts()[chartIdx].OyDataSets[oyIdx].push(boardData[set][charts()[chartIdx].Oy[0]()[oyIdx].Index[0]()]);
-          //       }
-          //     }
-          //   }
-          // } else {
-          //   for (let set = 0; set < boardData.length; set++) {
-          //     for (let chartIdx = 0; chartIdx < charts().length; chartIdx++) {
-          //       charts()[chartIdx].OxDataSet[chartIdx] = boardData[set][charts()[chartIdx].Ox[0]()];
-          //       for (let oyIdx = 0; oyIdx < charts()[chartIdx].Oy.length; oyIdx++) {
-          //         charts()[chartIdx].OyDataSets[oyIdx][oyIdx] = boardData[set][charts()[chartIdx].Oy[0]()[oyIdx].Index[0]()];
-          //       }
-          //     }
-          //   }
-          // }
+              chart.update();
+            }
+          }
         }
       }
-
-      console.log(boardData);
-
       // TODO: Investigate if this makes sense, or if the user should just refresh the page
-      setErrorDialog("");
+      setErrorMessage("");
     } catch (error: any) {
-      setErrorDialog(error.message);
+      setErrorMessage(error.message);
     }
   }
 
@@ -136,7 +136,7 @@ const Dashboard: Component = () => {
       intervalId = setInterval(getData, 1000);
 
     } catch (error: any) {
-      setErrorDialog(error.message);
+      setErrorMessage(error.message);
     }
   }
 
@@ -168,7 +168,7 @@ const Dashboard: Component = () => {
             show={[isConfigMenuOn, setIsConfigMenuOn]}>
           </ConfigMenu>
         }
-        <ErrorMessage errorMsg={[errorDialog, setErrorDialog]} />
+        <ErrorMessage errorMsg={[errorMessage, setErrorMessage]} />
         <DeleteBoard
           username={params.username}
           board={[deleteDialogBoard, setDeleteDialogBoard]}

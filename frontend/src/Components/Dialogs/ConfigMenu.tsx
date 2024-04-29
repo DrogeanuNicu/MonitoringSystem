@@ -42,10 +42,15 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
       Board: boardName(),
       Parameters: [],
       Charts: [],
+      Maps: [],
     };
 
     for (let i = 0; i < parameters().length; i++) {
       newConfig.Parameters.push(IParameterSignals.get(parameters()[i]));
+    }
+
+    for (let i = 0; i < maps().length; i++) {
+      newConfig.Maps.push(IMapSignals.get(maps()[i]));
     }
 
     for (let i = 0; i < charts().length; i++) {
@@ -125,9 +130,9 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
             </div>
 
             <DropDown name="Parameters" type={DropDownType.PARAMETERS} signals={[parameters, setParameters]} ></DropDown>
+            <DropDown name="Maps" type={DropDownType.MAPS} signals={[maps, setMaps]} params={[parameters, setParameters]} ></DropDown>
             <DropDown name="Charts" type={DropDownType.CHARTS} signals={[charts, setCharts]} params={[parameters, setParameters]} ></DropDown>
             <DropDown name="Gauges" type={DropDownType.GAUGES} signals={[gauges, setGauges]} ></DropDown>
-            <DropDown name="Maps" type={DropDownType.MAPS} signals={[maps, setMaps]} ></DropDown>
           </div>
 
           <ErrorAlert errorMsg={[error, setError]}></ErrorAlert>

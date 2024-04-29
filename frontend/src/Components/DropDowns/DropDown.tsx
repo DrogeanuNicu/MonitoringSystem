@@ -8,7 +8,7 @@ import { IChart, IChartSignals } from '../../Api/Chart';
 import BoardChart from './BoardChart';
 import { IGauge } from '../../Api/Gauge';
 import BoardGauge from './BoardGauge';
-import { IMap } from '../../Api/Map';
+import { IMap, IMapSignals } from '../../Api/Map';
 import BoardMap from './BoardMap';
 
 enum DropDownType {
@@ -42,7 +42,7 @@ const DropDown: Component<DropDownProps> = (props) => {
         setSignals([...signals(), createSignal<IGauge>(IGauge.create())]);
         break;
       case DropDownType.MAPS:
-        setSignals([...signals(), createSignal<IMap>(IMap.create())]);
+        setSignals([...signals(), IMapSignals.create(IMap.create())]);
         break;
       default:
         break;
@@ -51,9 +51,9 @@ const DropDown: Component<DropDownProps> = (props) => {
 
   const deleteSignal = (index: number) => {
     setSignals(() => {
-      const updatedParameters = [...signals()];
-      updatedParameters.splice(index, 1);
-      return updatedParameters;
+      const updatedSignals = [...signals()];
+      updatedSignals.splice(index, 1);
+      return updatedSignals;
     });
   };
 
@@ -85,7 +85,13 @@ const DropDown: Component<DropDownProps> = (props) => {
           elements.push(<BoardGauge signal={signals()[i]} />);
           break;
         case DropDownType.MAPS:
-          elements.push(<BoardMap signal={signals()[i]} />);
+          elements.push(
+            <BoardMap
+              index={i}
+              signal={signals()[i]}
+              deleteCb={deleteSignal}
+              params={[params, setParams]}
+            />);
           break;
         default:
           break;

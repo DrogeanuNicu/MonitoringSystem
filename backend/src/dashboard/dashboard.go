@@ -22,6 +22,13 @@ type IParameter struct {
 	Uom  string
 }
 
+type IMap struct {
+	Name string
+	Lon  uint
+	Lat  uint
+	Alt  uint
+}
+
 type IChartOy struct {
 	Index uint
 	Color string
@@ -38,6 +45,7 @@ type BoardConfig struct {
 	Board string
 
 	Parameters []IParameter
+	Maps       []IMap
 	Charts     []IChart
 }
 

@@ -14,6 +14,7 @@ interface BoardConfig {
   Board: string;
 
   Parameters: IParameter[];
+  Maps: IMap[];
   Charts: IChart[];
 }
 
@@ -121,6 +122,12 @@ const loadConfigApi = async (
     paramsSignals.push(IParameterSignals.create(config.Parameters[i]));
   }
   setParameters(paramsSignals);
+
+  let mapsSignals: IMapSignals[] = [];
+  for (let i = 0; i < config.Maps.length; i++) {
+    mapsSignals.push(IMapSignals.create(config.Maps[i]));
+  }
+  setMaps(mapsSignals);
 
   let chartsSignals: IChartSignals[] = [];
   for (let i = 0; i < config.Charts.length; i++) {

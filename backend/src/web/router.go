@@ -250,11 +250,7 @@ func getBoardConfigHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"Board":      boardConf.Board,
-		"Parameters": boardConf.Parameters,
-		"Charts":     boardConf.Charts,
-	})
+	c.JSON(http.StatusOK, boardConf)
 }
 
 func downloadBoardDataHandler(c *gin.Context) {

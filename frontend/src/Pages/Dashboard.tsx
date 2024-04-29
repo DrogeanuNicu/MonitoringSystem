@@ -16,6 +16,8 @@ import { IMapSignals } from '../Api/Map';
 import { authorizedFetch } from '../Api/Fetch';
 import DbTable from '../Components/Dashboard/Table/DbTable';
 import DbCharts from '../Components/Dashboard/Chart/DbCharts';
+import DbMaps from '../Components/Dashboard/Maps/DbMaps';
+import L from 'leaflet';
 
 const Dashboard: Component = () => {
   const params = useParams();
@@ -93,7 +95,7 @@ const Dashboard: Component = () => {
               const chart = charts()[chartIdx]?.Ref;
               if (chart !== undefined) {
                 chart.data.labels = new Array(boardData.length);
-                for (let oyIdx = 0; oyIdx < charts()[chartIdx].Oy.length; oyIdx++) {
+                for (let oyIdx = 0; oyIdx < charts()[chartIdx].Oy[0]().length; oyIdx++) {
                   chart.data.datasets[oyIdx].data = new Array(boardData.length);
                 }
               }
@@ -112,8 +114,24 @@ const Dashboard: Component = () => {
               chart.update();
             }
           }
+
+          /*Update Map */
+          for (let mapIdx = 0; mapIdx < maps().length; mapIdx++) {
+            const coords = L.latLng(
+              Number(boardData[boardData.length - 1][maps()[mapIdx].Lat[0]()]),
+              Number(boardData[boardData.length - 1][maps()[mapIdx].Lon[0]()]),
+              Number(boardData[boardData.length - 1][maps()[mapIdx].Alt[0]()]),
+            );
+            maps()[mapIdx].Marker?.setLatLng(coords);
+            maps()[mapIdx].Marker?.setPopupContent(`Lat: ${coords.lat}, Lon: ${coords.lng}, Alt: ${coords.alt}`);
+
+            if (maps()[mapIdx].Live[0]()) {
+              maps()[mapIdx].Ref?.setView(coords, 15);
+            }
+          }
         }
       }
+
       // TODO: Investigate if this makes sense, or if the user should just refresh the page
       setErrorMessage("");
     } catch (error: any) {
@@ -176,6 +194,7 @@ const Dashboard: Component = () => {
         />
       </div>
 
+      {/* TODO: Make the second column div go under the first one on small screens */}
       <div class="flex flex-col h-screen">
         <PanelGroup direction="row">
           <Panel id="table-div" initialSize={27} minSize={20} collapsible>
@@ -183,6 +202,7 @@ const Dashboard: Component = () => {
           </Panel>
           <ResizeHandle />
           <Panel id="chart-div" initialSize={73} minSize={20} collapsible>
+            <DbMaps maps={[maps, setMaps]}></DbMaps>
             <DbCharts charts={[charts, setCharts]} parameters={[parameters, setParameters]}></DbCharts>
           </Panel>
         </PanelGroup>

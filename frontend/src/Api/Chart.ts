@@ -22,6 +22,7 @@ namespace IChartOy {
 interface IChartOySignals {
   Index: Signal<number>;
   Color: Signal<string>;
+  Scale: Signal<number>;
 }
 
 namespace IChartOySignals {
@@ -29,6 +30,7 @@ namespace IChartOySignals {
     return {
       Index: createSignal(oy.Index),
       Color: createSignal(oy.Color),
+      Scale: createSignal(1.0),
     };
   };
 

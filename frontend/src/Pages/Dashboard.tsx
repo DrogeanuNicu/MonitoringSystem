@@ -107,7 +107,8 @@ const Dashboard: Component = () => {
               for (let set = 0; set < boardData.length; set++) {
                 chart.data.labels![set] = boardData[set][charts()[chartIdx].Ox[0]()];
                 for (let oyIdx = 0; oyIdx < charts()[chartIdx].Oy[0]().length; oyIdx++) {
-                  chart.data.datasets[oyIdx].data[set] = Number(boardData[set][charts()[chartIdx].Oy[0]()[oyIdx].Index[0]()]);
+                  chart.data.datasets[oyIdx].data[set] = Number(boardData[set][charts()[chartIdx].Oy[0]()[oyIdx].Index[0]()]) *
+                    charts()[chartIdx].Oy[0]()[oyIdx].Scale[0]();
                 }
               }
 

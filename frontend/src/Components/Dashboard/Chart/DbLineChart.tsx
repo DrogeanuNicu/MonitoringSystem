@@ -2,6 +2,7 @@ import { Component, Signal, createEffect, createSignal, onCleanup, onMount } fro
 import Chart, { ChartData, ChartOptions } from 'chart.js/auto';
 import { IChartSignals } from '../../../Api/Chart';
 import { IParameterSignals } from '../../../Api/Parameter';
+import { TextField } from '@suid/material';
 
 interface DbLineChartProps {
   chart: IChartSignals,
@@ -64,7 +65,25 @@ const DbLineChart: Component<DbLineChartProps> = (props) => {
 
   return (
     <div class="p-3 shadow-md rounded-lg">
-      <canvas ref={canvasRef} width={400} height={400} />
+      <div class="mb-2">
+        <canvas ref={canvasRef} width={400} height={400} />
+      </div>
+      <div class="flex flex-wrap justify-center mx-auto">
+        {Oy().map((oy) => (
+          <div class="p-2 w-full md:w-1/6">
+            <TextField
+              type="number"
+              label={parameters()[oy.Index[0]()].Name[0]()}
+              variant="outlined"
+              fullWidth
+              size="small"
+              inputProps={{ step: 0.1 }}
+              value={oy.Scale[0]().toString()}
+              onChange={(e) => oy.Scale[1](parseFloat(e.target.value))}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

@@ -44,6 +44,7 @@ const DbMap: Component<DbMapProps> = (props) => {
 
   return (
     <div class="p-3 shadow-md rounded-lg">
+      {/* TODO: adds check at submit for duplicated maps names */}
       <div id={name()} style="height:400px">
       </div>
       <div class="flex flex-row items-center justify-center">

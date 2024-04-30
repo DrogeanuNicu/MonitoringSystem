@@ -22,11 +22,10 @@ const DbMap: Component<DbMapProps> = (props) => {
   }
 
   const resizeHandler = () => {
-   props.map.Ref?.invalidateSize();
+    props.map.Ref?.invalidateSize();
   }
 
   onMount(() => {
-    
     const initCoords: L.LatLng = L.latLng(0, 0, 0);
 
     L.Marker.prototype.setIcon(L.icon({

@@ -71,6 +71,7 @@ const DbLineChart: Component<DbLineChartProps> = (props) => {
       <div class="flex flex-wrap justify-center mx-auto">
         {Oy().map((oy) => (
           <div class="p-2 flex-grow min-w-[100px] max-w-[200px]">
+            {/* TODO: Make the scale be real time, don't update just at fetch */}
             <TextField
               type="number"
               label={parameters()[oy.Index[0]()].Name[0]()}
@@ -78,8 +79,8 @@ const DbLineChart: Component<DbLineChartProps> = (props) => {
               fullWidth
               size="small"
               inputProps={{ step: 0.1 }}
-              value={oy.Scale[0]().toString()}
-              onChange={(e) => oy.Scale[1](parseFloat(e.target.value))}
+              value={oy.Scale[0]() !== 0 ? oy.Scale[0]().toString() : ""}
+              onChange={(e) => oy.Scale[1](parseFloat(e.target.value) || 0)}
             />
           </div>
         ))}

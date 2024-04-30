@@ -34,7 +34,7 @@ const BoardChart: Component<BoardChartProps> = (props) => {
   };
 
   const deleteOy = (oyIndex: number) => {
-    setOys(prevOys => prevOys.filter(oySignal => oySignal.Index[0]() !== oyIndex));
+    setOys(prevOys => prevOys.filter((_, index) => index !== oyIndex));
   };
 
   const populateOys = () => {

@@ -1,4 +1,4 @@
-import { Component, onMount, createSignal, onCleanup } from 'solid-js';
+import { Component, onMount, createSignal, onCleanup, createEffect } from 'solid-js';
 import { useParams } from "@solidjs/router";
 import { useNavigate } from "@solidjs/router";
 import { PanelGroup, Panel, ResizeHandle } from "solid-resizable-panels";
@@ -18,6 +18,7 @@ import DbTable from '../Components/Dashboard/Table/DbTable';
 import DbCharts from '../Components/Dashboard/Chart/DbCharts';
 import DbMaps from '../Components/Dashboard/Maps/DbMaps';
 import L from 'leaflet';
+import { MIN_SCREEN_WIDTH_PX } from '../Constants/Constants';
 
 const Dashboard: Component = () => {
   const params = useParams();
@@ -30,9 +31,10 @@ const Dashboard: Component = () => {
   const [charts, setCharts] = createSignal<IChartSignals[]>([]);
   const [gauges, setGauges] = createSignal<IGaugeSignals[]>([]);
   const [maps, setMaps] = createSignal<IMapSignals[]>([]);
+  const [screenWidth, setScreenWidth] = createSignal(window.innerWidth);
+
   /* TODO: Change this to have the same constants between BE and FE */
   const MAX_ELEMS_PER_CHART: number = 20;
-
   let intervalId: number;
 
   const prepareEditBoard = (board: string) => {
@@ -166,6 +168,17 @@ const Dashboard: Component = () => {
   onMount(init);
   onCleanup(deInit);
 
+  const handleScreenSize = () => {
+    setScreenWidth(window.innerWidth);
+  };
+
+  createEffect(() => {
+    window.addEventListener('resize', handleScreenSize);
+    return () => {
+      window.removeEventListener('resize', handleScreenSize);
+    };
+  });
+
   return (
     <div class="flex flex-col h-screen">
       <div>
@@ -195,19 +208,28 @@ const Dashboard: Component = () => {
         />
       </div>
 
-      {/* TODO: Make the second column div go under the first one on small screens */}
-      <div class="flex flex-col h-screen">
-        <PanelGroup direction="row">
-          <Panel id="table-div" initialSize={27} minSize={20} collapsible>
+      {screenWidth() > MIN_SCREEN_WIDTH_PX ?
+        <div class="flex flex-col h-screen">
+          <PanelGroup direction="row">
+            <Panel id="table-div" initialSize={27} minSize={20} collapsible>
+              <DbTable parameters={[parameters, setParameters]}></DbTable>
+            </Panel>
+            <ResizeHandle />
+            <Panel id="chart-div" initialSize={73} minSize={20} collapsible>
+              <DbMaps maps={[maps, setMaps]}></DbMaps>
+              <DbCharts charts={[charts, setCharts]} parameters={[parameters, setParameters]}></DbCharts>
+            </Panel>
+          </PanelGroup>
+        </div>
+        :
+        <div class="flex flex-col h-full">
+          <div class="flex-grow">
             <DbTable parameters={[parameters, setParameters]}></DbTable>
-          </Panel>
-          <ResizeHandle />
-          <Panel id="chart-div" initialSize={73} minSize={20} collapsible>
             <DbMaps maps={[maps, setMaps]}></DbMaps>
             <DbCharts charts={[charts, setCharts]} parameters={[parameters, setParameters]}></DbCharts>
-          </Panel>
-        </PanelGroup>
-      </div>
+          </div>
+        </div>
+      }
     </div >
   );
 };

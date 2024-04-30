@@ -52,6 +52,7 @@ const BoardMap: Component<BoardMapProps> = (props) => {
           <ParamSelect label='Altitude' signal={[Alt, setAlt]} cb={() => { }} params={props.params}></ParamSelect>
         </div>
       </div>
+      <hr class="mb-4 border-2"></hr>
     </div>
   );
 };

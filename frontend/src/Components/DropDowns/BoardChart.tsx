@@ -50,7 +50,6 @@ const BoardChart: Component<BoardChartProps> = (props) => {
             cb={paramSelectCb}
             params={props.params}></ParamSelect>
           <ColorPicker
-            oyIndex={i}
             signal={oys()[i].Color}
           ></ColorPicker>
           <IconButton
@@ -108,7 +107,7 @@ const BoardChart: Component<BoardChartProps> = (props) => {
       <div class="mb-4 flex justify-center text-main-color">
         <Button color="inherit" onClick={addOy}>Add Oy</Button>
       </div>
-      <hr class="mb-4"></hr>
+      <hr class="mb-4 border-2"></hr>
     </div >
   );
 };

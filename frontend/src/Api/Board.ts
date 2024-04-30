@@ -16,6 +16,12 @@ interface BoardConfig {
   Parameters: IParameter[];
   Maps: IMap[];
   Charts: IChart[];
+  Gauges: IGauge[];
+}
+
+interface BoardData {
+  Data: string[][],
+  LastTimeStamp: number,
 }
 
 const addBoardApi = async (username: string, data: BoardConfig) => {
@@ -135,9 +141,15 @@ const loadConfigApi = async (
   }
   setCharts(chartsSignals);
 
+  let gaugesSignals: IGaugeSignals[] = [];
+  for (let i = 0; i < config.Gauges.length; i++) {
+    gaugesSignals.push(IGaugeSignals.create(config.Gauges[i]));
+  }
+  setGauges(gaugesSignals);
+
   console.log(config);
 }
 
 
-export type { BoardConfig };
+export type { BoardConfig, BoardData };
 export { addBoardApi, editBoardApi, deleteBoardApi, downloadBoardDataApi, otaUpdateApi, getBoardConfigApi, loadConfigApi };

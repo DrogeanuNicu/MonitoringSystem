@@ -277,5 +277,5 @@ func getBoardDataHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, boardData.Data)
+	c.JSON(http.StatusOK, boardData)
 }

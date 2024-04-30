@@ -6,7 +6,7 @@ import { IParameter, IParameterSignals } from '../../Api/Parameter';
 import BoardParameter from './BoardParameter';
 import { IChart, IChartSignals } from '../../Api/Chart';
 import BoardChart from './BoardChart';
-import { IGauge } from '../../Api/Gauge';
+import { IGauge, IGaugeSignals } from '../../Api/Gauge';
 import BoardGauge from './BoardGauge';
 import { IMap, IMapSignals } from '../../Api/Map';
 import BoardMap from './BoardMap';
@@ -39,7 +39,7 @@ const DropDown: Component<DropDownProps> = (props) => {
         setSignals([...signals(), IChartSignals.create(IChart.create())]);
         break;
       case DropDownType.GAUGES:
-        setSignals([...signals(), createSignal<IGauge>(IGauge.create())]);
+        setSignals([...signals(), IGaugeSignals.create(IGauge.create())]);
         break;
       case DropDownType.MAPS:
         setSignals([...signals(), IMapSignals.create(IMap.create())]);
@@ -82,16 +82,26 @@ const DropDown: Component<DropDownProps> = (props) => {
           }
           break;
         case DropDownType.GAUGES:
-          elements.push(<BoardGauge signal={signals()[i]} />);
+          if (params !== undefined) {
+            elements.push(
+              <BoardGauge
+                index={i}
+                signal={signals()[i]}
+                deleteCb={deleteSignal}
+                params={[params, setParams]}
+              />);
+          }
           break;
         case DropDownType.MAPS:
-          elements.push(
-            <BoardMap
-              index={i}
-              signal={signals()[i]}
-              deleteCb={deleteSignal}
-              params={[params, setParams]}
-            />);
+          if (params !== undefined) {
+            elements.push(
+              <BoardMap
+                index={i}
+                signal={signals()[i]}
+                deleteCb={deleteSignal}
+                params={[params, setParams]}
+              />);
+          }
           break;
         default:
           break;

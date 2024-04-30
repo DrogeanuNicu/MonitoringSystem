@@ -41,12 +41,21 @@ type IChart struct {
 	Oy   []IChartOy
 }
 
+type IGauge struct {
+	Name  string
+	Index uint
+	Min   float64
+	Max   float64
+	Color string
+}
+
 type BoardConfig struct {
 	Board string
 
 	Parameters []IParameter
 	Maps       []IMap
 	Charts     []IChart
+	Gauges     []IGauge
 }
 
 type BoardData struct {

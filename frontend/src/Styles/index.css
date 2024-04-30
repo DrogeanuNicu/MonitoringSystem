@@ -7,6 +7,10 @@
     @apply bg-teal-600;
   }
   
+  .board-main-color {
+    @apply border-teal-600;
+  }
+
   .inactive-color {
     @apply bg-gray-300;
   }

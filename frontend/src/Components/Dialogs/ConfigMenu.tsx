@@ -43,6 +43,7 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
       Parameters: [],
       Charts: [],
       Maps: [],
+      Gauges: [],
     };
 
     for (let i = 0; i < parameters().length; i++) {
@@ -55,6 +56,10 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
 
     for (let i = 0; i < charts().length; i++) {
       newConfig.Charts.push(IChartSignals.get(charts()[i]));
+    }
+
+    for (let i = 0; i < gauges().length; i++) {
+      newConfig.Gauges.push(IGaugeSignals.get(gauges()[i]));
     }
 
     console.log(newConfig);
@@ -132,7 +137,7 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
             <DropDown name="Parameters" type={DropDownType.PARAMETERS} signals={[parameters, setParameters]} ></DropDown>
             <DropDown name="Maps" type={DropDownType.MAPS} signals={[maps, setMaps]} params={[parameters, setParameters]} ></DropDown>
             <DropDown name="Charts" type={DropDownType.CHARTS} signals={[charts, setCharts]} params={[parameters, setParameters]} ></DropDown>
-            <DropDown name="Gauges" type={DropDownType.GAUGES} signals={[gauges, setGauges]} ></DropDown>
+            <DropDown name="Gauges" type={DropDownType.GAUGES} signals={[gauges, setGauges]} params={[parameters, setParameters]} ></DropDown>
           </div>
 
           <ErrorAlert errorMsg={[error, setError]}></ErrorAlert>

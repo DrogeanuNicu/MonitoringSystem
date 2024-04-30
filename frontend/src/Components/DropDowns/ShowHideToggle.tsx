@@ -13,8 +13,8 @@ const ShowHideToggle: Component<ShowHideToggleProps> = (props) => {
 
     return (
         <Button color="inherit" class="w-full" onClick={() => setShow(!show())}>
-            <p class="inline-block">{props.text}</p>
-            <hr class="inline-block mx-4 w-full" />
+            <p class="inline-block text-lg">{props.text}</p>
+            <hr class="inline-block mx-4 w-full board-main-color border-1" />
             <div class="arrow-container">
                 {show()
                     ? <HiOutlineChevronDoubleDown size={24} class="icon-main-color ml-auto" />

@@ -70,7 +70,7 @@ const DbLineChart: Component<DbLineChartProps> = (props) => {
       </div>
       <div class="flex flex-wrap justify-center mx-auto">
         {Oy().map((oy) => (
-          <div class="p-2 w-full md:w-1/6">
+          <div class="p-2 flex-grow min-w-[100px] max-w-[200px]">
             <TextField
               type="number"
               label={parameters()[oy.Index[0]()].Name[0]()}

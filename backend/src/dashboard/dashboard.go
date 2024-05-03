@@ -101,7 +101,9 @@ func Init(pConfig *DashboardConfig) {
 	_, err := os.Stat(config.DataPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			panic(err)
+			if err := os.Mkdir(config.DataPath, folderPermissions); err != nil {
+				panic(err)
+			}
 		}
 	}
 

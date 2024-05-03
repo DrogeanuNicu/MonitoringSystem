@@ -3,7 +3,7 @@
 Raspbian OS was used; any Debian derivative should work fine.
 List of necessary Raspbian packages:
 ```
-sudo apt install make mosquitto mosquitto-clients openssl nginx certbot python3-certbot-nginx
+sudo apt install make mosquitto mosquitto-clients openssl nginx certbot python3-certbot-nginx postgresql postgresql-contrib
 ```
 
 To set up Golang, see section [Backend](#backend).
@@ -129,4 +129,13 @@ More details can be found here: [Mosquitto TLS Guide](http://www.steves-internet
 
 
 ## PostgreSQL
+After the PostgreSQL service is up, connect to the `postgres` user and set a new password:
+```sudo -u postgres psql```
+```\password postgres```
 
+Enter the password from the backend config file: ```backend/backend.config.json```
+
+While connected to the psql command line, create a new database with the name specified in the config file:
+```CREATE DATABASE database_name;```
+
+Start the backend, the tables will be created by the application.

@@ -97,7 +97,12 @@ const Dashboard: Component = () => {
           /* Update table */
           let lastData = boardData.Data[boardData.Data.length - 1]
           for (let i = 0; i < parameters().length && i < lastData.length; i++) {
-            parameters()[i].Value[1](lastData[i])
+            parameters()[i].Value[1](lastData[i]);
+          }
+          if (parameters().length > lastData.length) {
+            for (let i = lastData.length; i < parameters().length; i++) {
+              parameters()[i].Value[1]("");
+            }
           }
 
           /* Update charts */

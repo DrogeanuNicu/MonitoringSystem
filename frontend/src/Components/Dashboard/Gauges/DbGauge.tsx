@@ -78,7 +78,7 @@ const DbGauge: Component<DbGaugeProps> = (props) => {
   });
 
   return (
-    <div class="p-3 shadow-md rounded-lg">
+    <div class="p-3 shadow-md rounded-lg flex-grow flex flex-col justify-center items-center">
       <div id={getGaugeDivId()}></div>
       <div class="flex items-center justify-center space-x-10">
         <p>Min: {min()}</p>

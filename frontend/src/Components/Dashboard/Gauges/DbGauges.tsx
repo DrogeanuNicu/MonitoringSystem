@@ -12,7 +12,7 @@ const DbGauges: Component<DbGaugesProps> = (props) => {
   const [gauges, setGauges] = props.gauges;
 
   return (
-    <div class="p-3 overflow-x-auto">
+    <div class="p-3 overflow-x-auto flex flex-wrap">
       {gauges().map(gauge => (
         <DbGauge gauge={gauge}></DbGauge>
       ))}

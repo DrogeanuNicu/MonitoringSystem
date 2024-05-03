@@ -81,8 +81,8 @@ func Init(config *HttpsConfig, debugMode bool) {
 	router.GET("/api/:username/download/:board", authMiddleware(), downloadBoardDataHandler)
 	router.GET("/api/:username/data/:board", authMiddleware(), getBoardDataHandler)
 
-	// err := router.RunTLS(fmt.Sprintf("%s:%d", config.Address, config.Port), config.Cert, config.Key)
-	err := router.Run(fmt.Sprintf("%s:%d", config.Address, config.Port))
+	err := router.RunTLS(fmt.Sprintf("%s:%d", config.Address, config.Port), config.Cert, config.Key)
+	// err := router.Run(fmt.Sprintf("%s:%d", config.Address, config.Port))
 	if err != nil {
 		panic(err)
 	}

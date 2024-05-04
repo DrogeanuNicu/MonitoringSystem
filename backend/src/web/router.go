@@ -80,6 +80,7 @@ func Init(config *HttpsConfig, debugMode bool) {
 	router.GET("/api/:username/config/:board", authMiddleware(), getBoardConfigHandler)
 	router.GET("/api/:username/download/:board", authMiddleware(), downloadBoardDataHandler)
 	router.GET("/api/:username/data/:board", authMiddleware(), getBoardDataHandler)
+	router.GET("/api/test", testHttpsHandler)
 
 	err := router.RunTLS(fmt.Sprintf("%s:%d", config.Address, config.Port), config.Cert, config.Key)
 	// err := router.Run(fmt.Sprintf("%s:%d", config.Address, config.Port))
@@ -278,4 +279,9 @@ func getBoardDataHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, boardData)
+}
+
+func testHttpsHandler(c *gin.Context) {
+	data := map[string]string{"message": "it works!"}
+	c.JSON(http.StatusOK, data)
 }

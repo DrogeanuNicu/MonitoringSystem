@@ -130,12 +130,16 @@ More details can be found here: [Mosquitto TLS Guide](http://www.steves-internet
 
 ## PostgreSQL
 After the PostgreSQL service is up, connect to the `postgres` user and set a new password:
-```sudo -u postgres psql```
-```\password postgres```
+```
+sudo -u postgres psql
+\password postgres
+```
 
 Enter the password from the backend config file: ```backend/backend.config.json```
 
 While connected to the psql command line, create a new database with the name specified in the config file:
-```CREATE DATABASE database_name;```
+```
+CREATE DATABASE database_name;
+```
 
 Start the backend, the tables will be created by the application.

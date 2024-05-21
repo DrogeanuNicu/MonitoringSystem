@@ -134,11 +134,12 @@ func main() {
 			parameters[i] = rand.Uint32() % 1000
 		}
 
-		fmt.Println(parameters)
 		jsonMessage, err := json.Marshal(parameters)
 		if err != nil {
 			panic(err)
 		}
+
+		fmt.Println(string(jsonMessage))
 
 		mqttsMessage := paho.Publish{
 			QoS:     1,

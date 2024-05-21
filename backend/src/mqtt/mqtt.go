@@ -5,7 +5,6 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -205,19 +204,14 @@ func onConnectError(err error) {
 func onPublishReceived(pr paho.PublishReceived) (bool, error) {
 	var username string
 	var board string
-	var data []interface{}
 	var dataString []string
 
 	logger.Printf("%s: %s \n", pr.Packet.Topic, pr.Packet.Payload)
 
-	err := json.Unmarshal(pr.Packet.Payload, &data)
-	if err != nil {
-		logger.Printf("Can't decode the json data received on topic: %s", pr.Packet.Topic)
-		return true, nil
-	}
+	payloadParts := strings.Split(string(pr.Packet.Payload), ",")
 
-	for i := range data {
-		dataString = append(dataString, fmt.Sprint(data[i]))
+	for _, part := range payloadParts {
+		dataString = append(dataString, strings.TrimSpace(part))
 	}
 
 	convertTopicToUsernameAndBoard(&pr.Packet.Topic, &username, &board)

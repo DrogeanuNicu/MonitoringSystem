@@ -188,6 +188,18 @@ func FsDownloadBoardData(username string, board string) (string, error) {
 	return filePath, nil
 }
 
+func FsDownloadOtaUpdate(username string, board string) (string, error) {
+	filePath := getOtaBinPath(&username, &board)
+
+	_, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
+		logger.Printf("The file '%s' was not found\n", filePath)
+		return "", err
+	}
+
+	return filePath, nil
+}
+
 func FsReadBoardConfig(username string, board string, boardConf *BoardConfig) error {
 	filePath := getJsonFilepath(&username, &board)
 
@@ -220,6 +232,10 @@ func FsReadBoardConfig(username string, board string, boardConf *BoardConfig) er
 // ================================================================================================
 func getCsvFilepath(username *string, board *string) string {
 	return filepath.Join(config.DataPath, *username, *board, *board+".csv")
+}
+
+func getOtaBinPath(username *string, board *string) string {
+	return filepath.Join(config.DataPath, *username, *board, "update.bin")
 }
 
 func getJsonFilepath(username *string, board *string) string {

@@ -80,7 +80,8 @@ func Init(config *HttpsConfig, debugMode bool) {
 	router.GET("/api/:username/config/:board", authMiddleware(), getBoardConfigHandler)
 	router.GET("/api/:username/download/:board", authMiddleware(), downloadBoardDataHandler)
 	router.GET("/api/:username/data/:board", authMiddleware(), getBoardDataHandler)
-	router.GET("/api/test", testHttpsHandler)
+	router.POST("/api/:username/trigger/update/:board", authMiddleware(), triggerOtaUpdate)
+	router.GET("/api/:username/download/update/:board", authMiddleware(), getOtaUpdateBin)
 
 	err := router.RunTLS(fmt.Sprintf("%s:%d", config.Address, config.Port), config.Cert, config.Key)
 	// err := router.Run(fmt.Sprintf("%s:%d", config.Address, config.Port))
@@ -281,7 +282,19 @@ func getBoardDataHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, boardData)
 }
 
-func testHttpsHandler(c *gin.Context) {
-	data := map[string]string{"message": "it works!"}
-	c.JSON(http.StatusOK, data)
+func getOtaUpdateBin(c *gin.Context) {
+	username := c.Param("username")
+	board := c.Param("board")
+
+	filePath, err := dashboard.FsDownloadOtaUpdate(username, board)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"error": fmt.Sprintf("The BIN file of the '%s' board is not present on the server!", board)})
+		return
+	}
+
+	c.FileAttachment(filePath, "update.bin")
+}
+
+func triggerOtaUpdate(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{})
 }

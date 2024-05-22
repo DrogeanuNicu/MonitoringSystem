@@ -189,7 +189,7 @@ func FsDownloadBoardData(username string, board string) (string, error) {
 }
 
 func FsDownloadOtaUpdate(username string, board string) (string, error) {
-	filePath := getOtaBinPath(&username, &board)
+	filePath := GetOtaBinPath(&username, &board)
 
 	_, err := os.Stat(filePath)
 	if os.IsNotExist(err) {
@@ -225,6 +225,10 @@ func FsReadBoardConfig(username string, board string, boardConf *BoardConfig) er
 	return nil
 }
 
+func GetOtaBinPath(username *string, board *string) string {
+	return filepath.Join(config.DataPath, *username, *board, "update.bin")
+}
+
 // ================================================================================================
 //
 //	Local Functions
@@ -232,10 +236,6 @@ func FsReadBoardConfig(username string, board string, boardConf *BoardConfig) er
 // ================================================================================================
 func getCsvFilepath(username *string, board *string) string {
 	return filepath.Join(config.DataPath, *username, *board, *board+".csv")
-}
-
-func getOtaBinPath(username *string, board *string) string {
-	return filepath.Join(config.DataPath, *username, *board, "update.bin")
 }
 
 func getJsonFilepath(username *string, board *string) string {

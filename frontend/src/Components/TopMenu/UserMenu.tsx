@@ -24,6 +24,9 @@ const UserMenu: Component<UserMenuProps> = (props) => {
   const handleLogout = () => {
     authorizedFetch(props.username, `/api/${props.username}/logout`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
     removeToken(props.username);
     navigate("/");

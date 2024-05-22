@@ -3,6 +3,7 @@ package main
 import (
 	"backend/src/configParser"
 	"backend/src/dashboard"
+	"backend/src/mqtt"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
@@ -146,7 +147,7 @@ func main() {
 			Topic:   topic,
 			Payload: jsonMessage,
 		}
-		c.Publish(ctx, &mqttsMessage)
+		mqtt.Send(&mqttsMessage)
 
 		time.Sleep(1 * time.Second)
 	}

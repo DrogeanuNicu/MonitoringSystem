@@ -8,6 +8,7 @@ import TopMenu from '../Components/TopMenu';
 import ConfigMenu from '../Components/Dialogs/ConfigMenu';
 import ErrorMessage from '../Components/Dialogs/ErrorMessage';
 import DeleteBoard from '../Components/Dialogs/DeleteBoard';
+import OtaMenu from '../Components/Dialogs/OtaMenu';
 import { BoardConfig, loadConfigApi, editBoardApi, downloadBoardDataApi, otaUpdateApi } from '../Api/Board';
 import { IParameterSignals } from '../Api/Parameter';
 import { IChartSignals } from '../Api/Chart';
@@ -28,7 +29,9 @@ const Dashboard: Component = () => {
   const [errorMessage, setErrorMessage] = createSignal('');
   const [deleteDialogBoard, setDeleteDialogBoard] = createSignal('');
   const [isConfigMenuOn, setIsConfigMenuOn] = createSignal(false);
+  const [isOtaMenuOn, setIsOtaMenuOn] = createSignal(false);
   const [configMenuBoard, setConfigMenuBoard] = createSignal('');
+  const [otaMenuBoard, setOtaMenuBoard] = createSignal('');
   const [parameters, setParameters] = createSignal<IParameterSignals[]>([]);
   const [charts, setCharts] = createSignal<IChartSignals[]>([]);
   const [gauges, setGauges] = createSignal<IGaugeSignals[]>([]);
@@ -54,12 +57,8 @@ const Dashboard: Component = () => {
   }
 
   const prepareOtaUpdate = (board: string) => {
-    /* TODO: This should trigger the OTA menu component, the call to the API is performed from there */
-    try {
-      otaUpdateApi(params.username, board);
-    } catch (error: any) {
-      setErrorMessage(error.message);
-    }
+    setOtaMenuBoard(board);
+    setIsOtaMenuOn(true);
   }
 
   const deleteBoardCb = async (boardToBeDeleted: string) => {
@@ -79,6 +78,9 @@ const Dashboard: Component = () => {
     try {
       const response = await authorizedFetch(params.username, `/api/${params.username}/data/${params.board}`, {
         method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
       if (!response.ok) {
@@ -227,6 +229,11 @@ const Dashboard: Component = () => {
           </ConfigMenu>
         }
         <ErrorMessage errorMsg={[errorMessage, setErrorMessage]} />
+        <OtaMenu
+          username={params.username}
+          board={otaMenuBoard()}
+          show={[isOtaMenuOn, setIsOtaMenuOn]}>
+        </OtaMenu>
         <DeleteBoard
           username={params.username}
           board={[deleteDialogBoard, setDeleteDialogBoard]}

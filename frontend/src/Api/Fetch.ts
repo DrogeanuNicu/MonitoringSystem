@@ -25,12 +25,11 @@ const authorizedFetch = async (username: string, input: RequestInfo | URL, optio
       navigate("/");
     }
 
-    const headers = {
+    options.headers = {
+      ...options.headers,
       'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
     };
 
-    options.headers = headers;
     const response = await fetch(input, options);
 
     return response

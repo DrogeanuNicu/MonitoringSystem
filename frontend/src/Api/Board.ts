@@ -28,6 +28,9 @@ const addBoardApi = async (username: string, data: BoardConfig) => {
 
   const response = await authorizedFetch(username, `/api/${username}/add/${data.Board}`, {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify(data),
   });
 
@@ -38,6 +41,9 @@ const editBoardApi = async (username: string, data: BoardConfig, oldBoard: strin
 
   const response = await authorizedFetch(username, `/api/${username}/edit/${oldBoard}`, {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify(data),
   });
 
@@ -48,6 +54,9 @@ const deleteBoardApi = async (username: string, board: string) => {
 
   const response = await authorizedFetch(username, `/api/${username}/delete/${board}`, {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
   });
 
   await processResponseCode(response);
@@ -56,6 +65,9 @@ const deleteBoardApi = async (username: string, board: string) => {
 const downloadBoardDataApi = async (username: string, board: string) => {
   const response = await authorizedFetch(username, `/api/${username}/download/${board}`, {
     method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
   });
 
   if (response.ok) {
@@ -83,13 +95,29 @@ const downloadBoardDataApi = async (username: string, board: string) => {
   }
 }
 
-const otaUpdateApi = async (username: string, board: string) => {
-  console.log(`Doing OTA update for ${board} from username ${username}`);
+const otaUpdateApi = async (username: string, board: string, file: File | null) => {
+
+  if (file === null) {
+    throw new Error("No file was provided!");
+  } else {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await authorizedFetch(username, `/api/${username}/trigger/update/${board}`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    await processResponseCode(response);
+  }
 }
 
 async function getBoardConfigApi(username: string, board: string): Promise<BoardConfig> {
   const response = await authorizedFetch(username, `/api/${username}/config/${board}`, {
     method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
   });
 
   if (!response.ok) {

@@ -86,9 +86,9 @@ func Init(ctxPtr *context.Context, config *MqttsConfig, isDebugOn bool) {
 	}
 }
 
-func Send(message paho.Publish) error {
+func Send(message *paho.Publish) error {
 	if len(sendQueue.ch) < cap(sendQueue.ch) {
-		sendQueue.ch <- message
+		sendQueue.ch <- *message
 		return nil
 	}
 	return errors.New("the message queue is full")
@@ -98,6 +98,10 @@ func DeInit() {
 	close(sendQueue.ch)
 	sendQueue.wg.Wait()
 	close(sendQueue.stop)
+}
+
+func GetOtaTriggerTopic(username *string, board *string) string {
+	return fmt.Sprintf("/%s/%s/ota", *username, *board)
 }
 
 // ================================================================================================

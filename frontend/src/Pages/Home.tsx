@@ -14,6 +14,7 @@ import ConfigMenu from '../Components/Dialogs/ConfigMenu';
 
 import { authorizedFetch } from '../Api/Fetch';
 import { BoardConfig, addBoardApi, editBoardApi, downloadBoardDataApi, otaUpdateApi } from '../Api/Board';
+import OtaMenu from '../Components/Dialogs/OtaMenu';
 
 
 const Home: Component = () => {
@@ -22,13 +23,18 @@ const Home: Component = () => {
   const [errorMessage, setErrorMessage] = createSignal('');
   const [deleteDialogBoard, setDeleteDialogBoard] = createSignal('');
   const [isConfigMenuOn, setIsConfigMenuOn] = createSignal(false);
+  const [isOtaMenuOn, setIsOtaMenuOn] = createSignal(false);
   const [configMenuBoard, setConfigMenuBoard] = createSignal('');
+  const [otaMenuBoard, setOtaMenuBoard] = createSignal('');
   const [boardList, setBoardList] = createSignal<string[]>([]);
 
   const fetchData = async () => {
     try {
       const response = await authorizedFetch(params.username, `/api/${params.username}/boards`, {
         method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
       if (!response.ok) {
@@ -87,12 +93,8 @@ const Home: Component = () => {
   }
 
   const prepareOtaUpdate = (board: string) => {
-    /* TODO: This should trigger the OTA menu component, the call to the API is performed from there */
-    try {
-      otaUpdateApi(params.username, board);
-    } catch (error: any) {
-      setErrorMessage(error.message);
-    }
+    setOtaMenuBoard(board);
+    setIsOtaMenuOn(true);
   }
 
   const deleteBoardCb = async (boardToBeDeleted: string) => {
@@ -122,6 +124,11 @@ const Home: Component = () => {
         </ConfigMenu>
       }
       <ErrorMessage errorMsg={[errorMessage, setErrorMessage]} />
+      <OtaMenu
+        username={params.username}
+        board={otaMenuBoard()}
+        show={[isOtaMenuOn, setIsOtaMenuOn]}>
+      </OtaMenu>
       <DeleteBoard
         username={params.username}
         board={[deleteDialogBoard, setDeleteDialogBoard]}

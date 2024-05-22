@@ -3,11 +3,13 @@ package web
 import (
 	"backend/src/dashboard"
 	"backend/src/db"
+	"backend/src/mqtt"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/eclipse/paho.golang/paho"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -73,7 +75,6 @@ func Init(config *HttpsConfig, debugMode bool) {
 	router.POST("/api/register", registerHandler)
 	router.POST("/api/:username/logout", authMiddleware(), logoutHandler)
 	router.GET("/api/:username/boards", authMiddleware(), getBoardsHandler)
-	/* TODO: Investigate if it is necessary for the route to contain :board as it already is part of the body */
 	router.POST("/api/:username/add/:board", authMiddleware(), addBoardHandler)
 	router.POST("/api/:username/edit/:board", authMiddleware(), editBoardHandler)
 	router.POST("/api/:username/delete/:board", authMiddleware(), deleteBoardHandler)
@@ -83,8 +84,8 @@ func Init(config *HttpsConfig, debugMode bool) {
 	router.POST("/api/:username/trigger/update/:board", authMiddleware(), triggerOtaUpdate)
 	router.GET("/api/:username/download/update/:board", authMiddleware(), getOtaUpdateBin)
 
-	err := router.RunTLS(fmt.Sprintf("%s:%d", config.Address, config.Port), config.Cert, config.Key)
-	// err := router.Run(fmt.Sprintf("%s:%d", config.Address, config.Port))
+	// err := router.RunTLS(fmt.Sprintf("%s:%d", config.Address, config.Port), config.Cert, config.Key)
+	err := router.Run(fmt.Sprintf("%s:%d", config.Address, config.Port))
 	if err != nil {
 		panic(err)
 	}
@@ -288,6 +289,7 @@ func getOtaUpdateBin(c *gin.Context) {
 
 	filePath, err := dashboard.FsDownloadOtaUpdate(username, board)
 	if err != nil {
+		logger.Println(err)
 		c.JSON(http.StatusOK, gin.H{"error": fmt.Sprintf("The BIN file of the '%s' board is not present on the server!", board)})
 		return
 	}
@@ -296,5 +298,34 @@ func getOtaUpdateBin(c *gin.Context) {
 }
 
 func triggerOtaUpdate(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{})
+	username := c.Param("username")
+	board := c.Param("board")
+
+	file, err := c.FormFile("file")
+	if err != nil {
+		logger.Println(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	dst := dashboard.GetOtaBinPath(&username, &board)
+	if err := c.SaveUploadedFile(file, dst); err != nil {
+		logger.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	mqttsMessage := paho.Publish{
+		QoS:     1,
+		Topic:   mqtt.GetOtaTriggerTopic(&username, &board),
+		Payload: []byte(generateJwtToken(username)),
+	}
+	err = mqtt.Send(&mqttsMessage)
+	if err != nil {
+		logger.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not send the trigger update MQTTS message!"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully"})
 }

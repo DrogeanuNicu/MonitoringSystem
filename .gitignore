@@ -1,3 +1,4 @@
 .vscode
 data
 backend/tests/*/bin
+boards/*/build/*

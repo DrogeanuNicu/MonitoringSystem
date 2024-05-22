@@ -16,19 +16,76 @@
 /**************************************************************************************************
  *                                      Static Variables                                         *
  *************************************************************************************************/
+static const char ResetPin = MODEM_RESET_PIN;
 
 /**************************************************************************************************
  *                                      Global Variables                                         *
  *************************************************************************************************/
+Gsm_DataType Gsm_Data;
 extern TinyGsm modem;
 
 /**************************************************************************************************
  *                                Static Function Prototypes                                     *
  *************************************************************************************************/
+static void UpdateData(void);
+static void GetTimestamp(void);
+static void PrintData(void);
+static int16_t GetIntBefore(char lastChar);
 
 /**************************************************************************************************
  *                             Static Function Definitions                                       *
  *************************************************************************************************/
+static void UpdateData(void)
+{
+    Gsm_Data.signalQuality = modem.getSignalQuality();
+    GetTimestamp();
+}
+
+static void GetTimestamp(void)
+{
+    String ModemResponse;
+    // Eg: "14/01/01,02:14:36+08"
+    modem.sendAT(GF("+CCLK?"));
+    if (modem.waitResponse(GF("+CCLK:")) == 1)
+    {
+        modem.stream.readStringUntil('"');
+        Gsm_Data.year = GetIntBefore('/');
+        Gsm_Data.month = GetIntBefore('/');
+        Gsm_Data.day = GetIntBefore(',');
+        Gsm_Data.hour = GetIntBefore(':');
+        Gsm_Data.min = GetIntBefore(':');
+        Gsm_Data.sec = GetIntBefore('+');
+        Gsm_Data.timezoneQuarter = GetIntBefore('"');
+
+        modem.stream.readStringUntil('\r');
+        modem.waitResponse();
+    }
+}
+
+static void PrintData(void)
+{
+    LOG("Signal Quality: %d\nTimestamp: %d %d %d %d %d %d + %d quarter\n",
+        Gsm_Data.signalQuality,
+        Gsm_Data.day, Gsm_Data.month, Gsm_Data.year,
+        Gsm_Data.hour, Gsm_Data.min, Gsm_Data.sec,
+        Gsm_Data.timezoneQuarter);
+}
+
+static int16_t GetIntBefore(char lastChar)
+{
+    char buf[7];
+    size_t bytesRead = modem.stream.readBytesUntil(
+        lastChar, buf, static_cast<size_t>(7));
+    // if we read 7 or more bytes, it's an overflow
+    if (bytesRead && bytesRead < 7)
+    {
+        buf[bytesRead] = '\0';
+        int16_t res = atoi(buf);
+        return res;
+    }
+
+    return -9999;
+}
 
 /**************************************************************************************************
  *                              Global Function Definitions                                      *
@@ -56,7 +113,7 @@ void GsmModem_Init(void)
     digitalWrite(BOARD_PWRKEY_PIN, LOW);
 
     /* Check if the modem is online */
-    LOG("Start modem...\n");
+    LOG("\nStart modem...\n");
 
     int retry = 0;
     while (!modem.testAT(1000))
@@ -71,6 +128,25 @@ void GsmModem_Init(void)
             retry = 0;
         }
     }
+}
+
+void GsmModem_Main(void)
+{
+    if (!modem.isNetworkConnected())
+    {
+        if (!modem.waitForNetwork(MODEM_NETWORK_MAX_TIMEOUT_MS))
+        {
+            do
+            {
+                modem.restart(&ResetPin);
+            } while (GsmModem_Connect());
+        }
+    }
+
+    UpdateData();
+#ifdef DEBUG_SERIAL_LOG
+    PrintData();
+#endif
 }
 
 bool GsmModem_Connect(void)

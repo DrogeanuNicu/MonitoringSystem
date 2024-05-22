@@ -168,7 +168,7 @@ void Can_Main(void)
         xSemaphoreGive(Mcp2515.mISRSemaphore);
         Mcp2515.receive(frame);
 #ifdef DEBUG_SERIAL_LOG
-        // PrintFrame(&frame);
+        PrintFrame(&frame);
 #endif
         UpdateData(&frame);
     }

@@ -44,8 +44,6 @@ TinyGsm modem(debugger);
 TinyGsm modem(SerialAT);
 #endif
 
-volatile bool ShallSendMqttsData = true;
-
 /**************************************************************************************************
  *                                Static Function Prototypes                                     *
  *************************************************************************************************/
@@ -96,11 +94,11 @@ void Task_Gateway(void *parameter)
     GsmModem_Init();
     GsmModem_Connect();
     // esp_task_wdt_reset();
-    
+
     Mqtts_Init();
     Mqtts_Connect();
     // esp_task_wdt_reset();
-    
+
     Gps_Init();
     // esp_task_wdt_reset();
     for (;;)
@@ -118,11 +116,11 @@ void Task_Gateway(void *parameter)
             SerialAT.write(Serial.read());
         }
 #endif
-
+        GsmModem_Main();
         Gps_Main();
-        Mqtts_Main(ShallSendMqttsData);
+        Mqtts_Main();
 
-        vTaskDelay(pdMS_TO_TICKS(100));
+        // vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
 
@@ -135,6 +133,6 @@ void Task_Collect(void *parameter)
     {
         Can_Main();
 
-        vTaskDelay(pdMS_TO_TICKS(100));
+        // vTaskDelay(pdMS_TO_TICKS(100));
     }
 }

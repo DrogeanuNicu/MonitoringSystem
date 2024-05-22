@@ -24,6 +24,7 @@
 #define MODEM_RESET_PIN (5U)
 #define MODEM_RESET_LEVEL HIGH
 #define MODEM_GPS_ENABLE_GPIO (-1)
+#define MODEM_NETWORK_MAX_TIMEOUT_MS (120000U)
 #define SerialAT Serial1
 
 /* Tiny GSM config */

@@ -33,7 +33,7 @@ extern const uint8_t Mqtts_ClientId;
  *                                    Function Prototypes                                        *
  *************************************************************************************************/
 void Mqtts_Init(void);
-void Mqtts_Main(bool shallSend);
+void Mqtts_Main(void);
 bool Mqtts_Connect(void);
 bool Mqtts_Send(void);
 void Mqtts_Callback(const char *topic, const uint8_t *payload, uint32_t len);

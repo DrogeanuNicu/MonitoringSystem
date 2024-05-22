@@ -8,6 +8,7 @@
 #include "Logger.h"
 #include "Gps.h"
 #include "Can.h"
+#include "Gsm.h"
 
 /**************************************************************************************************
  *                                          Macros                                               *
@@ -27,6 +28,7 @@ const uint8_t Mqtts_ClientId = 0;
  *                                      Static Variables                                         *
  *************************************************************************************************/
 static char MsgBuffer[MQTTS_MAX_MSG_LEN];
+static int16_t lastMqttsSendSecond = 0;
 
 /**************************************************************************************************
  *                                      Global Variables                                         *
@@ -52,7 +54,7 @@ void Mqtts_Init()
     LOG("Started MQTTS communication\n");
 }
 
-void Mqtts_Main(bool shallSend)
+void Mqtts_Main(void)
 {
     if (!modem.mqtt_connected())
     {
@@ -62,8 +64,9 @@ void Mqtts_Main(bool shallSend)
         }
     }
 
-    if (true == shallSend)
+    if (lastMqttsSendSecond != Gsm_Data.sec)
     {
+        lastMqttsSendSecond = Gsm_Data.sec;
         Mqtts_Send();
     }
 
@@ -98,7 +101,8 @@ bool Mqtts_Send(void)
     snprintf(
         MsgBuffer,
         MQTTS_MAX_MSG_LEN,
-        "%02d/%02d/%d %02d:%02d:%02d,%.6f,%.6f,%.6f,%.2f,%d,%d,%u,"
+        "%02d/%02d/%02d %02d:%02d:%02d,%d,%d,"
+        "%.6f,%.6f,%.6f,%.2f,%d,%d,%u,"
         "%d,%d,%d,%.2f,%.2f,"
         "%d,%d,%d,%d,%d,"
         "%.2f,%.2f,%d,%d,%d,%d,"
@@ -106,7 +110,8 @@ bool Mqtts_Send(void)
         "%.2f,%d,%d,%d,%d,"
         "%.2f,%.2f,%d,%d,"
         "%.2f,%.2f,%d,%d\0",
-        Gps_Data.day, Gps_Data.month, Gps_Data.year, Gps_Data.hour, Gps_Data.min, Gps_Data.sec, Gps_Data.lat, Gps_Data.lon, Gps_Data.alt, Gps_Data.speed, Gps_Data.visSat, Gps_Data.usedSat, Gps_Data.fixedMode,
+        Gsm_Data.day, Gsm_Data.month, Gsm_Data.year, Gsm_Data.hour, Gsm_Data.min, Gsm_Data.sec, Gsm_Data.signalQuality, Gsm_Data.timezoneQuarter,
+        Gps_Data.lat, Gps_Data.lon, Gps_Data.alt, Gps_Data.speed, Gps_Data.visSat, Gps_Data.usedSat, Gps_Data.fixedMode,
         Can_P_0x601.motorSpeed, Can_P_0x601.motorTemperature, Can_P_0x601.controllerTemperature, Can_P_0x601.motorCurrent, Can_P_0x601.batteryVoltage,
         Can_P_0x602.motorVoltageFrequency, Can_P_0x602.diagnosticTroubleCodes, Can_P_0x602.throttleLevel, Can_P_0x602.brakingLevel, Can_P_0x602.controllerStatusFlags,
         Can_P_0x501.lowestCellVoltage, Can_P_0x501.highestCellVoltage, Can_P_0x501.lowestCellTemperature, Can_P_0x501.highestCellTemperature, Can_P_0x501.internalBmsTemperature, Can_P_0x501.bmsStatusFlags,

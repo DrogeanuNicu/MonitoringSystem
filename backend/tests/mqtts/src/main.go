@@ -3,11 +3,9 @@ package main
 import (
 	"backend/src/configParser"
 	"backend/src/dashboard"
-	"backend/src/mqtt"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"math/rand"
@@ -130,25 +128,31 @@ func main() {
 
 	topic := fmt.Sprintf("%s/%s", username, board)
 	for {
+		var message string
+
 		for i := 0; i < len(parameters); i++ {
 			// TODO: add random value based on the type of the parameter
 			parameters[i] = rand.Uint32() % 1000
-		}
 
-		jsonMessage, err := json.Marshal(parameters)
-		if err != nil {
-			panic(err)
+			message += fmt.Sprintf("%v", parameters[i])
+			if i != len(parameters)-1 {
+				message += ","
+			}
 		}
-
-		fmt.Println(string(jsonMessage))
 
 		mqttsMessage := paho.Publish{
 			QoS:     1,
 			Topic:   topic,
-			Payload: jsonMessage,
+			Payload: []byte(message),
 		}
-		mqtt.Send(&mqttsMessage)
 
+		_, err = c.Publish(ctx, &mqttsMessage)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		fmt.Println(string(message))
 		time.Sleep(1 * time.Second)
 	}
 }

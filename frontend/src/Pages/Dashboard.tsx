@@ -32,6 +32,7 @@ const Dashboard: Component = () => {
   const [isOtaMenuOn, setIsOtaMenuOn] = createSignal(false);
   const [configMenuBoard, setConfigMenuBoard] = createSignal('');
   const [otaMenuBoard, setOtaMenuBoard] = createSignal('');
+  const [otaStatus, setOtaStatus] = createSignal(0);
   const [parameters, setParameters] = createSignal<IParameterSignals[]>([]);
   const [charts, setCharts] = createSignal<IChartSignals[]>([]);
   const [gauges, setGauges] = createSignal<IGaugeSignals[]>([]);
@@ -93,6 +94,8 @@ const Dashboard: Component = () => {
       } else {
         lastTimeStamp = boardData.LastTimeStamp;
       }
+
+      setOtaStatus(boardData.OtaStatus);
 
       if (boardData.Data !== null) {
         if (boardData.Data.length > 0) {
@@ -232,6 +235,7 @@ const Dashboard: Component = () => {
         <OtaMenu
           username={params.username}
           board={otaMenuBoard()}
+          status={[otaStatus, setOtaStatus]}
           show={[isOtaMenuOn, setIsOtaMenuOn]}>
         </OtaMenu>
         <DeleteBoard

@@ -210,18 +210,25 @@ func onPublishReceived(pr paho.PublishReceived) (bool, error) {
 	var board string
 	var dataString []string
 
-	logger.Printf("%s: %s \n", pr.Packet.Topic, pr.Packet.Payload)
+	err := convertTopicToUsernameAndBoard(&pr.Packet.Topic, &username, &board)
+	if err != nil {
+		logger.Printf("%s: %s \n", pr.Packet.Topic, pr.Packet.Payload)
 
-	payloadParts := strings.Split(string(pr.Packet.Payload), ",")
+		if pr.Packet.Topic == GetOtaTriggerTopic(&username, &board) {
+			/* Message sent by the server, ignore it */
+			return true, nil
+		}
 
-	for _, part := range payloadParts {
-		dataString = append(dataString, strings.TrimSpace(part))
+		payloadParts := strings.Split(string(pr.Packet.Payload), ",")
+		for _, part := range payloadParts {
+			dataString = append(dataString, strings.TrimSpace(part))
+		}
+
+		dashboard.AppendBoardData(&username, &board, &dataString)
+
+		return true, nil
 	}
-
-	convertTopicToUsernameAndBoard(&pr.Packet.Topic, &username, &board)
-	dashboard.AppendBoardData(&username, &board, &dataString)
-
-	return true, nil
+	return true, err
 }
 
 func onClientError(err error) {
@@ -236,8 +243,13 @@ func onServerDisconnect(d *paho.Disconnect) {
 	}
 }
 
-func convertTopicToUsernameAndBoard(topic *string, username *string, board *string) {
+func convertTopicToUsernameAndBoard(topic *string, username *string, board *string) error {
 	topicArray := strings.Split(*topic, "/")
-	*username = topicArray[0]
-	*board = topicArray[1]
+	if len(topicArray) >= 2 {
+		*username = topicArray[0]
+		*board = topicArray[1]
+		return nil
+	}
+
+	return errors.New("invalid topic")
 }

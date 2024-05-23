@@ -22,6 +22,15 @@ interface BoardConfig {
 interface BoardData {
   Data: string[][],
   LastTimeStamp: number,
+  OtaStatus: number,
+}
+
+enum OtaStatus {
+  NO_STATUS = 0,
+  BINARY_UPLOADED,
+  MQTTS_MSG_SENT,
+  BOARD_REQUESTED_BIN,
+  LENGTH
 }
 
 const addBoardApi = async (username: string, data: BoardConfig) => {
@@ -180,4 +189,4 @@ const loadConfigApi = async (
 
 
 export type { BoardConfig, BoardData };
-export { addBoardApi, editBoardApi, deleteBoardApi, downloadBoardDataApi, otaUpdateApi, getBoardConfigApi, loadConfigApi };
+export { OtaStatus, addBoardApi, editBoardApi, deleteBoardApi, downloadBoardDataApi, otaUpdateApi, getBoardConfigApi, loadConfigApi };

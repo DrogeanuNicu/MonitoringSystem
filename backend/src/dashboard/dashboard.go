@@ -3,6 +3,7 @@ package dashboard
 import (
 	"log"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -61,9 +62,15 @@ type BoardConfig struct {
 type BoardData struct {
 	Data          [][]string
 	LastTimeStamp int64
+	OtaStatus     int
 }
 
-type BoardMap map[string]BoardData
+type BoardAccess struct {
+	Packet *BoardData
+	Mu     sync.Mutex
+}
+
+type BoardMap map[string]*BoardAccess
 
 type UserMap map[string]BoardMap
 
@@ -78,6 +85,12 @@ type UserMap map[string]BoardMap
 //	Global Variables
 //
 // ================================================================================================
+const (
+	OTA_NO_STATUS int = iota
+	OTA_BINARY_UPLOADED
+	OTA_MQTTS_MSG_SENT
+	OTA_BOARD_REQUESTED_BIN
+)
 
 // ================================================================================================
 //
@@ -114,26 +127,32 @@ func UserLogout(username string) {
 }
 
 func GetBoardData(username *string, board *string) (BoardData, error) {
-	if _, isBoardActive := dshbd[*username][*board]; !isBoardActive {
+	if _, userExists := dshbd[*username]; !userExists {
 		dshbd[*username] = make(BoardMap)
-		var boardData BoardData = BoardData{
-			LastTimeStamp: time.Now().Unix(),
-		}
-		err := fsReadLastBoardData(username, board, &boardData.Data)
-
-		if err != nil {
-			return boardData, err
-		}
-
-		dshbd[*username][*board] = boardData
-	} else {
-		tempBoardData := dshbd[*username][*board]
-		tempBoardData.LastTimeStamp = time.Now().Unix()
-
-		dshbd[*username][*board] = tempBoardData
 	}
 
-	return dshbd[*username][*board], nil
+	if _, boardExists := dshbd[*username][*board]; !boardExists {
+		dshbd[*username][*board] = &BoardAccess{
+			Packet: &BoardData{
+				LastTimeStamp: time.Now().Unix(),
+			},
+		}
+		dshbd[*username][*board].Mu.Lock()
+		defer dshbd[*username][*board].Mu.Unlock()
+
+		err := fsReadLastBoardData(username, board, &(dshbd[*username][*board].Packet.Data))
+		return *dshbd[*username][*board].Packet, err
+	}
+
+	dshbd[*username][*board].Mu.Lock()
+	defer dshbd[*username][*board].Mu.Unlock()
+
+	dshbd[*username][*board].Packet.LastTimeStamp = time.Now().Unix()
+	if dshbd[*username][*board].Packet.OtaStatus == OTA_BOARD_REQUESTED_BIN {
+		dshbd[*username][*board].Packet.OtaStatus = OTA_NO_STATUS
+	}
+
+	return *dshbd[*username][*board].Packet, nil
 }
 
 func AppendBoardData(username *string, board *string, newData *[]string) error {
@@ -142,23 +161,29 @@ func AppendBoardData(username *string, board *string, newData *[]string) error {
 		return err
 	}
 
-	if _, isBoardActive := dshbd[*username][*board]; isBoardActive {
-		length := len(dshbd[*username][*board].Data)
-		if length < config.ChartsDataLength {
-			dshbd[*username][*board] = BoardData{
-				Data:          append(dshbd[*username][*board].Data, *newData),
-				LastTimeStamp: dshbd[*username][*board].LastTimeStamp,
-			}
+	if board, isBoardActive := dshbd[*username][*board]; isBoardActive {
+		board.Mu.Lock()
+		defer board.Mu.Unlock()
 
+		if len(board.Packet.Data) < config.ChartsDataLength {
+			board.Packet.Data = append(board.Packet.Data, *newData)
 		} else {
-			for i := 1; i < length; i++ {
-				dshbd[*username][*board].Data[i-1] = dshbd[*username][*board].Data[i]
+			for i := 1; i < len(board.Packet.Data); i++ {
+				board.Packet.Data[i-1] = board.Packet.Data[i]
 			}
-			dshbd[*username][*board].Data[length-1] = *newData
+			board.Packet.Data[len(board.Packet.Data)-1] = *newData
 		}
 	}
 
 	return nil
+}
+
+func SetOtaStatus(username *string, board *string, status int) {
+	if _, isBoardActive := dshbd[*username][*board]; isBoardActive {
+		dshbd[*username][*board].Mu.Lock()
+		defer dshbd[*username][*board].Mu.Unlock()
+		dshbd[*username][*board].Packet.OtaStatus = status
+	}
 }
 
 // ================================================================================================
@@ -174,8 +199,8 @@ func startPeriodicCleanUp() {
 		currentTime := time.Now().Unix()
 
 		for u, boards := range dshbd {
-			for b, boardData := range boards {
-				if boardData.LastTimeStamp < currentTime-config.MaxSecondsOfInactivity {
+			for b, board := range boards {
+				if board.Packet.LastTimeStamp < currentTime-config.MaxSecondsOfInactivity {
 					delete(dshbd[u], b)
 				}
 			}

@@ -1,7 +1,7 @@
 import { Component } from 'solid-js';
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@suid/material";
 import { createSignal } from "solid-js";
-import ErrorAlert from '../Alerts';
+import { ErrorAlert } from '../Alerts';
 import { ErrorAlertProps } from '../Alerts';
 
 import Transition from './Transition';

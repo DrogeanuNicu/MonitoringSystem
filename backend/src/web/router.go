@@ -83,6 +83,7 @@ func Init(config *HttpsConfig, debugMode bool) {
 	router.GET("/api/:username/data/:board", authMiddleware(), getBoardDataHandler)
 	router.POST("/api/:username/trigger/update/:board", authMiddleware(), triggerOtaUpdate)
 	router.GET("/api/:username/download/update/:board", authMiddleware(), getOtaUpdateBin)
+	router.POST("/api/:username/reset/status/:board", authMiddleware(), resetOtaStatus)
 
 	// err := router.RunTLS(fmt.Sprintf("%s:%d", config.Address, config.Port), config.Cert, config.Key)
 	err := router.Run(fmt.Sprintf("%s:%d", config.Address, config.Port))
@@ -273,10 +274,9 @@ func getBoardDataHandler(c *gin.Context) {
 	username := c.Param("username")
 	board := c.Param("board")
 
-	boardData := dashboard.BoardData{}
 	boardData, err := dashboard.GetBoardData(&username, &board)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{"error": fmt.Sprintf("Could not get teh data of the board: %s", board)})
+		c.JSON(http.StatusOK, gin.H{"error": fmt.Sprintf("Could not get the data of the board: %s", board)})
 		return
 	}
 
@@ -293,6 +293,7 @@ func getOtaUpdateBin(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"error": fmt.Sprintf("The BIN file of the '%s' board is not present on the server!", board)})
 		return
 	}
+	dashboard.SetOtaStatus(&username, &board, dashboard.OTA_BOARD_REQUESTED_BIN)
 
 	c.FileAttachment(filePath, "update.bin")
 }
@@ -314,6 +315,7 @@ func triggerOtaUpdate(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	dashboard.SetOtaStatus(&username, &board, dashboard.OTA_BINARY_UPLOADED)
 
 	mqttsMessage := paho.Publish{
 		QoS:     1,
@@ -326,6 +328,16 @@ func triggerOtaUpdate(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not send the trigger update MQTTS message!"})
 		return
 	}
+	dashboard.SetOtaStatus(&username, &board, dashboard.OTA_MQTTS_MSG_SENT)
 
 	c.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully"})
+}
+
+func resetOtaStatus(c *gin.Context) {
+	username := c.Param("username")
+	board := c.Param("board")
+
+	dashboard.SetOtaStatus(&username, &board, dashboard.OTA_NO_STATUS)
+
+	c.JSON(http.StatusOK, gin.H{})
 }

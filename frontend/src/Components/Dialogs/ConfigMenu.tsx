@@ -1,6 +1,6 @@
 import { Component, createSignal, onMount, Signal, createEffect } from 'solid-js';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@suid/material";
-import ErrorAlert from '../Alerts';
+import { ErrorAlert } from '../Alerts';
 import ShowHideToggle from '../DropDowns/ShowHideToggle';
 import { DropDownType } from '../DropDowns/DropDown';
 

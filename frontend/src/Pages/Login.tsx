@@ -2,7 +2,7 @@ import { Component, createSignal } from 'solid-js';
 import { useNavigate } from "@solidjs/router";
 
 import FormInputField from "../Components/FormInputField"
-import ErrorAlert from '../Components/Alerts';
+import { ErrorAlert } from '../Components/Alerts';
 
 import "../Styles/index.css";
 import { storeToken } from '../Api/Fetch';

@@ -1,14 +1,14 @@
 /**************************************************************************************************
  *                                        Include Files                                           *
  *************************************************************************************************/
-#include "Config.h"
-#include "Mqtts.h"
+#include "Config.hpp"
+#include "Mqtts.hpp"
 #include <TinyGsmClient.h>
-#include "Certs.h"
-#include "Logger.h"
-#include "Gps.h"
-#include "Can.h"
-#include "Gsm.h"
+#include "Certs.hpp"
+#include "Logger.hpp"
+#include "Gps.hpp"
+#include "Can.hpp"
+#include "Gsm.hpp"
 
 /**************************************************************************************************
  *                                          Macros                                               *

@@ -5,19 +5,11 @@
  *************************************************************************************************/
 #include "Arduino.h"
 
-#include "Config.h"
+#include "Config.hpp"
 
 /**************************************************************************************************
  *                                          Macros                                               *
  *************************************************************************************************/
-#ifdef DEBUG_SERIAL_LOG
-#define LOG(...) Logger_Log(__VA_ARGS__)
-#define LOG_UNSAFE(...) Logger_LogUnsafe(__VA_ARGS__)
-#else
-#define LOG(...)
-#endif
-
-#define PRINT_BUFFER_SIZE (1024U)
 
 /**************************************************************************************************
  *                                   Typedefs/Structs/Enums                                      *
@@ -26,6 +18,12 @@
 /**************************************************************************************************
  *                                        Constants                                              *
  *************************************************************************************************/
+extern const char *Mqtts_Broker;
+extern const uint16_t Mqtts_Port;
+extern const char *Mqtts_ClientIdStr;
+extern const char *Mqtts_SubscribeTopic;
+extern const char *Mqtts_PublishTopic;
+extern const uint8_t Mqtts_ClientId;
 
 /**************************************************************************************************
  *                                      Global Variables                                         *
@@ -34,10 +32,8 @@
 /**************************************************************************************************
  *                                    Function Prototypes                                        *
  *************************************************************************************************/
-void Logger_Init(uint32_t BaudRate);
-#ifdef DEBUG_SERIAL_LOG
-void Logger_Log(const char *Format, ...);
-void Logger_LogUnsafe(const char *Format, ...);
-bool Logger_TakeSemaphore(void);
-void Logger_GiveSemaphore(void);
-#endif
+void Mqtts_Init(void);
+void Mqtts_Main(void);
+bool Mqtts_Connect(void);
+bool Mqtts_Send(void);
+void Mqtts_Callback(const char *topic, const uint8_t *payload, uint32_t len);

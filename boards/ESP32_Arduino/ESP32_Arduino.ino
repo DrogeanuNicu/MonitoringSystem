@@ -1,20 +1,20 @@
 /**************************************************************************************************
  *                                        Include Files                                           *
  *************************************************************************************************/
-#include "Config.h"
+#include "Config.hpp"
 #include <TinyGsmClient.h>
 #ifdef DEBUG_DUMP_AT_COMMANDS
 #include <StreamDebugger.h>
 #endif
 #include "esp_task_wdt.h"
 
-#include "Certs.h"
-#include "Logger.h"
-#include "Gps.h"
-#include "Gsm.h"
-#include "Mqtts.h"
-#include "Spi.h"
-#include "Can.h"
+#include "Certs.hpp"
+#include "Logger.hpp"
+#include "Gps.hpp"
+#include "Gsm.hpp"
+#include "Mqtts.hpp"
+#include "Spi.hpp"
+#include "Can.hpp"
 
 /**************************************************************************************************
  *                                          Macros                                               *

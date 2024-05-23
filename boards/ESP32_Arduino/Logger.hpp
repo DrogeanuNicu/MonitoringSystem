@@ -5,12 +5,19 @@
  *************************************************************************************************/
 #include "Arduino.h"
 
-#include "Config.h"
-#include <SPI.h>
+#include "Config.hpp"
 
 /**************************************************************************************************
  *                                          Macros                                               *
  *************************************************************************************************/
+#ifdef DEBUG_SERIAL_LOG
+#define LOG(...) Logger_Log(__VA_ARGS__)
+#define LOG_UNSAFE(...) Logger_LogUnsafe(__VA_ARGS__)
+#else
+#define LOG(...)
+#endif
+
+#define PRINT_BUFFER_SIZE (1024U)
 
 /**************************************************************************************************
  *                                   Typedefs/Structs/Enums                                      *
@@ -27,4 +34,10 @@
 /**************************************************************************************************
  *                                    Function Prototypes                                        *
  *************************************************************************************************/
-void Spi_Init(void);
+void Logger_Init(uint32_t BaudRate);
+#ifdef DEBUG_SERIAL_LOG
+void Logger_Log(const char *Format, ...);
+void Logger_LogUnsafe(const char *Format, ...);
+bool Logger_TakeSemaphore(void);
+void Logger_GiveSemaphore(void);
+#endif

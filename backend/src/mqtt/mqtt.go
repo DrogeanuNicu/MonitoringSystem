@@ -101,7 +101,7 @@ func DeInit() {
 }
 
 func GetOtaTriggerTopic(username *string, board *string) string {
-	return fmt.Sprintf("/%s/%s/ota", *username, *board)
+	return fmt.Sprintf("%s/%s/ota", *username, *board)
 }
 
 // ================================================================================================
@@ -212,23 +212,24 @@ func onPublishReceived(pr paho.PublishReceived) (bool, error) {
 
 	err := convertTopicToUsernameAndBoard(&pr.Packet.Topic, &username, &board)
 	if err != nil {
-		logger.Printf("%s: %s \n", pr.Packet.Topic, pr.Packet.Payload)
+		logger.Printf("Invalid topic %s", pr.Packet.Topic)
+		return true, err
+	}
 
-		if pr.Packet.Topic == GetOtaTriggerTopic(&username, &board) {
-			/* Message sent by the server, ignore it */
-			return true, nil
-		}
-
-		payloadParts := strings.Split(string(pr.Packet.Payload), ",")
-		for _, part := range payloadParts {
-			dataString = append(dataString, strings.TrimSpace(part))
-		}
-
-		dashboard.AppendBoardData(&username, &board, &dataString)
-
+	logger.Printf("%s: %s \n", pr.Packet.Topic, pr.Packet.Payload)
+	if pr.Packet.Topic == GetOtaTriggerTopic(&username, &board) {
+		/* Message sent by the server, ignore it */
 		return true, nil
 	}
-	return true, err
+
+	payloadParts := strings.Split(string(pr.Packet.Payload), ",")
+	for _, part := range payloadParts {
+		dataString = append(dataString, strings.TrimSpace(part))
+	}
+
+	dashboard.AppendBoardData(&username, &board, &dataString)
+
+	return true, nil
 }
 
 func onClientError(err error) {

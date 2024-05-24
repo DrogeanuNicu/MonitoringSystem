@@ -50,6 +50,9 @@
 #define MQTTS_CLIENT_ID (0U)
 #define MQTTS_MAX_MSG_LEN (1024U)
 
+/* HTTPS config*/
+#define HTTPS_SSL_CTX (8U) /* Needs to be different from 0, hardcoded value for MQTTS*/
+
 /* OTA config */
 #define OTA_SERVER_URL ("https://" SERVER_ADDR "/api/" USERNAME "/download/update/binary/" BOARD)
 #define OTA_VALIDATION_TOKEN_MAX_LEN (256U)

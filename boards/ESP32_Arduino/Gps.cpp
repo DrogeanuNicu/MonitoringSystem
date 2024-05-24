@@ -52,7 +52,7 @@ void Gps_Main(void)
     if (true == Gps_GetData(&Gps_Data))
     {
 #if defined(DEBUG_SERIAL_LOG)
-        Gps_PrintData(&Gps_Data);
+        // Gps_PrintData(&Gps_Data);
 #endif
     }
 }

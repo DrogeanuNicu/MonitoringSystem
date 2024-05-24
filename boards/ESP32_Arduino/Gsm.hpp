@@ -41,4 +41,5 @@ extern Gsm_DataType Gsm_Data;
 void GsmModem_Init(void);
 void GsmModem_Main(void);
 bool GsmModem_Connect(void);
+void GsmModem_SaveOtaToken(const uint8_t *ValTok, const uint32_t ValTokLen);
 void GsmModem_TriggerOtaUpdate(const uint8_t *ValTok, const uint32_t ValTokLen);

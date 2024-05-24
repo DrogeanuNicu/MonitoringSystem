@@ -21,7 +21,9 @@
  *                                      Static Variables                                         *
  *************************************************************************************************/
 static const char ResetPin = MODEM_RESET_PIN;
-const char *OtaServerUrl = OTA_SERVER_URL;
+static const char *OtaServerUrl = OTA_SERVER_URL;
+static char AuthHeader[HTTPS_AUTH_HEADER_MAX_LEN];
+static volatile bool ShallTriggerOtaUpdate = false;
 
 /**************************************************************************************************
  *                                      Global Variables                                         *
@@ -36,8 +38,8 @@ static void UpdateData(void);
 static void GetTimestamp(void);
 static void PrintData(void);
 static int16_t GetIntBefore(char lastChar);
-static bool SetTheAuthHttpsHeader(const uint8_t *ValTok, const uint32_t ValTokLen);
 static bool WriteOtaBinToFlash(void);
+static void TriggerOtaUpdate(void);
 
 /**************************************************************************************************
  *                             Static Function Definitions                                       *
@@ -94,12 +96,59 @@ static int16_t GetIntBefore(char lastChar)
     return -9999;
 }
 
-static bool SetTheAuthHttpsHeader(const uint8_t *ValTok, const uint32_t ValTokLen)
+static void TriggerOtaUpdate()
 {
-    char AuthHeader[HTTPS_AUTH_HEADER_MAX_LEN];
+    uint32_t HttpsCode = 0;
+    uint32_t UpdateReady = false;
 
-    snprintf(AuthHeader, HTTPS_AUTH_HEADER_MAX_LEN, "Bearer %.*s", ValTokLen, ValTok);
-    return modem.https_add_header("Authorization", AuthHeader);
+    if (!modem.https_begin())
+    {
+        LOG("Failed to start the HTTPS\n");
+        goto CLEANUP_OTA_TRIGGER;
+    }
+
+    if (!modem.https_set_ssl_index(HTTPS_SSL_CTX))
+    {
+        LOG("Failed to set the SSL context\n");
+        goto CLEANUP_OTA_TRIGGER;
+    }
+
+    if (!modem.https_add_header("Authorization", AuthHeader))
+    {
+        LOG("Failed to add Authorization header\n");
+        goto CLEANUP_OTA_TRIGGER;
+    }
+
+    if (!modem.https_set_url(OtaServerUrl))
+    {
+        LOG("Failed to set the server's URL\n");
+        goto CLEANUP_OTA_TRIGGER;
+    }
+
+    LOG("Get the new OTA binary from the server\n");
+    HttpsCode = modem.https_get();
+    if (HttpsCode != HTTPS_SUCCES_CODE)
+    {
+        LOG("HTTPS get failed! Error code = %u\n", HttpsCode);
+        goto CLEANUP_OTA_TRIGGER;
+    }
+
+    /* The binary is in the modem's memory, write it to the ESP32 flash */
+    UpdateReady = WriteOtaBinToFlash();
+
+CLEANUP_OTA_TRIGGER:
+    modem.https_end();
+
+    if (true == UpdateReady)
+    {
+        LOG("Update successfully completed. Rebooting\n");
+        esp_restart();
+    }
+    else
+    {
+        LOG("Something went wrong. Aborting...\n");
+        ShallTriggerOtaUpdate = false;
+    }
 }
 
 static bool WriteOtaBinToFlash(void)
@@ -126,7 +175,7 @@ static bool WriteOtaBinToFlash(void)
     while (1)
     {
         ChunkLen = modem.https_body(OtaBuffer, OTA_MAX_CHUNK_SIZE);
-        if (ChunkLen == 0)
+        if (0 == ChunkLen)
         {
             break;
         }
@@ -149,18 +198,13 @@ static bool WriteOtaBinToFlash(void)
 #endif
     }
 
-    if (!Update.end())
+    if (!Update.end() || !Update.isFinished())
     {
         LOG("Error Occurred. Error #: %u\n", Update.getError());
         return false;
     }
 
-    if (!Update.isFinished())
-    {
-        return true;
-    }
-
-    return false;
+    return true;
 }
 
 /**************************************************************************************************
@@ -204,6 +248,8 @@ void GsmModem_Init(void)
             retry = 0;
         }
     }
+
+    LOG("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n");
 }
 
 void GsmModem_Main(void)
@@ -219,9 +265,14 @@ void GsmModem_Main(void)
         }
     }
 
+    if (ShallTriggerOtaUpdate)
+    {
+        TriggerOtaUpdate();
+    }
+
     UpdateData();
 #ifdef DEBUG_SERIAL_LOG
-    PrintData();
+    // PrintData();
 #endif
 }
 
@@ -278,7 +329,6 @@ bool GsmModem_Connect(void)
     }
 
     LOG("\nRegistration Status:%d\n", status);
-    char AuthHeader[HTTPS_AUTH_HEADER_MAX_LEN];
     String ueInfo;
     if (!modem.getSystemInformation(ueInfo))
     {
@@ -299,51 +349,14 @@ bool GsmModem_Connect(void)
     return true;
 }
 
-void GsmModem_TriggerOtaUpdate(const uint8_t *ValTok, const uint32_t ValTokLen)
+void GsmModem_SaveOtaToken(const uint8_t *ValTok, const uint32_t ValTokLen)
 {
-    uint32_t HttpsCode = 0;
-    uint32_t UpdateReady = false;
-
     if (0 == ValTokLen || ValTokLen > OTA_VALIDATION_TOKEN_MAX_LEN)
     {
         LOG("Validation token is to large\n");
         return;
     }
 
-    if (!modem.https_begin())
-    {
-        LOG("Failed to start the HTTPS\n");
-        return;
-    }
-
-    if (!SetTheAuthHttpsHeader(ValTok, ValTokLen))
-    {
-        LOG("Failed to add Authorization header\n");
-        return;
-    }
-
-    if (!modem.https_set_url(OtaServerUrl))
-    {
-        LOG("Failed to set the server's URL\n");
-        return;
-    }
-
-    LOG("Get the new OTA binary from the server\n");
-    HttpsCode = modem.https_get();
-    if (HttpsCode != HTTPS_SUCCES_CODE)
-    {
-        LOG("HTTPS get failed! Error code = %u\n", HttpsCode);
-        return;
-    }
-
-    /* The binary is in the modem's memory, write it to the ESP32 flash */
-    UpdateReady = WriteOtaBinToFlash();
-
-    modem.https_end();
-
-    if (true == UpdateReady)
-    {
-        LOG("Update successfully completed. Rebooting\n");
-        esp_restart();
-    }
+    snprintf(AuthHeader, HTTPS_AUTH_HEADER_MAX_LEN, "Bearer %.*s", ValTokLen, ValTok);
+    ShallTriggerOtaUpdate = true;
 }

@@ -56,7 +56,7 @@ void Mqtts_Init()
 
 void Mqtts_Main(void)
 {
-    if (!modem.mqtt_connected())
+    if (!modem.mqtt_connected(Mqtts_ClientId))
     {
         if (false == Mqtts_Connect())
         {
@@ -87,6 +87,7 @@ bool Mqtts_Connect()
     LOG("MQTT has connected!\n");
 
     modem.mqtt_set_callback(Mqtts_Callback);
+    /* Make this blocking to ensure that it will always subscribe */
     if (!modem.mqtt_subscribe(Mqtts_ClientId, Mqtts_SubscribeTopic))
     {
         LOG("Could not subscribe to the MQTT topic: %s\n", Mqtts_SubscribeTopic);
@@ -142,7 +143,6 @@ void Mqtts_Callback(const char *topic, const uint8_t *payload, uint32_t len)
         Logger_GiveSemaphore();
 #endif
 
-        GsmModem_TriggerOtaUpdate(payload, len);
-
+        GsmModem_SaveOtaToken(payload, len);
     }
 }

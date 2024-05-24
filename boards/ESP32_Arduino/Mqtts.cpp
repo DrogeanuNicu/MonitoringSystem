@@ -17,12 +17,12 @@
 /**************************************************************************************************
  *                                        Constants                                              *
  *************************************************************************************************/
-const char *Mqtts_Broker = "drogeanunicusor.go.ro";
-const uint16_t Mqtts_Port = 8883;
-const char *Mqtts_ClientIdStr = "A76XX";
-const char *Mqtts_SubscribeTopic = "nicu/esp32/ota";
-const char *Mqtts_PublishTopic = "nicu/esp32";
-const uint8_t Mqtts_ClientId = 0;
+const char *Mqtts_Broker = MQTTS_BROKER;
+const uint16_t Mqtts_Port = MQTTS_PORT;
+const char *Mqtts_ClientIdStr = MQTTS_CLIENT_ID_STRING;
+const char *Mqtts_SubscribeTopic = MQTTS_SUBSCRIBE_TOPIC;
+const char *Mqtts_PublishTopic = MQTTS_PUBLIS_TOPIC;
+const uint8_t Mqtts_ClientId = MQTTS_CLIENT_ID;
 
 /**************************************************************************************************
  *                                      Static Variables                                         *
@@ -127,14 +127,22 @@ bool Mqtts_Send(void)
 
 void Mqtts_Callback(const char *topic, const uint8_t *payload, uint32_t len)
 {
-#if defined(DEBUG_SERIAL_LOG)
-    LOG("\n====== Mqtts Callback ======\n");
-    LOG(topic);
-    LOG("\nPayload: \n");
-    for (int i = 0; i < len; ++i)
+    if (!strcmp(topic, Mqtts_SubscribeTopic))
     {
-        LOG("%u,", payload[i]);
-    }
-    LOG("\n============================\n");
+#if defined(DEBUG_SERIAL_LOG)
+        Logger_TakeSemaphore();
+        LOG_UNSAFE("\n====== Mqtts Callback ======\n");
+        LOG_UNSAFE(topic);
+        LOG_UNSAFE("\nPayload: \n");
+        for (int i = 0; i < len; ++i)
+        {
+            LOG_UNSAFE("%u,", payload[i]);
+        }
+        LOG_UNSAFE("\n============================\n");
+        Logger_GiveSemaphore();
 #endif
+
+        GsmModem_TriggerOtaUpdate(payload, len);
+
+    }
 }

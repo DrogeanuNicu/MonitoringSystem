@@ -4,6 +4,11 @@
 // #define DEBUG_DUMP_AT_COMMANDS
 #define DEBUG_SERIAL_LOG
 
+/* */
+#define SERVER_ADDR "drogeanunicusor.go.ro"
+#define USERNAME "nicu"
+#define BOARD "esp32"
+
 /* Board Config */
 #define LILYGO_T_A7670
 #define BOARD_PWRKEY_PIN (4U) /* The modem boot pin needs to follow the startup sequence */
@@ -37,10 +42,15 @@
 #define CAN_NOMIMAL_BITRATE (500UL)
 
 /* MTTS config */
-#define MQTTS_BROKER "drogeanunicusor.go.ro"
+#define MQTTS_BROKER (SERVER_ADDR)
 #define MQTTS_PORT (8883U)
-#define MQTTS_CLIENT_ID_STRING "A76XX"
-#define MQTTS_SUBSCRIBE_TOPIC "nicu/esp32/ota"
-#define MQTTS_PUBLIS_TOPIC "nicu/esp32"
+#define MQTTS_CLIENT_ID_STRING BOARD
+#define MQTTS_SUBSCRIBE_TOPIC (USERNAME "/" BOARD "/ota")
+#define MQTTS_PUBLIS_TOPIC (USERNAME "/" BOARD)
 #define MQTTS_CLIENT_ID (0U)
 #define MQTTS_MAX_MSG_LEN (1024U)
+
+/* OTA config */
+#define OTA_SERVER_URL ("https://" SERVER_ADDR "/api/" USERNAME "/download/update/binary/" BOARD)
+#define OTA_VALIDATION_TOKEN_MAX_LEN (256U)
+#define OTA_MAX_CHUNK_SIZE TINY_GSM_RX_BUFFER

@@ -10,6 +10,7 @@
 /**************************************************************************************************
  *                                          Macros                                               *
  *************************************************************************************************/
+/* TODO: Add severity level to filter logs */
 #ifdef DEBUG_SERIAL_LOG
 #define LOG(...) Logger_Log(__VA_ARGS__)
 #define LOG_UNSAFE(...) Logger_LogUnsafe(__VA_ARGS__)

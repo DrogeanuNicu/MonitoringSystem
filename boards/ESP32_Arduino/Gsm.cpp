@@ -4,10 +4,14 @@
 #include "Gsm.hpp"
 #include "Logger.hpp"
 #include <TinyGsmClient.h>
+#include <Update.h>
 
 /**************************************************************************************************
  *                                          Macros                                               *
  *************************************************************************************************/
+#define HTTPS_AUTH_HEADER_PREFIX_LEN (7U)
+#define HTTPS_AUTH_HEADER_MAX_LEN (HTTPS_AUTH_HEADER_PREFIX_LEN + OTA_VALIDATION_TOKEN_MAX_LEN)
+#define HTTPS_SUCCES_CODE (200U)
 
 /**************************************************************************************************
  *                                        Constants                                              *
@@ -17,6 +21,7 @@
  *                                      Static Variables                                         *
  *************************************************************************************************/
 static const char ResetPin = MODEM_RESET_PIN;
+const char *OtaServerUrl = OTA_SERVER_URL;
 
 /**************************************************************************************************
  *                                      Global Variables                                         *
@@ -31,6 +36,8 @@ static void UpdateData(void);
 static void GetTimestamp(void);
 static void PrintData(void);
 static int16_t GetIntBefore(char lastChar);
+static bool SetTheAuthHttpsHeader(const uint8_t *ValTok, const uint32_t ValTokLen);
+static bool WriteOtaBinToFlash(void);
 
 /**************************************************************************************************
  *                             Static Function Definitions                                       *
@@ -85,6 +92,75 @@ static int16_t GetIntBefore(char lastChar)
     }
 
     return -9999;
+}
+
+static bool SetTheAuthHttpsHeader(const uint8_t *ValTok, const uint32_t ValTokLen)
+{
+    char AuthHeader[HTTPS_AUTH_HEADER_MAX_LEN];
+
+    snprintf(AuthHeader, HTTPS_AUTH_HEADER_MAX_LEN, "Bearer %.*s", ValTokLen, ValTok);
+    return modem.https_add_header("Authorization", AuthHeader);
+}
+
+static bool WriteOtaBinToFlash(void)
+{
+    uint8_t OtaBuffer[OTA_MAX_CHUNK_SIZE];
+    uint32_t BinSize = 0;
+    uint32_t ChunkLen = 0;
+    uint32_t Written = 0;
+#ifdef DEBUG_SERIAL_LOG
+    uint32_t Total = 0;
+    uint32_t Progress = 0;
+    uint32_t NewProgress = 0;
+#endif
+
+    BinSize = modem.https_get_size();
+    LOG("Binary size: %u Kb\n", BinSize);
+    if (!Update.begin(BinSize))
+    {
+        LOG("Not enough space to begin OTA update\n");
+        return false;
+    }
+
+    LOG("Start the update process...\n");
+    while (1)
+    {
+        ChunkLen = modem.https_body(OtaBuffer, OTA_MAX_CHUNK_SIZE);
+        if (ChunkLen == 0)
+        {
+            break;
+        }
+
+        Written = Update.write(OtaBuffer, ChunkLen);
+        if (Written != ChunkLen)
+        {
+            LOG("Written only: %u/%u. Aborting update...\n", Written, ChunkLen);
+            break;
+        }
+
+#ifdef DEBUG_SERIAL_LOG
+        Total += Written;
+        NewProgress = (Total * 100) / BinSize;
+        if (NewProgress - Progress >= 5 || NewProgress == 100)
+        {
+            Progress = NewProgress;
+            LOG("\r %u%%\n", Progress);
+        }
+#endif
+    }
+
+    if (!Update.end())
+    {
+        LOG("Error Occurred. Error #: %u\n", Update.getError());
+        return false;
+    }
+
+    if (!Update.isFinished())
+    {
+        return true;
+    }
+
+    return false;
 }
 
 /**************************************************************************************************
@@ -202,7 +278,7 @@ bool GsmModem_Connect(void)
     }
 
     LOG("\nRegistration Status:%d\n", status);
-
+    char AuthHeader[HTTPS_AUTH_HEADER_MAX_LEN];
     String ueInfo;
     if (!modem.getSystemInformation(ueInfo))
     {
@@ -221,4 +297,53 @@ bool GsmModem_Connect(void)
     LOG("Network IP: %s\n", modem.getLocalIP().c_str());
 
     return true;
+}
+
+void GsmModem_TriggerOtaUpdate(const uint8_t *ValTok, const uint32_t ValTokLen)
+{
+    uint32_t HttpsCode = 0;
+    uint32_t UpdateReady = false;
+
+    if (0 == ValTokLen || ValTokLen > OTA_VALIDATION_TOKEN_MAX_LEN)
+    {
+        LOG("Validation token is to large\n");
+        return;
+    }
+
+    if (!modem.https_begin())
+    {
+        LOG("Failed to start the HTTPS\n");
+        return;
+    }
+
+    if (!SetTheAuthHttpsHeader(ValTok, ValTokLen))
+    {
+        LOG("Failed to add Authorization header\n");
+        return;
+    }
+
+    if (!modem.https_set_url(OtaServerUrl))
+    {
+        LOG("Failed to set the server's URL\n");
+        return;
+    }
+
+    LOG("Get the new OTA binary from the server\n");
+    HttpsCode = modem.https_get();
+    if (HttpsCode != HTTPS_SUCCES_CODE)
+    {
+        LOG("HTTPS get failed! Error code = %u\n", HttpsCode);
+        return;
+    }
+
+    /* The binary is in the modem's memory, write it to the ESP32 flash */
+    UpdateReady = WriteOtaBinToFlash();
+
+    modem.https_end();
+
+    if (true == UpdateReady)
+    {
+        LOG("Update successfully completed. Rebooting\n");
+        esp_restart();
+    }
 }

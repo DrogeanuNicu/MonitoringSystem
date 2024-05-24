@@ -26,7 +26,6 @@ const Home: Component = () => {
   const [isOtaMenuOn, setIsOtaMenuOn] = createSignal(false);
   const [configMenuBoard, setConfigMenuBoard] = createSignal('');
   const [otaMenuBoard, setOtaMenuBoard] = createSignal('');
-  const [otaStatus, setOtaStatus] = createSignal(0);
   const [boardList, setBoardList] = createSignal<string[]>([]);
 
   const fetchData = async () => {
@@ -125,11 +124,9 @@ const Home: Component = () => {
         </ConfigMenu>
       }
       <ErrorMessage errorMsg={[errorMessage, setErrorMessage]} />
-      {/* TODO: Fix the ota update status for the home page */}
       <OtaMenu
         username={params.username}
         board={otaMenuBoard()}
-        status={[otaStatus, setOtaStatus]}
         show={[isOtaMenuOn, setIsOtaMenuOn]}>
       </OtaMenu>
       <DeleteBoard

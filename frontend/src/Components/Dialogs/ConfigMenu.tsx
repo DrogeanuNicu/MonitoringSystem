@@ -66,7 +66,7 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
 
     try {
       /* TODO: Add more checks to be sure the data is correct before sending to the backend */
-      /* TODO: Add types for parameters, because only numbers can be used as oy data for charts, os can use strings */
+      /* TODO: Add types for parameters, because only numbers can be used as oy data for charts, ox can use strings */
       /* TODO: add protobuf or something else for constants, types */
       if (newConfig.Board.length > 20) {
         throw new Error("The length of the board's name cannot be bigger than 20!");

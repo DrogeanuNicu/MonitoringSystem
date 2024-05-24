@@ -15,38 +15,40 @@ interface OtaMenuProps {
   username: string;
   board: string;
   show: [() => boolean, (newValue: boolean) => void];
-  status: [() => number, (newValue: number) => void];
 }
 
 const OtaMenu: Component<OtaMenuProps> = (props) => {
   const [isOn, setIsOn] = props.show;
-  const [status, setStatus] = props.status;
   const [error, setError] = createSignal('');
+  const [status, setStatus] = createSignal(OtaStatus.NO_STATUS);
   const [loading, setLoading] = createSignal(false);
   const [file, setFile] = createSignal<File | null>(null);
   const checks: Signal<boolean>[] = [];
   for (let i = 0; i < OtaStatus.LENGTH; i++) {
     checks.push(createSignal<boolean>(false));
   }
+  let intervalId: number;
 
   const handleClose = () => {
     setError('');
+    setLoading(false);
     setIsOn(false);
     setStatus(OtaStatus.NO_STATUS);
-    setLoading(false);
-    authorizedFetch(props.username, `/api/${props.username}/reset/status/${props.board}`, {
+    authorizedFetch(props.username, `/api/${props.username}/reset/ota/status/${props.board}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
     });
+    clearInterval(intervalId);
   };
-  
+
   const handleUpdate = async () => {
     try {
       setLoading(true);
       setError('');
       await otaUpdateApi(props.username, props.board, file());
+      intervalId = setInterval(getOtaStatus, 1000);
     } catch (error: any) {
       setLoading(false);
       setError(error.message);
@@ -59,6 +61,34 @@ const OtaMenu: Component<OtaMenuProps> = (props) => {
       setFile(target.files[0]);
     }
   };
+
+  const getOtaStatus = async () => {
+    const response = await authorizedFetch(props.username, `/api/${props.username}/get/ota/status/${props.board}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    try {
+      if (!response.ok) {
+        throw new Error(`Could not get the OTA update status. Server responded with: ${response.status}`);
+      }
+
+      const responseData = await response.json();
+      if (responseData.error !== undefined) {
+        throw new Error(responseData.error);
+      }
+
+      if (responseData.status !== undefined) {
+        setStatus(responseData.status);
+      }
+
+    } catch (error: any) {
+      setLoading(false);
+      setError(error.message);
+    }
+  }
 
   createEffect(() => {
     for (let i = 0; i < OtaStatus.LENGTH; i++) {

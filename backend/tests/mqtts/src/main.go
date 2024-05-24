@@ -131,7 +131,6 @@ func main() {
 		var message string
 
 		for i := 0; i < len(parameters); i++ {
-			// TODO: add random value based on the type of the parameter
 			parameters[i] = rand.Uint32() % 1000
 
 			message += fmt.Sprintf("%v", parameters[i])

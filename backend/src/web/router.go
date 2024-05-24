@@ -81,9 +81,10 @@ func Init(config *HttpsConfig, debugMode bool) {
 	router.GET("/api/:username/config/:board", authMiddleware(), getBoardConfigHandler)
 	router.GET("/api/:username/download/:board", authMiddleware(), downloadBoardDataHandler)
 	router.GET("/api/:username/data/:board", authMiddleware(), getBoardDataHandler)
-	router.POST("/api/:username/trigger/update/:board", authMiddleware(), triggerOtaUpdate)
-	router.GET("/api/:username/download/update/:board", authMiddleware(), getOtaUpdateBin)
-	router.POST("/api/:username/reset/status/:board", authMiddleware(), resetOtaStatus)
+	router.GET("/api/:username/download/update/binary/:board", authMiddleware(), getOtaUpdateBin)
+	router.POST("/api/:username/trigger/ota/update/:board", authMiddleware(), triggerOtaUpdate)
+	router.POST("/api/:username/reset/ota/status/:board", authMiddleware(), resetOtaStatus)
+	router.GET("/api/:username/get/ota/status/:board", authMiddleware(), getOtaStatus)
 
 	// err := router.RunTLS(fmt.Sprintf("%s:%d", config.Address, config.Port), config.Cert, config.Key)
 	err := router.Run(fmt.Sprintf("%s:%d", config.Address, config.Port))
@@ -196,7 +197,7 @@ func addBoardHandler(c *gin.Context) {
 
 	go dashboard.FsAddBoard(username, &boardConf)
 
-	/* TODO: Analyze if it makes sense to query the DB one more time in order to return the full list of the boards => solves sync problem between different terminals */
+	/* TODO: Make the Home page periodically fetch the full list of the boards => solves sync problem between different terminals */
 	c.JSON(http.StatusOK, gin.H{})
 }
 
@@ -340,4 +341,11 @@ func resetOtaStatus(c *gin.Context) {
 	dashboard.SetOtaStatus(&username, &board, dashboard.OTA_NO_STATUS)
 
 	c.JSON(http.StatusOK, gin.H{})
+}
+
+func getOtaStatus(c *gin.Context) {
+	username := c.Param("username")
+	board := c.Param("board")
+
+	c.JSON(http.StatusOK, gin.H{"status": dashboard.GetOtaStatus(&username, &board)})
 }

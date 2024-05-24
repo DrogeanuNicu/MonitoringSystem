@@ -93,7 +93,6 @@ func authMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		/* TODO: Investigate if keeping the timestamp makes sense, it could be annoying to interact with */
 		timestamp := int64(claims["timestamp"].(float64))
 		tokenCreationTime := time.Unix(timestamp, 0)
 		expirationTime := tokenCreationTime.Add(24 * time.Hour)

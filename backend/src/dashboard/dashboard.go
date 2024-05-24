@@ -62,7 +62,6 @@ type BoardConfig struct {
 type BoardData struct {
 	Data          [][]string
 	LastTimeStamp int64
-	OtaStatus     int
 }
 
 type BoardAccess struct {
@@ -73,6 +72,9 @@ type BoardAccess struct {
 type BoardMap map[string]*BoardAccess
 
 type UserMap map[string]BoardMap
+
+type OtaStatusBoard map[string]int
+type OtaStatusMap map[string]OtaStatusBoard
 
 // ================================================================================================
 //
@@ -101,6 +103,7 @@ var logger = log.New(os.Stdout, "[DSHBD] ", log.Ldate|log.Ltime)
 
 var config DashboardConfig
 var dshbd UserMap = make(UserMap)
+var otaStatusMap = make(OtaStatusMap)
 
 // ================================================================================================
 //
@@ -148,9 +151,6 @@ func GetBoardData(username *string, board *string) (BoardData, error) {
 	defer dshbd[*username][*board].Mu.Unlock()
 
 	dshbd[*username][*board].Packet.LastTimeStamp = time.Now().Unix()
-	if dshbd[*username][*board].Packet.OtaStatus == OTA_BOARD_REQUESTED_BIN {
-		dshbd[*username][*board].Packet.OtaStatus = OTA_NO_STATUS
-	}
 
 	return *dshbd[*username][*board].Packet, nil
 }
@@ -178,12 +178,15 @@ func AppendBoardData(username *string, board *string, newData *[]string) error {
 	return nil
 }
 
+func GetOtaStatus(username *string, board *string) int {
+	return otaStatusMap[*username][*board]
+}
+
 func SetOtaStatus(username *string, board *string, status int) {
-	if _, isBoardActive := dshbd[*username][*board]; isBoardActive {
-		dshbd[*username][*board].Mu.Lock()
-		defer dshbd[*username][*board].Mu.Unlock()
-		dshbd[*username][*board].Packet.OtaStatus = status
+	if _, isUserValid := otaStatusMap[*username]; !isUserValid {
+		otaStatusMap[*username] = make(OtaStatusBoard)
 	}
+	otaStatusMap[*username][*board] = status
 }
 
 // ================================================================================================
@@ -198,15 +201,27 @@ func startPeriodicCleanUp() {
 	for range ticker.C {
 		currentTime := time.Now().Unix()
 
-		for u, boards := range dshbd {
-			for b, board := range boards {
-				if board.Packet.LastTimeStamp < currentTime-config.MaxSecondsOfInactivity {
+		for u := range dshbd {
+			for b := range dshbd[u] {
+				if dshbd[u][b].Packet.LastTimeStamp < currentTime-config.MaxSecondsOfInactivity {
 					delete(dshbd[u], b)
 				}
 			}
 
 			if len(dshbd[u]) == 0 {
 				delete(dshbd, u)
+			}
+		}
+
+		for u := range dshbd {
+			for b := range otaStatusMap[u] {
+				if otaStatusMap[u][b] == OTA_NO_STATUS {
+					delete(otaStatusMap[u], b)
+				}
+			}
+
+			if len(otaStatusMap[u]) == 0 {
+				delete(otaStatusMap, u)
 			}
 		}
 	}

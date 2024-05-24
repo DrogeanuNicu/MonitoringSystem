@@ -112,7 +112,7 @@ const otaUpdateApi = async (username: string, board: string, file: File | null) 
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await authorizedFetch(username, `/api/${username}/trigger/update/${board}`, {
+    const response = await authorizedFetch(username, `/api/${username}/trigger/ota/update/${board}`, {
       method: 'POST',
       body: formData,
     });

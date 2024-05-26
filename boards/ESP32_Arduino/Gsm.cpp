@@ -47,28 +47,6 @@ static void TriggerOtaUpdate(void);
 static void UpdateData(void)
 {
     Gsm_Data.signalQuality = modem.getSignalQuality();
-    GetTimestamp();
-}
-
-static void GetTimestamp(void)
-{
-    String ModemResponse;
-    // Eg: "14/01/01,02:14:36+08"
-    modem.sendAT(GF("+CCLK?"));
-    if (modem.waitResponse(GF("+CCLK:")) == 1)
-    {
-        modem.stream.readStringUntil('"');
-        Gsm_Data.year = GetIntBefore('/');
-        Gsm_Data.month = GetIntBefore('/');
-        Gsm_Data.day = GetIntBefore(',');
-        Gsm_Data.hour = GetIntBefore(':');
-        Gsm_Data.min = GetIntBefore(':');
-        Gsm_Data.sec = GetIntBefore('+');
-        Gsm_Data.timezoneQuarter = GetIntBefore('"');
-
-        modem.stream.readStringUntil('\r');
-        modem.waitResponse();
-    }
 }
 
 static void PrintData(void)
@@ -248,8 +226,6 @@ void GsmModem_Init(void)
             retry = 0;
         }
     }
-
-    LOG("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n");
 }
 
 void GsmModem_Main(void)
@@ -265,15 +241,39 @@ void GsmModem_Main(void)
         }
     }
 
-    if (ShallTriggerOtaUpdate)
-    {
-        TriggerOtaUpdate();
-    }
-
     UpdateData();
 #ifdef DEBUG_SERIAL_LOG
     // PrintData();
 #endif
+}
+
+void GsmModem_CheckOtaTrigger(void)
+{
+    if (ShallTriggerOtaUpdate)
+    {
+        TriggerOtaUpdate();
+    }
+}
+
+void GsmModem_GetTimestamp(void)
+{
+    String ModemResponse;
+    // Eg: "14/01/01,02:14:36+08"
+    modem.sendAT(GF("+CCLK?"));
+    if (modem.waitResponse(GF("+CCLK:")) == 1)
+    {
+        modem.stream.readStringUntil('"');
+        Gsm_Data.year = GetIntBefore('/');
+        Gsm_Data.month = GetIntBefore('/');
+        Gsm_Data.day = GetIntBefore(',');
+        Gsm_Data.hour = GetIntBefore(':');
+        Gsm_Data.min = GetIntBefore(':');
+        Gsm_Data.sec = GetIntBefore('+');
+        Gsm_Data.timezoneQuarter = GetIntBefore('"');
+
+        modem.stream.readStringUntil('\r');
+        modem.waitResponse();
+    }
 }
 
 bool GsmModem_Connect(void)

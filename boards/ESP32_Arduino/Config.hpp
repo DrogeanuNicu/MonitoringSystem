@@ -3,6 +3,7 @@
 /* Debug Config */
 // #define DEBUG_DUMP_AT_COMMANDS
 #define DEBUG_SERIAL_LOG
+// #define TINY_GSM_DEBUG Serial
 
 /* */
 #define SERVER_ADDR "drogeanunicusor.go.ro"
@@ -49,6 +50,8 @@
 #define MQTTS_PUBLIS_TOPIC (USERNAME "/" BOARD)
 #define MQTTS_CLIENT_ID (0U)
 #define MQTTS_MAX_MSG_LEN (1024U)
+#define MQTTS_SUB_QOS_LEVEL (2U)
+#define MQTTS_KEEP_ALIVE_S (60U)
 
 /* HTTPS config*/
 #define HTTPS_SSL_CTX (8U) /* Needs to be different from 0, hardcoded value for MQTTS*/

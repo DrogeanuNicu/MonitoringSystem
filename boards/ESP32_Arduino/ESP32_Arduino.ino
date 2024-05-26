@@ -33,6 +33,7 @@
 /**************************************************************************************************
  *                                      Static Variables                                         *
  *************************************************************************************************/
+static int16_t LastSec = 0U;
 
 /**************************************************************************************************
  *                                      Global Variables                                         *
@@ -116,9 +117,18 @@ void Task_Gateway(void *parameter)
             SerialAT.write(Serial.read());
         }
 #endif
-        GsmModem_Main();
-        Gps_Main();
         Mqtts_Main();
+        GsmModem_CheckOtaTrigger();
+        GsmModem_GetTimestamp();
+
+        if (Gsm_Data.sec != LastSec)
+        {
+            LastSec = Gsm_Data.sec;
+
+            GsmModem_Main();
+            Gps_Main();
+            Mqtts_Send();
+        }
 
         // vTaskDelay(pdMS_TO_TICKS(100));
     }

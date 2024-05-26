@@ -28,7 +28,6 @@ const uint8_t Mqtts_ClientId = MQTTS_CLIENT_ID;
  *                                      Static Variables                                         *
  *************************************************************************************************/
 static char MsgBuffer[MQTTS_MAX_MSG_LEN];
-static int16_t lastMqttsSendSecond = 0;
 
 /**************************************************************************************************
  *                                      Global Variables                                         *
@@ -56,21 +55,7 @@ void Mqtts_Init()
 
 void Mqtts_Main(void)
 {
-    if (!modem.mqtt_connected(Mqtts_ClientId))
-    {
-        if (false == Mqtts_Connect())
-        {
-            esp_restart();
-        }
-    }
-
-    if (lastMqttsSendSecond != Gsm_Data.sec)
-    {
-        lastMqttsSendSecond = Gsm_Data.sec;
-        Mqtts_Send();
-    }
-
-    modem.mqtt_handle();
+    modem.mqtt_handle(100);
 }
 
 bool Mqtts_Connect()
@@ -78,7 +63,7 @@ bool Mqtts_Connect()
     modem.mqtt_set_certificate(Mqtts_CertsCa, Mqtts_CertsServer, Mqtts_CertsKey);
     LOG("Connecting to MQTT broker: %s\n", Mqtts_Broker);
 
-    modem.mqtt_connect(Mqtts_ClientId, Mqtts_Broker, Mqtts_Port, Mqtts_ClientIdStr);
+    modem.mqtt_connect(Mqtts_ClientId, Mqtts_Broker, Mqtts_Port, Mqtts_ClientIdStr, NULL, NULL, MQTTS_KEEP_ALIVE_S);
     if (!modem.mqtt_connected())
     {
         LOG("MQTT could not connect to the broker!\n");
@@ -87,18 +72,27 @@ bool Mqtts_Connect()
     LOG("MQTT has connected!\n");
 
     modem.mqtt_set_callback(Mqtts_Callback);
-    /* Make this blocking to ensure that it will always subscribe */
-    if (!modem.mqtt_subscribe(Mqtts_ClientId, Mqtts_SubscribeTopic))
+
+    if (!modem.mqtt_subscribe(Mqtts_ClientId, Mqtts_SubscribeTopic, MQTTS_SUB_QOS_LEVEL))
     {
         LOG("Could not subscribe to the MQTT topic: %s\n", Mqtts_SubscribeTopic);
         return false;
     }
+    LOG("Subscribed MQTT topic: %s\n", Mqtts_SubscribeTopic);
 
     return true;
 }
 
 bool Mqtts_Send(void)
 {
+    if (!modem.mqtt_connected(Mqtts_ClientId))
+    {
+        if (false == Mqtts_Connect())
+        {
+            esp_restart();
+        }
+    }
+
     snprintf(
         MsgBuffer,
         MQTTS_MAX_MSG_LEN,
@@ -132,17 +126,12 @@ void Mqtts_Callback(const char *topic, const uint8_t *payload, uint32_t len)
     {
 #if defined(DEBUG_SERIAL_LOG)
         Logger_TakeSemaphore();
-        LOG_UNSAFE("\n====== Mqtts Callback ======\n");
-        LOG_UNSAFE(topic);
-        LOG_UNSAFE("\nPayload: \n");
-        for (int i = 0; i < len; ++i)
-        {
-            LOG_UNSAFE("%u,", payload[i]);
-        }
-        LOG_UNSAFE("\n============================\n");
+        LOG_UNSAFE("====== Mqtts Callback ======\n");
+        LOG_UNSAFE("Topic: %s\n", topic);
+        LOG_UNSAFE("Payload: %s\n\n", (char *)payload);
         Logger_GiveSemaphore();
 #endif
 
-        GsmModem_SaveOtaToken(payload, len);
+        // GsmModem_SaveOtaToken(payload, len);
     }
 }

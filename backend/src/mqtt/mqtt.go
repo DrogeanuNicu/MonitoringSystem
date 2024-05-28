@@ -12,6 +12,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
@@ -23,14 +24,15 @@ import (
 //
 // ================================================================================================
 type MqttsConfig struct {
-	NumClients int    `json:"NumClients"`
-	Address    string `json:"Address"`
-	Port       int    `json:"Port"`
-	Topic      string `json:"Topic"`
-	SendChSize int    `json:"SendChSize"`
-	Ca         string `json:"Ca"`
-	Cert       string `json:"Cert"`
-	Key        string `json:"Key"`
+	NumClients    int    `json:"NumClients"`
+	Address       string `json:"Address"`
+	Port          int    `json:"Port"`
+	Topic         string `json:"Topic"`
+	SendChSize    int    `json:"SendChSize"`
+	Ca            string `json:"Ca"`
+	Cert          string `json:"Cert"`
+	Key           string `json:"Key"`
+	OtaResendTime int    `json:"OtaResendTime"`
 }
 
 type PayloadElement struct {
@@ -63,6 +65,7 @@ type sendQueueType struct {
 var debug bool = false
 var logger = log.New(os.Stdout, "[MQTTS] ", log.Ldate|log.Ltime)
 var sendQueue sendQueueType
+var otaResendTime int
 
 // ================================================================================================
 //
@@ -73,6 +76,7 @@ func Init(ctxPtr *context.Context, config *MqttsConfig, isDebugOn bool) {
 	debug = isDebugOn
 	sendQueue.ch = make(chan paho.Publish, config.SendChSize)
 	sendQueue.stop = make(chan struct{})
+	otaResendTime = config.OtaResendTime
 
 	u, err := url.Parse(fmt.Sprintf("mqtts://%s:%d", config.Address, config.Port))
 	if err != nil {
@@ -102,6 +106,39 @@ func DeInit() {
 
 func GetOtaTriggerTopic(username *string, board *string) string {
 	return fmt.Sprintf("%s/%s/ota", *username, *board)
+}
+
+func HandleOtaHandshake(username string, board string) {
+	topic := GetOtaTriggerTopic(&username, &board)
+	ticker := time.NewTicker(time.Duration(otaResendTime) * time.Millisecond)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		pOtaController := dashboard.GetOtaController(&username, &board)
+		if pOtaController == nil {
+			break
+		}
+
+		pOtaController.Mu.Lock()
+		if pOtaController.Status == dashboard.OTA_NO_STATUS || pOtaController.Status == dashboard.OTA_BOARD_REQUESTED_BIN {
+			pOtaController.Mu.Unlock()
+			break
+		}
+
+		mqttsMessage := paho.Publish{
+			QoS:     2,
+			Topic:   topic,
+			Payload: []byte(pOtaController.Token),
+		}
+		pOtaController.Mu.Unlock()
+
+		err := Send(&mqttsMessage)
+		if err != nil {
+			logger.Printf("Can not send OTA trigger message for %s/%s: %v", username, board, err)
+		} else {
+			dashboard.SetOtaStatus(&username, &board, dashboard.OTA_MQTTS_MSG_SENT)
+		}
+	}
 }
 
 // ================================================================================================

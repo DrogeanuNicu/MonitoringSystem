@@ -14,7 +14,8 @@
         "SendChSize": 100,
         "Ca": "../certs/mqtts/ca.crt",
         "Cert": "../certs/mqtts/server.crt",
-        "Key": "../certs/mqtts/server.key"
+        "Key": "../certs/mqtts/server.key",
+        "OtaResendTime": 1000
     },
     "database": {
         "Address": "localhost",

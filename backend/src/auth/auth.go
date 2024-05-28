@@ -1,7 +1,9 @@
-package web
+package auth
 
 import (
+	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -33,19 +35,14 @@ import (
 //
 // ================================================================================================
 var jwtKey = []byte("6540a5dc8816255260adf23ba88fd238")
+var logger = log.New(os.Stdout, "[AUTH] ", log.Ldate|log.Ltime)
 
 // ================================================================================================
 //
 //	Global Functions
 //
 // ================================================================================================
-
-// ================================================================================================
-//
-//	Local Functions
-//
-// ================================================================================================
-func generateJwtToken(username string) string {
+func GenerateJwtToken(username string) string {
 	claims := jwt.MapClaims{}
 	claims["username"] = username
 	claims["timestamp"] = time.Now().Unix()
@@ -59,7 +56,12 @@ func generateJwtToken(username string) string {
 	return tokenString
 }
 
-func authMiddleware() gin.HandlerFunc {
+// ================================================================================================
+//
+//	Local Functions
+//
+// ================================================================================================
+func Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authorizationHeader := c.GetHeader("Authorization")
 		if authorizationHeader == "" {

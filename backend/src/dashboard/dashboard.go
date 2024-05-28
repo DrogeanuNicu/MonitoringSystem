@@ -1,6 +1,8 @@
 package dashboard
 
 import (
+	"backend/src/auth"
+	"fmt"
 	"log"
 	"os"
 	"sync"
@@ -69,11 +71,17 @@ type BoardAccess struct {
 	Mu     sync.Mutex
 }
 
-type BoardMap map[string]*BoardAccess
+type OtaControl struct {
+	Status     int
+	Mu         sync.Mutex
+	LastUpdate int64
+	Token      string
+}
 
+type BoardMap map[string]*BoardAccess
 type UserMap map[string]BoardMap
 
-type OtaStatusBoard map[string]int
+type OtaStatusBoard map[string]*OtaControl
 type OtaStatusMap map[string]OtaStatusBoard
 
 // ================================================================================================
@@ -178,15 +186,52 @@ func AppendBoardData(username *string, board *string, newData *[]string) error {
 	return nil
 }
 
-func GetOtaStatus(username *string, board *string) int {
+func GetOtaController(username *string, board *string) *OtaControl {
+	if _, userExists := otaStatusMap[*username]; !userExists {
+		return nil
+	}
+
+	if _, boardExists := otaStatusMap[*username][*board]; !boardExists {
+		return nil
+	}
+
 	return otaStatusMap[*username][*board]
+}
+
+func GetOtaStatus(username *string, board *string) (int, error) {
+	if _, userExists := otaStatusMap[*username]; !userExists {
+		return OTA_NO_STATUS, fmt.Errorf("username %s not found", *username)
+	}
+
+	if _, boardExists := otaStatusMap[*username][*board]; !boardExists {
+		return OTA_NO_STATUS, fmt.Errorf("board %s not found for username %s", *board, *username)
+	}
+
+	otaStatusMap[*username][*board].Mu.Lock()
+	defer otaStatusMap[*username][*board].Mu.Unlock()
+	otaStatusMap[*username][*board].LastUpdate = time.Now().Unix()
+	return otaStatusMap[*username][*board].Status, nil
 }
 
 func SetOtaStatus(username *string, board *string, status int) {
 	if _, isUserValid := otaStatusMap[*username]; !isUserValid {
 		otaStatusMap[*username] = make(OtaStatusBoard)
 	}
-	otaStatusMap[*username][*board] = status
+
+	if _, boardIsValid := otaStatusMap[*username][*board]; !boardIsValid {
+		otaStatusMap[*username][*board] = &OtaControl{
+			Status:     OTA_NO_STATUS,
+			LastUpdate: time.Now().Unix(),
+		}
+	}
+
+	otaStatusMap[*username][*board].Mu.Lock()
+	defer otaStatusMap[*username][*board].Mu.Unlock()
+	otaStatusMap[*username][*board].Status = status
+	if otaStatusMap[*username][*board].Status == OTA_BINARY_UPLOADED {
+		otaStatusMap[*username][*board].Token = auth.GenerateJwtToken(*username)
+		otaStatusMap[*username][*board].LastUpdate = time.Now().Unix()
+	}
 }
 
 // ================================================================================================
@@ -203,8 +248,12 @@ func startPeriodicCleanUp() {
 
 		for u := range dshbd {
 			for b := range dshbd[u] {
+				dshbd[u][b].Mu.Lock()
 				if dshbd[u][b].Packet.LastTimeStamp < currentTime-config.MaxSecondsOfInactivity {
+					dshbd[u][b].Mu.Unlock()
 					delete(dshbd[u], b)
+				} else {
+					dshbd[u][b].Mu.Unlock()
 				}
 			}
 
@@ -215,8 +264,12 @@ func startPeriodicCleanUp() {
 
 		for u := range dshbd {
 			for b := range otaStatusMap[u] {
-				if otaStatusMap[u][b] == OTA_NO_STATUS {
+				otaStatusMap[u][b].Mu.Lock()
+				if otaStatusMap[u][b].LastUpdate < currentTime-config.MaxSecondsOfInactivity {
+					otaStatusMap[u][b].Mu.Unlock()
 					delete(otaStatusMap[u], b)
+				} else {
+					otaStatusMap[u][b].Mu.Unlock()
 				}
 			}
 

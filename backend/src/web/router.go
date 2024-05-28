@@ -1,6 +1,7 @@
 package web
 
 import (
+	"backend/src/auth"
 	"backend/src/dashboard"
 	"backend/src/db"
 	"backend/src/mqtt"
@@ -9,7 +10,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/eclipse/paho.golang/paho"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -73,21 +73,21 @@ func Init(config *HttpsConfig, debugMode bool) {
 
 	router.POST("/api/login", loginHandler)
 	router.POST("/api/register", registerHandler)
-	router.POST("/api/:username/logout", authMiddleware(), logoutHandler)
-	router.GET("/api/:username/boards", authMiddleware(), getBoardsHandler)
-	router.POST("/api/:username/add/:board", authMiddleware(), addBoardHandler)
-	router.POST("/api/:username/edit/:board", authMiddleware(), editBoardHandler)
-	router.POST("/api/:username/delete/:board", authMiddleware(), deleteBoardHandler)
-	router.GET("/api/:username/config/:board", authMiddleware(), getBoardConfigHandler)
-	router.GET("/api/:username/download/:board", authMiddleware(), downloadBoardDataHandler)
-	router.GET("/api/:username/data/:board", authMiddleware(), getBoardDataHandler)
-	router.GET("/api/:username/download/update/binary/:board", authMiddleware(), getOtaUpdateBin)
-	router.POST("/api/:username/trigger/ota/update/:board", authMiddleware(), triggerOtaUpdate)
-	router.POST("/api/:username/reset/ota/status/:board", authMiddleware(), resetOtaStatus)
-	router.GET("/api/:username/get/ota/status/:board", authMiddleware(), getOtaStatus)
+	router.POST("/api/:username/logout", auth.Middleware(), logoutHandler)
+	router.GET("/api/:username/boards", auth.Middleware(), getBoardsHandler)
+	router.POST("/api/:username/add/:board", auth.Middleware(), addBoardHandler)
+	router.POST("/api/:username/edit/:board", auth.Middleware(), editBoardHandler)
+	router.POST("/api/:username/delete/:board", auth.Middleware(), deleteBoardHandler)
+	router.GET("/api/:username/config/:board", auth.Middleware(), getBoardConfigHandler)
+	router.GET("/api/:username/download/:board", auth.Middleware(), downloadBoardDataHandler)
+	router.GET("/api/:username/data/:board", auth.Middleware(), getBoardDataHandler)
+	router.GET("/api/:username/download/update/binary/:board", auth.Middleware(), getOtaUpdateBin)
+	router.POST("/api/:username/trigger/ota/update/:board", auth.Middleware(), triggerOtaUpdate)
+	router.POST("/api/:username/reset/ota/status/:board", auth.Middleware(), resetOtaStatus)
+	router.GET("/api/:username/get/ota/status/:board", auth.Middleware(), getOtaStatus)
 
-	err := router.RunTLS(fmt.Sprintf("%s:%d", config.Address, config.Port), config.Cert, config.Key)
-	// err := router.Run(fmt.Sprintf("%s:%d", config.Address, config.Port))
+	// err := router.RunTLS(fmt.Sprintf("%s:%d", config.Address, config.Port), config.Cert, config.Key)
+	err := router.Run(fmt.Sprintf("%s:%d", config.Address, config.Port))
 	if err != nil {
 		panic(err)
 	}
@@ -125,7 +125,7 @@ func loginHandler(c *gin.Context) {
 		return
 	}
 
-	token := generateJwtToken(username)
+	token := auth.GenerateJwtToken(username)
 	c.JSON(http.StatusOK, gin.H{"token": token})
 }
 
@@ -161,7 +161,7 @@ func registerHandler(c *gin.Context) {
 
 	go dashboard.FsAddUser(username)
 
-	token := generateJwtToken(username)
+	token := auth.GenerateJwtToken(username)
 	c.JSON(http.StatusOK, gin.H{"token": token})
 }
 
@@ -186,9 +186,12 @@ func addBoardHandler(c *gin.Context) {
 	username := c.Param("username")
 	var boardConf dashboard.BoardConfig
 
-	parseBoardConf(c, &boardConf)
+	err := parseBoardConf(c, &boardConf)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid board config!"})
+	}
 
-	err := db.AddBoard(username, &boardConf)
+	err = db.AddBoard(username, &boardConf)
 	if err != nil {
 		logger.Println(err)
 		c.JSON(http.StatusOK, gin.H{"error": fmt.Sprintf("Could not add the %s board into the database!", boardConf.Board)})
@@ -317,19 +320,7 @@ func triggerOtaUpdate(c *gin.Context) {
 		return
 	}
 	dashboard.SetOtaStatus(&username, &board, dashboard.OTA_BINARY_UPLOADED)
-
-	mqttsMessage := paho.Publish{
-		QoS:     1,
-		Topic:   mqtt.GetOtaTriggerTopic(&username, &board),
-		Payload: []byte(generateJwtToken(username)),
-	}
-	err = mqtt.Send(&mqttsMessage)
-	if err != nil {
-		logger.Println(err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not send the trigger update MQTTS message!"})
-		return
-	}
-	dashboard.SetOtaStatus(&username, &board, dashboard.OTA_MQTTS_MSG_SENT)
+	go mqtt.HandleOtaHandshake(username, board)
 
 	c.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully"})
 }
@@ -347,5 +338,12 @@ func getOtaStatus(c *gin.Context) {
 	username := c.Param("username")
 	board := c.Param("board")
 
-	c.JSON(http.StatusOK, gin.H{"status": dashboard.GetOtaStatus(&username, &board)})
+	status, err := dashboard.GetOtaStatus(&username, &board)
+	if err == nil {
+		c.JSON(http.StatusOK, gin.H{"status": status})
+		return
+	}
+
+	logger.Println(err)
+	c.JSON(http.StatusOK, gin.H{"status": dashboard.OTA_NO_STATUS})
 }

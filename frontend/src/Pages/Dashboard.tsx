@@ -181,7 +181,7 @@ const Dashboard: Component = () => {
       )
 
       await getData();
-      intervalId = setInterval(getData, 500);
+      intervalId = setInterval(getData, 10000);
 
     } catch (error: any) {
       setErrorMessage(error.message);

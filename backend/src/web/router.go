@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -76,11 +77,11 @@ func Init(config *HttpsConfig, debugMode bool) {
 	router.POST("/api/:username/logout", auth.Middleware(), logoutHandler)
 	router.GET("/api/:username/boards", auth.Middleware(), getBoardsHandler)
 	router.POST("/api/:username/add/:board", auth.Middleware(), addBoardHandler)
-	router.POST("/api/:username/edit/:board", auth.Middleware(), editBoardHandler)
+	router.POST("/api/:username/edit/:board/:deleteStoredData", auth.Middleware(), editBoardHandler)
 	router.POST("/api/:username/delete/:board", auth.Middleware(), deleteBoardHandler)
 	router.GET("/api/:username/config/:board", auth.Middleware(), getBoardConfigHandler)
 	router.GET("/api/:username/download/:board", auth.Middleware(), downloadBoardDataHandler)
-	router.GET("/api/:username/data/:board", auth.Middleware(), getBoardDataHandler)
+	router.GET("/api/:username/data/:board/:maxelemsperchart", auth.Middleware(), getBoardDataHandler)
 	router.GET("/api/:username/download/update/binary/:board", auth.Middleware(), getOtaUpdateBin)
 	router.POST("/api/:username/trigger/ota/update/:board", auth.Middleware(), triggerOtaUpdate)
 	router.POST("/api/:username/reset/ota/status/:board", auth.Middleware(), resetOtaStatus)
@@ -101,7 +102,7 @@ func Init(config *HttpsConfig, debugMode bool) {
 func loginHandler(c *gin.Context) {
 	var requestData map[string]interface{}
 	if err := c.BindJSON(&requestData); err != nil {
-		fmt.Println("Error binding JSON:", err)
+		logger.Printf("Error binding JSON: %v\n", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request!"})
 		return
 	}
@@ -139,7 +140,7 @@ func logoutHandler(c *gin.Context) {
 func registerHandler(c *gin.Context) {
 	var requestData map[string]interface{}
 	if err := c.BindJSON(&requestData); err != nil {
-		fmt.Println("Error binding JSON:", err)
+		logger.Printf("Error binding JSON: %v\n", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request!"})
 		return
 	}
@@ -198,7 +199,7 @@ func addBoardHandler(c *gin.Context) {
 		return
 	}
 
-	go dashboard.FsAddBoard(username, &boardConf)
+	go dashboard.FsAddBoard(username, boardConf)
 
 	/* TODO: Make the Home page periodically fetch the full list of the boards => solves sync problem between different terminals */
 	c.JSON(http.StatusOK, gin.H{})
@@ -207,9 +208,14 @@ func addBoardHandler(c *gin.Context) {
 func editBoardHandler(c *gin.Context) {
 	username := c.Param("username")
 	oldBoard := c.Param("board")
+	deleteStoredData := c.Param("deleteStoredData")
+	deleteStoredDataBool, err := strconv.ParseBool(deleteStoredData)
+	if err != nil {
+		deleteStoredDataBool = false
+	}
 	var boardConf dashboard.BoardConfig
 
-	err := parseBoardConf(c, &boardConf)
+	err = parseBoardConf(c, &boardConf)
 	if err != nil {
 		logger.Println(err)
 		c.JSON(http.StatusOK, gin.H{"error": "Invalid board data!"})
@@ -223,7 +229,7 @@ func editBoardHandler(c *gin.Context) {
 		return
 	}
 
-	go dashboard.FsEditBoardData(username, &boardConf, oldBoard)
+	go dashboard.FsEditBoardData(username, boardConf, oldBoard, deleteStoredDataBool)
 
 	c.JSON(http.StatusOK, gin.H{})
 }
@@ -277,8 +283,13 @@ func downloadBoardDataHandler(c *gin.Context) {
 func getBoardDataHandler(c *gin.Context) {
 	username := c.Param("username")
 	board := c.Param("board")
+	maxElemsPerChart, err := strconv.ParseUint(c.Param("maxelemsperchart"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"error": fmt.Sprintf("Invalid number of elements per char requested!: %s", c.Param("maxelemsperchart"))})
+		return
+	}
 
-	boardData, err := dashboard.GetBoardData(&username, &board)
+	boardData, err := dashboard.GetBoardData(&username, &board, maxElemsPerChart)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{"error": fmt.Sprintf("Could not get the data of the board: %s", board)})
 		return

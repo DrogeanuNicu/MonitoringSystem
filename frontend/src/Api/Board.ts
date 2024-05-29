@@ -12,6 +12,7 @@ import { IMapSignals } from "./Map";
 
 interface BoardConfig {
   Board: string;
+  MaxElemsPerChart: number;
 
   Parameters: IParameter[];
   Maps: IMap[];
@@ -22,7 +23,7 @@ interface BoardConfig {
 interface BoardData {
   Data: string[][],
   LastTimeStamp: number,
-  OtaStatus: number,
+  MaxElemsPerChart: number,
 }
 
 enum OtaStatus {
@@ -46,9 +47,9 @@ const addBoardApi = async (username: string, data: BoardConfig) => {
   await processResponseCode(response);
 }
 
-const editBoardApi = async (username: string, data: BoardConfig, oldBoard: string) => {
+const editBoardApi = async (username: string, data: BoardConfig, oldBoard: string, deleteStoredData?: boolean) => {
 
-  const response = await authorizedFetch(username, `/api/${username}/edit/${oldBoard}`, {
+  const response = await authorizedFetch(username, `/api/${username}/edit/${oldBoard}/${deleteStoredData || false}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -152,6 +153,7 @@ const processResponseCode = async (response: Response) => {
 const loadConfigApi = async (
   username: string,
   board: string,
+  [maxElemsPerChart, setMaxElemsPerChart]: Signal<number>,
   [parameters, setParameters]: Signal<IParameterSignals[]>,
   [charts, setCharts]: Signal<IChartSignals[]>,
   [gauges, setGauges]: Signal<IGaugeSignals[]>,
@@ -159,6 +161,8 @@ const loadConfigApi = async (
 ) => {
 
   const config: BoardConfig = await getBoardConfigApi(username, board);
+
+  setMaxElemsPerChart(config.MaxElemsPerChart);
 
   let paramsSignals: IParameterSignals[] = [];
   for (let i = 0; i < config.Parameters.length; i++) {

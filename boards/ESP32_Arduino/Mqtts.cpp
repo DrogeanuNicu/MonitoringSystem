@@ -132,6 +132,6 @@ void Mqtts_Callback(const char *topic, const uint8_t *payload, uint32_t len)
         Logger_GiveSemaphore();
 #endif
 
-        // GsmModem_SaveOtaToken(payload, len);
+        GsmModem_SaveOtaToken(payload, len);
     }
 }

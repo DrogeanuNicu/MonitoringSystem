@@ -26,7 +26,7 @@
     },
     "dashboard": {
         "DataPath": "../data",
-        "ChartsDataLength": 20,
+        "DefaultChartsDataLength": 40,
         "MaxSecondsOfInactivity": 600
     }
 }

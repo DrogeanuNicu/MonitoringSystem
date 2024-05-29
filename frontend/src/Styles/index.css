@@ -40,6 +40,13 @@
   .inactive-button {
     @apply w-1/2 px-4 py-2 inactive-color text-black;
   }
+
+  .custom-checkbox:checked {
+    @apply bg-teal-600 border-transparent;
+  }
+  .custom-checkbox {
+    @apply text-teal-600 h-5 w-5;
+  }
 }
 
 code {

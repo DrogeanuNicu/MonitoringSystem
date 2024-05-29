@@ -37,9 +37,8 @@ const Dashboard: Component = () => {
   const [gauges, setGauges] = createSignal<IGaugeSignals[]>([]);
   const [maps, setMaps] = createSignal<IMapSignals[]>([]);
   const [screenWidth, setScreenWidth] = createSignal(window.innerWidth);
+  const [maxElemsPerChart, setMaxElemsPerChart] = createSignal(0);
 
-  /* TODO: Change this to have the same constants between BE and FE */
-  const MAX_ELEMS_PER_CHART: number = 20;
   let intervalId: number;
   let lastTimeStamp: number = 0;
 
@@ -65,9 +64,10 @@ const Dashboard: Component = () => {
     navigate(`/home/${params.username}`)
   };
 
-  const configMenuCb = async (newConfig: BoardConfig, oldBoardName?: string | undefined) => {
+  const configMenuCb = async (newConfig: BoardConfig, oldBoardName?: string | undefined, deleteStoredData?: boolean) => {
     if (oldBoardName !== undefined) {
-      await editBoardApi(params.username, newConfig, oldBoardName);
+      await editBoardApi(params.username, newConfig, oldBoardName, deleteStoredData);
+      deInit();
       await init();
     } else {
       throw new Error("the board you are trying to edit does not exist anymore!");
@@ -76,7 +76,7 @@ const Dashboard: Component = () => {
 
   const getData = async () => {
     try {
-      const response = await authorizedFetch(params.username, `/api/${params.username}/data/${params.board}`, {
+      const response = await authorizedFetch(params.username, `/api/${params.username}/data/${params.board}/${maxElemsPerChart()}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -93,6 +93,7 @@ const Dashboard: Component = () => {
       } else {
         lastTimeStamp = boardData.LastTimeStamp;
       }
+      setMaxElemsPerChart(boardData.MaxElemsPerChart);
 
       if (boardData.Data !== null) {
         if (boardData.Data.length > 0) {
@@ -108,7 +109,7 @@ const Dashboard: Component = () => {
           }
 
           /* Update charts */
-          if (boardData.Data.length !== MAX_ELEMS_PER_CHART) {
+          if (boardData.Data.length < maxElemsPerChart()) {
             for (let chartIdx = 0; chartIdx < charts().length; chartIdx++) {
               const chart = charts()[chartIdx]?.Ref;
               if (chart !== undefined) {
@@ -174,6 +175,7 @@ const Dashboard: Component = () => {
       await loadConfigApi(
         params.username,
         params.board,
+        [maxElemsPerChart, setMaxElemsPerChart],
         [parameters, setParameters],
         [charts, setCharts],
         [gauges, setGauges],
@@ -181,7 +183,7 @@ const Dashboard: Component = () => {
       )
 
       await getData();
-      intervalId = setInterval(getData, 10000);
+      intervalId = setInterval(getData, 1000);
 
     } catch (error: any) {
       setErrorMessage(error.message);

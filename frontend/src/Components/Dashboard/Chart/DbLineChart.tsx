@@ -66,7 +66,7 @@ const DbLineChart: Component<DbLineChartProps> = (props) => {
   return (
     <div class="p-3 shadow-md rounded-lg">
       <div class="mb-2">
-        <canvas ref={canvasRef} width={400} height={400} />
+        <canvas ref={canvasRef} width={400} height={500} />
       </div>
       <div class="flex flex-wrap justify-center mx-auto">
         {Oy().map((oy) => (

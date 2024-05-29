@@ -63,7 +63,7 @@ func FsAddUser(username string) error {
 	return nil
 }
 
-func FsAddBoard(username string, boardConf *BoardConfig) error {
+func FsAddBoard(username string, boardConf BoardConfig) error {
 	boardFolderPath := filepath.Join(config.DataPath, username, boardConf.Board)
 
 	if _, err := os.Stat(boardFolderPath); err == nil {
@@ -81,56 +81,13 @@ func FsAddBoard(username string, boardConf *BoardConfig) error {
 		return err
 	}
 
-	filePath := getCsvFilepath(&username, &boardConf.Board)
-	if _, err := os.Stat(filePath); err != nil {
-		if !os.IsNotExist(err) {
-			logger.Printf("Failed to check if CSV file exists for %s/%s: %v\n", username, boardConf.Board, err)
-			return err
-		}
-
-		file, err := os.Create(filePath)
-		if err != nil {
-			logger.Printf("Failed to create CSV file for %s/%s: %v\n", username, boardConf.Board, err)
-			return err
-		}
-		defer file.Close()
-
-		writer := csv.NewWriter(file)
-		defer writer.Flush()
-
-		headers := make([]string, len(boardConf.Parameters))
-		for i, param := range boardConf.Parameters {
-			if param.Uom != "" {
-				headers[i] = fmt.Sprintf("%s [%s]", param.Name, param.Uom)
-			} else {
-				headers[i] = param.Name
-			}
-		}
-		if err := writer.Write(headers); err != nil {
-			logger.Printf("Failed to write CSV headers for %s/%s: %v\n", username, boardConf.Board, err)
-			return err
-		}
-		headers = nil
-	}
-
-	/* TODO: Remove this after you have updated the database to contain the board config as well*/
-	filePath = getJsonFilepath(&username, &boardConf.Board)
-	jsonFile, err := os.Create(filePath)
+	err := fsCreateCsvDataFile(&username, &boardConf)
 	if err != nil {
-		logger.Printf("Failed to create JSON file for %s/%s: %v\n", username, boardConf.Board, err)
-		return err
-	}
-	defer jsonFile.Close()
-
-	jsonData, err := json.Marshal(*boardConf)
-	if err != nil {
-		logger.Println("Error marshaling JSON:", err)
 		return err
 	}
 
-	_, err = jsonFile.Write(jsonData)
+	err = fsCreateConfigFile(&username, &boardConf)
 	if err != nil {
-		logger.Println("Error writing JSON to file:", err)
 		return err
 	}
 
@@ -158,21 +115,38 @@ func FsDeleteBoard(username string, board string) error {
 	return nil
 }
 
-func FsEditBoardData(username string, data *BoardConfig, oldBoard string) error {
+func FsEditBoardData(username string, data BoardConfig, oldBoard string, deleteStoredData bool) error {
 	oldFilePath := getCsvFilepath(&username, &oldBoard)
 
-	_, err := os.Stat(oldFilePath)
-	if !os.IsNotExist(err) {
-		err = FsDeleteBoard(username, oldBoard)
+	if data.Board != oldBoard || deleteStoredData {
+		_, err := os.Stat(oldFilePath)
+		if !os.IsNotExist(err) {
+			err = FsDeleteBoard(username, oldBoard)
+			if err != nil {
+				return err
+			}
+		}
+
+		err = FsAddBoard(username, data)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	if !deleteStoredData {
+		err := fsDeleteConfigFile(&username, &(data.Board))
+		if err != nil {
+			return err
+		}
+
+		err = fsCreateConfigFile(&username, &data)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = FsAddBoard(username, data)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -262,7 +236,7 @@ func fsAppendBoardData(username *string, board *string, newData *[]string) error
 	return nil
 }
 
-func fsReadLastBoardData(username *string, board *string, data *[][]string) error {
+func fsReadLastBoardData(username *string, board *string, data *[][]string, maxElemsPerChart uint64) error {
 	filePath := getCsvFilepath(username, board)
 
 	file, err := os.Open(filePath)
@@ -272,13 +246,20 @@ func fsReadLastBoardData(username *string, board *string, data *[][]string) erro
 	}
 	defer file.Close()
 
-	ringBuffer := make([]string, config.ChartsDataLength)
-	lineCount := 0
+	var actualLen uint64 = 0
+	if maxElemsPerChart != 0 {
+		actualLen = maxElemsPerChart
+	} else {
+		actualLen = config.DefaultChartsDataLength
+	}
+
+	var lineCount uint64 = 0
+	ringBuffer := make([]string, actualLen)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		ringBuffer[lineCount%len(ringBuffer)] = line
+		ringBuffer[lineCount%uint64(len(ringBuffer))] = line
 		lineCount++
 	}
 
@@ -291,18 +272,92 @@ func fsReadLastBoardData(username *string, board *string, data *[][]string) erro
 		return nil
 	}
 
-	startIndex := lineCount % config.ChartsDataLength
-	if lineCount < config.ChartsDataLength {
+	startIndex := lineCount % actualLen
+	if lineCount < actualLen {
 		startIndex = 1
 		lineCount -= 1
 	}
 
-	if lineCount > config.ChartsDataLength {
-		lineCount = config.ChartsDataLength
+	if lineCount > actualLen {
+		lineCount = actualLen
 	}
 
-	for i := 0; i < lineCount; i++ {
-		*data = append(*data, strings.Split(ringBuffer[(startIndex+i)%len(ringBuffer)], ","))
+	*data = [][]string{}
+	for i := uint64(0); i < lineCount; i++ {
+		*data = append(*data, strings.Split(ringBuffer[(startIndex+i)%uint64(len(ringBuffer))], ","))
+	}
+
+	return nil
+}
+
+func fsCreateConfigFile(username *string, boardConf *BoardConfig) error {
+	/* TODO: Remove this after you have updated the database to contain the board config as well*/
+	filePath := getJsonFilepath(username, &(boardConf.Board))
+	jsonFile, err := os.Create(filePath)
+	if err != nil {
+		logger.Printf("Failed to create JSON file for %s/%s: %v\n", *username, boardConf.Board, err)
+		return err
+	}
+	defer jsonFile.Close()
+
+	jsonData, err := json.Marshal(*boardConf)
+	if err != nil {
+		logger.Println("Error marshaling JSON:", err)
+		return err
+	}
+
+	_, err = jsonFile.Write(jsonData)
+	if err != nil {
+		logger.Println("Error writing JSON to file:", err)
+		return err
+	}
+
+	return nil
+}
+
+func fsDeleteConfigFile(username *string, board *string) error {
+	filePath := getJsonFilepath(username, board)
+
+	err := os.Remove(filePath)
+	if err != nil {
+		logger.Printf("Error deleting the config file `%s`, %v", filePath, err)
+		return err
+	}
+
+	return nil
+}
+
+func fsCreateCsvDataFile(username *string, boardConf *BoardConfig) error {
+	filePath := getCsvFilepath(username, &(boardConf.Board))
+	if _, err := os.Stat(filePath); err != nil {
+		if !os.IsNotExist(err) {
+			logger.Printf("Failed to check if CSV file exists for %s/%s: %v\n", *username, boardConf.Board, err)
+			return err
+		}
+
+		file, err := os.Create(filePath)
+		if err != nil {
+			logger.Printf("Failed to create CSV file for %s/%s: %v\n", *username, boardConf.Board, err)
+			return err
+		}
+		defer file.Close()
+
+		writer := csv.NewWriter(file)
+		defer writer.Flush()
+
+		headers := make([]string, len(boardConf.Parameters))
+		for i, param := range boardConf.Parameters {
+			if param.Uom != "" {
+				headers[i] = fmt.Sprintf("%s [%s]", param.Name, param.Uom)
+			} else {
+				headers[i] = param.Name
+			}
+		}
+		if err := writer.Write(headers); err != nil {
+			logger.Printf("Failed to write CSV headers for %s/%s: %v\n", *username, boardConf.Board, err)
+			return err
+		}
+		headers = nil
 	}
 
 	return nil

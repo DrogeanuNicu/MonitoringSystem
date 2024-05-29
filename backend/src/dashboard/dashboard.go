@@ -15,9 +15,9 @@ import (
 //
 // ================================================================================================
 type DashboardConfig struct {
-	DataPath               string `json:"DataPath"`
-	ChartsDataLength       int    `json:"ChartsDataLength"`
-	MaxSecondsOfInactivity int64  `json:"MaxSecondsOfInactivity"`
+	DataPath                string `json:"DataPath"`
+	DefaultChartsDataLength uint64 `json:"DefaultChartsDataLength"`
+	MaxSecondsOfInactivity  int64  `json:"MaxSecondsOfInactivity"`
 }
 
 type IParameter struct {
@@ -53,7 +53,8 @@ type IGauge struct {
 }
 
 type BoardConfig struct {
-	Board string
+	Board            string
+	MaxElemsPerChart uint
 
 	Parameters []IParameter
 	Maps       []IMap
@@ -62,8 +63,9 @@ type BoardConfig struct {
 }
 
 type BoardData struct {
-	Data          [][]string
-	LastTimeStamp int64
+	Data             [][]string
+	LastTimeStamp    int64
+	MaxElemsPerChart uint64
 }
 
 type BoardAccess struct {
@@ -137,7 +139,7 @@ func Init(pConfig *DashboardConfig) {
 func UserLogout(username string) {
 }
 
-func GetBoardData(username *string, board *string) (BoardData, error) {
+func GetBoardData(username *string, board *string, maxElemsPerChart uint64) (BoardData, error) {
 	if _, userExists := dshbd[*username]; !userExists {
 		dshbd[*username] = make(BoardMap)
 	}
@@ -145,21 +147,27 @@ func GetBoardData(username *string, board *string) (BoardData, error) {
 	if _, boardExists := dshbd[*username][*board]; !boardExists {
 		dshbd[*username][*board] = &BoardAccess{
 			Packet: &BoardData{
-				LastTimeStamp: time.Now().Unix(),
+				LastTimeStamp:    time.Now().Unix(),
+				MaxElemsPerChart: maxElemsPerChart,
 			},
 		}
 		dshbd[*username][*board].Mu.Lock()
-		defer dshbd[*username][*board].Mu.Unlock()
-
-		err := fsReadLastBoardData(username, board, &(dshbd[*username][*board].Packet.Data))
+		err := fsReadLastBoardData(username, board, &(dshbd[*username][*board].Packet.Data), maxElemsPerChart)
+		dshbd[*username][*board].Mu.Unlock()
 		return *dshbd[*username][*board].Packet, err
 	}
 
 	dshbd[*username][*board].Mu.Lock()
-	defer dshbd[*username][*board].Mu.Unlock()
-
 	dshbd[*username][*board].Packet.LastTimeStamp = time.Now().Unix()
 
+	if dshbd[*username][*board].Packet.MaxElemsPerChart != maxElemsPerChart {
+		dshbd[*username][*board].Packet.MaxElemsPerChart = maxElemsPerChart
+		err := fsReadLastBoardData(username, board, &(dshbd[*username][*board].Packet.Data), maxElemsPerChart)
+		dshbd[*username][*board].Mu.Unlock()
+		return *dshbd[*username][*board].Packet, err
+	}
+
+	dshbd[*username][*board].Mu.Unlock()
 	return *dshbd[*username][*board].Packet, nil
 }
 
@@ -169,17 +177,17 @@ func AppendBoardData(username *string, board *string, newData *[]string) error {
 		return err
 	}
 
-	if board, isBoardActive := dshbd[*username][*board]; isBoardActive {
-		board.Mu.Lock()
-		defer board.Mu.Unlock()
+	if pBoard, isBoardActive := dshbd[*username][*board]; isBoardActive {
+		pBoard.Mu.Lock()
+		defer pBoard.Mu.Unlock()
 
-		if len(board.Packet.Data) < config.ChartsDataLength {
-			board.Packet.Data = append(board.Packet.Data, *newData)
+		if uint64(len(pBoard.Packet.Data)) < dshbd[*username][*board].Packet.MaxElemsPerChart {
+			pBoard.Packet.Data = append(pBoard.Packet.Data, *newData)
 		} else {
-			for i := 1; i < len(board.Packet.Data); i++ {
-				board.Packet.Data[i-1] = board.Packet.Data[i]
+			for i := 1; i < len(pBoard.Packet.Data); i++ {
+				pBoard.Packet.Data[i-1] = pBoard.Packet.Data[i]
 			}
-			board.Packet.Data[len(board.Packet.Data)-1] = *newData
+			pBoard.Packet.Data[len(pBoard.Packet.Data)-1] = *newData
 		}
 	}
 

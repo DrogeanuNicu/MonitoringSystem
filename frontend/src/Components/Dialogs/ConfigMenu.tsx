@@ -3,6 +3,7 @@ import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } 
 import { ErrorAlert } from '../Alerts';
 import ShowHideToggle from '../DropDowns/ShowHideToggle';
 import { DropDownType } from '../DropDowns/DropDown';
+import { Checkbox } from "@suid/material";
 
 import { BoardConfig, loadConfigApi } from '../../Api/Board';
 import { IParameterSignals } from '../../Api/Parameter';
@@ -18,7 +19,7 @@ interface ConfigMenuProps {
   board: string;
 
   show: [() => boolean, (newValue: boolean) => void];
-  cb: (newConfig: BoardConfig, oldBoardName?: string | undefined) => Promise<void>;
+  cb: (newConfig: BoardConfig, oldBoardName?: string | undefined, deleteStoredData?: boolean) => Promise<void>;
 }
 
 const ConfigMenu: Component<ConfigMenuProps> = (props) => {
@@ -30,6 +31,8 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
   const [charts, setCharts] = createSignal<IChartSignals[]>([]);
   const [gauges, setGauges] = createSignal<IGaugeSignals[]>([]);
   const [maps, setMaps] = createSignal<IMapSignals[]>([]);
+  const [maxElemsPerChart, setMaxElemsPerChart] = createSignal(20);
+  const [deleteStoredData, setDeleteStoredData] = createSignal(false);
 
   const handleClose = () => {
     setError('');
@@ -40,6 +43,7 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
   const handleSubmit = async () => {
     let newConfig: BoardConfig = {
       Board: boardName(),
+      MaxElemsPerChart: maxElemsPerChart(),
       Parameters: [],
       Charts: [],
       Maps: [],
@@ -62,8 +66,6 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
       newConfig.Gauges.push(IGaugeSignals.get(gauges()[i]));
     }
 
-    console.log(newConfig);
-
     try {
       /* TODO: Add more checks to be sure the data is correct before sending to the backend */
       /* TODO: Add types for parameters, because only numbers can be used as oy data for charts, ox can use strings */
@@ -76,7 +78,23 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
         throw new Error("The board's name cannot be empty!");
       }
 
-      await props.cb(newConfig, (props.board !== '') ? props.board : undefined);
+      if (typeof newConfig.MaxElemsPerChart !== 'number' || isNaN(newConfig.MaxElemsPerChart)) {
+        throw new Error("The maximum elements per chart has to be a number!");
+      }
+
+      if (newConfig.MaxElemsPerChart < 1) {
+        throw new Error("The maximum elements per chart has to be a number greater than 0!");
+      }
+
+      if (newConfig.Parameters.length < 1) {
+        throw new Error("You need to define at least one parameter!");
+      }
+
+      if (newConfig.Board !== props.board && deleteStoredData() === false) {
+        throw new Error("Changing the name of the board means that all collected data has to be deleted! Check the box to continue!");
+      }
+
+      await props.cb(newConfig, (props.board !== '') ? props.board : undefined, deleteStoredData());
       handleClose();
     }
     catch (error: any) {
@@ -92,6 +110,7 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
         await loadConfigApi(
           props.username,
           props.board,
+          [maxElemsPerChart, setMaxElemsPerChart],
           [parameters, setParameters],
           [charts, setCharts],
           [gauges, setGauges],
@@ -131,6 +150,15 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
                   value={boardName()}
                   onChange={(e) => setBoardName(e.target.value)}
                 />
+                <TextField
+                  required
+                  label="Max elements per chart in live mode"
+                  variant="outlined"
+                  fullWidth
+                  size="small"
+                  value={maxElemsPerChart()}
+                  onChange={(e) => setMaxElemsPerChart(Number(e.target.value))}
+                />
               </div>
             </div>
 
@@ -140,6 +168,17 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
             <DropDown name="Gauges" type={DropDownType.GAUGES} signals={[gauges, setGauges]} params={[parameters, setParameters]} ></DropDown>
           </div>
 
+          <div class="flex items-center">
+            <p class="mr-2">Delete the already collected data?</p>
+            <Checkbox
+              checked={deleteStoredData()}
+              onChange={(event, checked) => {
+                setDeleteStoredData(checked);
+              }}
+              inputProps={{ "aria-label": "controlled" }}
+              class="custom-checkbox"
+            />
+          </div>
           <ErrorAlert errorMsg={[error, setError]}></ErrorAlert>
         </DialogContent>
         <DialogActions class="text-main-color">

@@ -87,8 +87,8 @@ func Init(config *HttpsConfig, debugMode bool) {
 	router.POST("/api/:username/reset/ota/status/:board", auth.Middleware(), resetOtaStatus)
 	router.GET("/api/:username/get/ota/status/:board", auth.Middleware(), getOtaStatus)
 
-	// err := router.RunTLS(fmt.Sprintf("%s:%d", config.Address, config.Port), config.Cert, config.Key)
-	err := router.Run(fmt.Sprintf("%s:%d", config.Address, config.Port))
+	err := router.RunTLS(fmt.Sprintf("%s:%d", config.Address, config.Port), config.Cert, config.Key)
+	// err := router.Run(fmt.Sprintf("%s:%d", config.Address, config.Port))
 	if err != nil {
 		panic(err)
 	}

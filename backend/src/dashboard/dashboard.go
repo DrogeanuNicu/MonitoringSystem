@@ -242,6 +242,24 @@ func SetOtaStatus(username *string, board *string, status int) {
 	}
 }
 
+func CleadBoardData(username *string, board *string, oldBoard *string) {
+
+	if pBoard, isBoardActive := dshbd[*username][*oldBoard]; isBoardActive {
+		pBoard.Mu.Lock()
+		defer pBoard.Mu.Unlock()
+
+		if *board == *oldBoard {
+
+			length := len(pBoard.Packet.Data[0])
+
+			pBoard.Packet.Data = make([][]string, 1)
+			pBoard.Packet.Data[0] = make([]string, length)
+		} else {
+			delete(dshbd[*username], *oldBoard)
+		}
+	}
+}
+
 // ================================================================================================
 //
 //	Local Functions

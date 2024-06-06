@@ -132,6 +132,8 @@ func FsEditBoardData(username string, data BoardConfig, oldBoard string, deleteS
 			return err
 		}
 
+		CleadBoardData(&username, &data.Board, &oldBoard)
+
 		return nil
 	}
 

@@ -90,9 +90,12 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
         throw new Error("You need to define at least one parameter!");
       }
 
-      if (newConfig.Board !== props.board && deleteStoredData() === false) {
-        throw new Error("Changing the name of the board means that all collected data has to be deleted! Check the box to continue!");
+      if (props.board !== "") {
+        if (newConfig.Board !== props.board && deleteStoredData() === false) {
+          throw new Error("Changing the name of the board means that all collected data has to be deleted! Check the box to continue!");
+        }
       }
+
 
       await props.cb(newConfig, (props.board !== '') ? props.board : undefined, deleteStoredData());
       handleClose();
@@ -168,17 +171,19 @@ const ConfigMenu: Component<ConfigMenuProps> = (props) => {
             <DropDown name="Gauges" type={DropDownType.GAUGES} signals={[gauges, setGauges]} params={[parameters, setParameters]} ></DropDown>
           </div>
 
-          <div class="flex items-center">
-            <p class="mr-2">Delete the already collected data?</p>
-            <Checkbox
-              checked={deleteStoredData()}
-              onChange={(event, checked) => {
-                setDeleteStoredData(checked);
-              }}
-              inputProps={{ "aria-label": "controlled" }}
-              class="custom-checkbox"
-            />
-          </div>
+          {props.board !== '' && (
+            <div class="flex items-center">
+              <p class="mr-2">Delete the already collected data?</p>
+              <Checkbox
+                checked={deleteStoredData()}
+                onChange={(event, checked) => {
+                  setDeleteStoredData(checked);
+                }}
+                inputProps={{ "aria-label": "controlled" }}
+                class="custom-checkbox"
+              />
+            </div>
+          )}
           <ErrorAlert errorMsg={[error, setError]}></ErrorAlert>
         </DialogContent>
         <DialogActions class="text-main-color">

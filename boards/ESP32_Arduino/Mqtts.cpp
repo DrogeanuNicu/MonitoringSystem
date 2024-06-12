@@ -37,10 +37,21 @@ extern TinyGsm modem;
 /**************************************************************************************************
  *                                Static Function Prototypes                                     *
  *************************************************************************************************/
+static void ResetParameters(void);
 
 /**************************************************************************************************
  *                             Static Function Definitions                                       *
  *************************************************************************************************/
+static void ResetParameters(void)
+{
+    memset((void*)&Can_P_0x601, 0U, sizeof(Can_P_0x601));
+    memset((void*)&Can_P_0x602, 0U, sizeof(Can_P_0x602));
+    memset((void*)&Can_P_0x501, 0U, sizeof(Can_P_0x501));
+    memset((void*)&Can_P_0x502, 0U, sizeof(Can_P_0x502));
+    memset((void*)&Can_P_0x503, 0U, sizeof(Can_P_0x503));
+    memset((void*)&Can_P_0x1806E5F4, 0U, sizeof(Can_P_0x1806E5F4));
+    memset((void*)&Can_P_0x18FF50E5, 0U, sizeof(Can_P_0x18FF50E5));
+}
 
 /**************************************************************************************************
  *                              Global Function Definitions                                      *
@@ -116,6 +127,8 @@ bool Mqtts_Send(void)
         Can_P_0x18FF50E5.outputChargingVoltage, Can_P_0x18FF50E5.outputChargingCurrent, Can_P_0x18FF50E5.chargerStatusFlags, Can_P_0x18FF50E5.chargerTemperature);
 
     LOG("%.*s\n", MQTTS_MAX_MSG_LEN, MsgBuffer);
+
+    ResetParameters();
 
     return modem.mqtt_publish(Mqtts_ClientId, Mqtts_PublishTopic, MsgBuffer);
 }

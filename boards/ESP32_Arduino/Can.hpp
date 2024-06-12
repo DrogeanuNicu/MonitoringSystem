@@ -84,13 +84,13 @@ typedef struct
 /**************************************************************************************************
  *                                      Global Variables                                         *
  *************************************************************************************************/
-extern Can_PType_0x601 Can_P_0x601;
-extern Can_PType_0x602 Can_P_0x602;
-extern Can_PType_0x501 Can_P_0x501;
-extern Can_PType_0x502 Can_P_0x502;
-extern Can_PType_0x503 Can_P_0x503;
-extern Can_PType_0x1806E5F4 Can_P_0x1806E5F4;
-extern Can_PType_0x18FF50E5 Can_P_0x18FF50E5;
+extern volatile Can_PType_0x601 Can_P_0x601;
+extern volatile Can_PType_0x602 Can_P_0x602;
+extern volatile Can_PType_0x501 Can_P_0x501;
+extern volatile Can_PType_0x502 Can_P_0x502;
+extern volatile Can_PType_0x503 Can_P_0x503;
+extern volatile Can_PType_0x1806E5F4 Can_P_0x1806E5F4;
+extern volatile Can_PType_0x18FF50E5 Can_P_0x18FF50E5;
 
 /**************************************************************************************************
  *                                    Function Prototypes                                        *

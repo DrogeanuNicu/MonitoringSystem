@@ -13,7 +13,7 @@
  *                                        Constants                                              *
  *************************************************************************************************/
 static const byte MCP2515_CS = 13;
-static const byte MCP2515_INT = 4;
+static const byte MCP2515_INT = 34;
 static const uint32_t QUARTZ_FREQUENCY = 16UL * 1000UL * 1000UL;
 
 /**************************************************************************************************
@@ -24,13 +24,13 @@ static ACAN2515 Mcp2515(MCP2515_CS, SPI, MCP2515_INT);
 /**************************************************************************************************
  *                                      Global Variables                                         *
  *************************************************************************************************/
-Can_PType_0x601 Can_P_0x601;
-Can_PType_0x602 Can_P_0x602;
-Can_PType_0x501 Can_P_0x501;
-Can_PType_0x502 Can_P_0x502;
-Can_PType_0x503 Can_P_0x503;
-Can_PType_0x1806E5F4 Can_P_0x1806E5F4;
-Can_PType_0x18FF50E5 Can_P_0x18FF50E5;
+volatile Can_PType_0x601 Can_P_0x601;
+volatile Can_PType_0x602 Can_P_0x602;
+volatile Can_PType_0x501 Can_P_0x501;
+volatile Can_PType_0x502 Can_P_0x502;
+volatile Can_PType_0x503 Can_P_0x503;
+volatile Can_PType_0x1806E5F4 Can_P_0x1806E5F4;
+volatile Can_PType_0x18FF50E5 Can_P_0x18FF50E5;
 
 /**************************************************************************************************
  *                                Static Function Prototypes                                     *

@@ -145,7 +145,7 @@ const Dashboard: Component = () => {
               );
               maps()[mapIdx].Marker?.setLatLng(coords);
               maps()[mapIdx].Marker?.setPopupContent(`Lat: ${coords.lat}, Lon: ${coords.lng}, Alt: ${coords.alt}`);
-              maps()[mapIdx].Ref?.setView(coords, 15);
+              maps()[mapIdx].Ref?.setView(coords, 25);
             }
           }
 

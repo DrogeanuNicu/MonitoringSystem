@@ -40,7 +40,7 @@
 #endif
 
 /* CAN config */
-#define CAN_NOMIMAL_BITRATE (500UL)
+#define CAN_NOMIMAL_BITRATE (250UL)
 
 /* MTTS config */
 #define MQTTS_BROKER (SERVER_ADDR)

@@ -24,7 +24,7 @@ const DbMap: Component<DbMapProps> = (props) => {
   const resizeHandler = () => {
     props.map.Ref?.invalidateSize();
     // TODO: During resizing, if the marker is not on the screen it's value is lost, therefor the map is pointing to (0,0,0)
-    props.map.Ref?.setView(props.map.Marker?.getLatLng() ?? L.latLng(0, 0, 0), 15);
+    props.map.Ref?.setView(props.map.Marker?.getLatLng() ?? L.latLng(0, 0, 0), 25);
   }
 
   onMount(() => {

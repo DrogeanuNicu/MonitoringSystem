@@ -110,12 +110,14 @@ static void UpdateData(CANMessage *pFrame)
         Can_P_0x1806E5F4.maxChargingCurrent = ((pFrame->data[2] << 8) + pFrame->data[3]) / 10.0;
         Can_P_0x1806E5F4.chargingControl = pFrame->data[4];
         Can_P_0x1806E5F4.operatingMode = pFrame->data[5];
+        break;
 
     case 0x18FF50E5:
         Can_P_0x18FF50E5.outputChargingVoltage = ((pFrame->data[0] << 8) + pFrame->data[1]) / 10.0;
         Can_P_0x18FF50E5.outputChargingCurrent = ((pFrame->data[2] << 8) + pFrame->data[3]) / 10.0;
         Can_P_0x18FF50E5.chargerStatusFlags = pFrame->data[4];
         Can_P_0x18FF50E5.chargerTemperature = pFrame->data[5];
+        break;
 
     default:
         break;
@@ -127,7 +129,7 @@ static void UpdateData(CANMessage *pFrame)
  *************************************************************************************************/
 void Can_Init(uint32_t BitRateKbps)
 {
-    ACAN2515Settings settings(QUARTZ_FREQUENCY, BitRateKbps * 1000UL); /* 500 KBPS*/
+    ACAN2515Settings settings(QUARTZ_FREQUENCY, BitRateKbps * 1000UL);
     settings.mRequestedMode = ACAN2515Settings::NormalMode;
     uint16_t errorCode;
 
@@ -168,7 +170,7 @@ void Can_Main(void)
         xSemaphoreGive(Mcp2515.mISRSemaphore);
         Mcp2515.receive(frame);
 #ifdef DEBUG_SERIAL_LOG
-        // PrintFrame(&frame);
+        PrintFrame(&frame);
 #endif
         UpdateData(&frame);
     }

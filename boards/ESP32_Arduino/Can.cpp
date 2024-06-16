@@ -74,8 +74,8 @@ static void UpdateData(CANMessage *pFrame)
     case 0x602:
         Can_P_0x602.motorVoltageFrequency = (pFrame->data[0] << 8) + pFrame->data[1];
         Can_P_0x602.diagnosticTroubleCodes = (pFrame->data[2] << 8) + pFrame->data[3];
-        Can_P_0x602.throttleLevel = pFrame->data[4];
-        Can_P_0x602.brakingLevel = pFrame->data[5];
+        Can_P_0x602.throttleLevel = pFrame->data[4] * 100 / 0xFF;
+        Can_P_0x602.brakingLevel = pFrame->data[5] * 100 / 0xFF;
         Can_P_0x602.controllerStatusFlags = pFrame->data[6];
         break;
 

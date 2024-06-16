@@ -245,12 +245,12 @@ const Dashboard: Component = () => {
       {screenWidth() > MIN_SCREEN_WIDTH_PX ?
         <div class="flex flex-col h-screen">
           <PanelGroup direction="row">
-            <Panel id="table-div" initialSize={27} minSize={20} collapsible>
+            <Panel id="table-div" initialSize={25} minSize={20} collapsible>
               <DbTable parameters={[parameters, setParameters]}></DbTable>
               <DbGauges gauges={[gauges, setGauges]} parameters={[parameters, setParameters]} ></DbGauges>
             </Panel>
             <ResizeHandle />
-            <Panel id="chart-div" initialSize={73} minSize={20} collapsible>
+            <Panel id="chart-div" initialSize={75} minSize={20} collapsible>
               <DbMaps maps={[maps, setMaps]}></DbMaps>
               <DbCharts charts={[charts, setCharts]} parameters={[parameters, setParameters]}></DbCharts>
             </Panel>

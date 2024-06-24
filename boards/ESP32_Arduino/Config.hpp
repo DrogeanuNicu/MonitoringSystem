@@ -2,7 +2,7 @@
 
 /* Debug Config */
 // #define DEBUG_DUMP_AT_COMMANDS
-#define DEBUG_SERIAL_LOG
+// #define DEBUG_SERIAL_LOG
 // #define TINY_GSM_DEBUG Serial
 
 /* */
@@ -40,7 +40,7 @@
 #endif
 
 /* CAN config */
-#define CAN_NOMIMAL_BITRATE (250UL)
+#define CAN_NOMIMAL_BITRATE (500UL)
 
 /* MTTS config */
 #define MQTTS_BROKER (SERVER_ADDR)

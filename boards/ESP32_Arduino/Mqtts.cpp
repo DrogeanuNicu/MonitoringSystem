@@ -128,7 +128,7 @@ bool Mqtts_Send(void)
 
     LOG("%.*s\n", MQTTS_MAX_MSG_LEN, MsgBuffer);
 
-    // ResetParameters();
+    ResetParameters();
 
     return modem.mqtt_publish(Mqtts_ClientId, Mqtts_PublishTopic, MsgBuffer);
 }
